@@ -21,7 +21,7 @@ scipy = ">=1.12"
 [tasks]
 # --- Verification (V-model, right-hand side) ---
 test = "python -m pytest"
-test-fast = "python -m pytest -m \"not lean and not docker\""
+test-fast = "python -m pytest -m \"not lean and not docker and not slow\""
 lint = "ruff check dpc tests"
 format = "ruff format dpc tests"
 typecheck = "mypy dpc"

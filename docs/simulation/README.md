@@ -32,8 +32,24 @@ honeypots. What matters is honeypot camouflage (ADR 0006: embargo, private
 pools, possibly informal-side honeypots) and the unforgeable anchors
 (machine-checked refutations, confirmed real errors).
 
+## Extended model (2026-11-08, 3 seeds × 400 items, error rate 0.1)
+
+| Mechanism | Result |
+|---|---|
+| **Lenses** (concept §8.3–8.4), ρ = 0.5 | identical reviews miss **100 %** of blind errors (overall miss rate 52 %); with greedily chosen lenses **33 %** (overall 15 %) |
+| **IRT** (concept §8.2), honeypots 2.5 units easier than real errors | κ of honest reviewers rises from 0.42 to 0.55, miss rate from 4.9 % to 8.0 % — honeypots must span the difficulty range |
+| **Delphi** (concept §8.6) | switching to a *wrong* justification: honest 7 %, easily led reviewers 58 % — a clean signal of influenceability; switching to a *right* one: 50 % vs 88 % |
+| **Sybil** (FMEA R6), target items | 5 Sybil accounts among 40 honest: 0 % of targets pass (random assignment + one-finding rule); 40 against 10: **71 %** pass — protection rests on one account per person (SR-41) |
+| **Collusion PV ↔ PVV** + pair window (SR-08) | repeated (PV, PVV) pairs 579 → 41 with a window of 50 checks; target success 12.5 % → 8.8 % |
+
+Consequences: lenses are the effective countermeasure against correlated blind
+spots (repetition is not); honeypot difficulty must be matched to real errors;
+the Sybil defence is identity, not statistics; the pair window works.
+
+Reproduce, e.g.: `pixi run dpc simulate --items 400 --error-rate 0.1 --blind-share 0.5 --lenses --runs 3`
+(switches: `--irt --honeypot-shift`, `--delphi`, `--sybils/--colluders --target-share`,
+`--pair-window`). Tests: `tests/test_simulation.py` (marked `slow`).
+
 ## Not yet modelled
 
-Lenses and Delphi rounds (correlated blind spots are modelled, lenses are
-not), the IRT model with item difficulty, leases and aborts, Sybil accounts and
-collusion between PV and PVV.
+Leases and aborts, paired review, choice sets with attention, payouts.

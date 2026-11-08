@@ -42,7 +42,12 @@ def _digest_of(digests: dict[str, str]) -> str:
     return sha256_hex(canonical_json(dict(sorted(digests.items()))))
 
 
-def _step(result: RunResult, step: str, log: AuditLog) -> None:
+def _step(result: RunResult, step: str, log: AuditLog, log_dir: Path | None = None) -> None:
+    """Record a step; the full output goes to ``log_dir/<step>.log`` (its hash is
+    in the audit log, so the file can be verified later)."""
+    if log_dir is not None:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        (log_dir / f"{step}.log").write_text(result.output, encoding="utf-8")
     log.append(
         f"{step}.completed",
         {
@@ -54,13 +59,16 @@ def _step(result: RunResult, step: str, log: AuditLog) -> None:
         },
     )
     if not result.ok:
-        raise IngestError(f"{step} failed (exit {result.returncode}):\n"
-                          f"{result.output.strip()[-3000:]}")
+        errors = [line for line in result.output.splitlines() if line.startswith("error")]
+        hint = f" (full output: {log_dir / (step + '.log')})" if log_dir else ""
+        raise IngestError(f"{step} failed (exit {result.returncode}){hint}:\n"
+                          + "\n".join(errors[:20]) + "\n…\n" + result.output.strip()[-2000:])
 
 
 def ingest_in_volume(
     submission: Submission, *, executor: DockerExecutor, log: AuditLog, out_dir: Path
 ) -> VolumeIngestResult:
+    logs = out_dir.parent / "logs"
     log.append("submission.received", submission.model_dump())
     ws = VolumeWorkspace(executor, volume_name(submission), submission.project_dir)
     ws.create()
@@ -97,7 +105,7 @@ def ingest_in_volume(
             log.append("cache.retry", {"artifact_key": key, "attempt": attempt,
                                        "output_sha256": sha256_hex(cache.output.encode())})
         if cache is not None:
-            _step(cache, "cache", log)
+            _step(cache, "cache", log, logs)
         heads = ws.package_heads(image, manifest)
         drift = sorted(p.name for p in manifest.packages if heads.get(p.name) != p.rev)
         if drift:
@@ -132,7 +140,7 @@ def ingest_in_volume(
             f"{len(integrity.changed)} changed, {len(integrity.added)} added, "
             f"e.g. {(integrity.changed + integrity.added)[:5]}"
         )
-    _step(build, "build", log)
+    _step(build, "build", log, logs)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = {mode: out_dir / f"{mode}.jsonl" for mode in ("core", "metadata")}
@@ -140,7 +148,7 @@ def ingest_in_volume(
         result = ws.analyze(image, manifest, root=submission.root,
                             imports=[submission.root_module], mode=mode,  # type: ignore[arg-type]
                             out=path)
-        _step(result, f"analysis_{mode}", log)
+        _step(result, f"analysis_{mode}", log, logs)
 
     try:
         analysis = merge(Analysis.load(paths["core"]), Analysis.load(paths["metadata"]))

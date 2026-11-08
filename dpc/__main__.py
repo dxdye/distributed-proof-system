@@ -145,9 +145,16 @@ def cmd_simulate(args: argparse.Namespace) -> int:
         reviewers.append(ReviewerType("clicker", args.clickers, behaviour="clicker"))
     if args.lookup:
         reviewers.append(ReviewerType("lookup", args.lookup, behaviour="lookup"))
+    if args.sybils:
+        reviewers.append(ReviewerType("sybil", args.sybils, behaviour="sybil"))
+    if args.colluders:
+        reviewers.append(ReviewerType("colluder", args.colluders, behaviour="colluder"))
     base = SimConfig(
         items=args.items, error_rate=args.error_rate, blind_share=args.blind_share,
         honeypot_share=args.honeypot_share, reviewers=tuple(reviewers),
+        detection_model="irt" if args.irt else "beta",
+        honeypot_difficulty_shift=args.honeypot_shift, lenses=args.lenses, delphi=args.delphi,
+        target_share=args.target_share, pair_window=args.pair_window,
         decision=DecisionParams(prior_error=args.error_rate, delta_a=args.delta_a,
                                 k_min=args.k_min, max_rounds=args.max_rounds),
         roles=RoleThresholds(theta_pv=args.theta_pv, theta_pvv=args.theta_pvv),
@@ -233,6 +240,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--honest", type=int, default=40)
     p.add_argument("--clickers", type=int, default=0, help="'always correct' reviewers")
     p.add_argument("--lookup", type=int, default=0, help="honeypot lookup attackers")
+    p.add_argument("--sybils", type=int, default=0, help="accounts of one Sybil attacker")
+    p.add_argument("--colluders", type=int, default=0, help="colluding PV/PVV accounts")
+    p.add_argument("--target-share", type=float, default=0.0,
+                   help="share of erroneous items the attackers want accepted")
+    p.add_argument("--pair-window", type=int, default=0, help="SR-08 pair repetition window")
+    p.add_argument("--lenses", action="store_true", help="assign lenses greedily (§8.4)")
+    p.add_argument("--delphi", action="store_true", help="Delphi round 2 (§8.6)")
+    p.add_argument("--irt", action="store_true", help="IRT detection model (§8.2)")
+    p.add_argument("--honeypot-shift", type=float, default=0.0,
+                   help="honeypot difficulty relative to real errors (< 0: easier)")
     p.add_argument("--delta-a", type=float, default=1e-3)
     p.add_argument("--k-min", type=int, default=3)
     p.add_argument("--max-rounds", type=int, default=4)

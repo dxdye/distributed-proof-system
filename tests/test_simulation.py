@@ -71,3 +71,65 @@ def test_lookup_attack_inflates_trust_but_is_flagged() -> None:
     assert lookup["reviews"] > 0
     assert lookup["flagged_suspicious"] >= 0.5
     assert honest["flagged_suspicious"] <= 0.05
+
+
+# ---------------------------------------------------------- extended model
+def _runs(cfg: SimConfig, seeds: range = range(3)) -> list:  # type: ignore[type-arg]
+    return [simulate(replace(cfg, seed=s)) for s in seeds]
+
+
+def _share(hits: int, total: int) -> float:
+    return hits / total if total else 0.0
+
+
+@pytest.mark.slow
+@pytest.mark.req("SR-34")
+def test_lenses_find_blind_errors_that_repetition_misses() -> None:
+    """Verification §11.2: lenses against identical reviews under correlated errors."""
+    base = SimConfig(items=400, error_rate=0.1, blind_share=0.5, reviewers=(HONEST,))
+    plain, lensed = _runs(base), _runs(replace(base, lenses=True))
+    plain_rate = _share(sum(r.blind_missed for r in plain), sum(r.blind_errors for r in plain))
+    lens_rate = _share(sum(r.blind_missed for r in lensed), sum(r.blind_errors for r in lensed))
+    assert plain_rate > 0.95  # identical reviews never see a blind error
+    assert lens_rate < 0.5
+
+
+@pytest.mark.slow
+def test_easy_honeypots_overstate_sensitivity() -> None:
+    """Concept §8.2: honeypots must cover the whole difficulty range."""
+    base = SimConfig(items=400, error_rate=0.1, reviewers=(HONEST,), detection_model="irt")
+    matched, easy = _runs(base), _runs(replace(base, honeypot_difficulty_shift=-2.5))
+    assert easy[0].by_kind["honest"]["mean_kappa"] > matched[0].by_kind["honest"]["mean_kappa"]
+    assert (_share(sum(r.missed for r in easy), sum(r.erroneous for r in easy))
+            > _share(sum(r.missed for r in matched), sum(r.erroneous for r in matched)))
+
+
+@pytest.mark.slow
+def test_delphi_switching_separates_judgement_from_influenceability() -> None:
+    gullible = ReviewerType("gullible", 15, switch_false=0.6)
+    result = _runs(SimConfig(items=400, error_rate=0.1, reviewers=(HONEST, gullible),
+                             delphi=True))[0]
+    honest, easily_led = result.by_kind["honest"], result.by_kind["gullible"]
+    assert easily_led["delphi_switch_false"] > honest["delphi_switch_false"] + 0.3
+
+
+@pytest.mark.slow
+def test_sybil_attack_needs_a_majority_of_the_pool() -> None:
+    """FMEA R6: random assignment plus the one-finding rule defeat a minority."""
+    def success(sybils: int, honest: int) -> float:
+        runs = _runs(SimConfig(items=400, error_rate=0.1, target_share=0.5, reviewers=(
+            ReviewerType("honest", honest), ReviewerType("sybil", sybils, behaviour="sybil"))))
+        return _share(sum(r.targets_accepted for r in runs), sum(r.targets for r in runs))
+
+    assert success(5, 40) < 0.1
+    assert success(40, 10) > 0.4
+
+
+@pytest.mark.slow
+@pytest.mark.req("SR-08")
+def test_pair_window_prevents_repeated_pv_pvv_pairs() -> None:
+    base = SimConfig(items=400, error_rate=0.1, target_share=0.5, reviewers=(
+        ReviewerType("honest", 30), ReviewerType("colluder", 10, behaviour="colluder")))
+    open_pairs = sum(r.repeated_pairs for r in _runs(base))
+    windowed = sum(r.repeated_pairs for r in _runs(replace(base, pair_window=50)))
+    assert windowed < 0.2 * open_pairs

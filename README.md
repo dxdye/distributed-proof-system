@@ -25,8 +25,8 @@ makes the reliability of that judgement measurable:
 |---|---|---|
 | M0 | Scaffold, audit log, requirement traceability | ✅ |
 | M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ Navier–Stokes measured ([report](docs/case-studies/navier-stokes.md)), QRH 7/8 running |
-| M2 | Mutation generator, local equivalence filter, honeypot sources and mixing | 🚧 works on fixtures; real-repository runs and further sources open |
-| M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ first study done ([findings](docs/simulation/README.md)); lenses, IRT, Sybil not yet simulated |
+| M2 | Mutation generator, local and component equivalence filter, auto-detection filter, honeypot source registry and mixing | ✅ 47 honeypot candidates on Navier–Stokes; maintainer review of pools open |
+| M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ study incl. lenses, IRT, Delphi, Sybil, collusion ([findings](docs/simulation/README.md)) |
 | M4 | Web prototype for class A, pilot | planned |
 | M5 | Class B, certificate, signed report | planned |
 
