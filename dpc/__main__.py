@@ -9,13 +9,24 @@ from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
-from dpc.analysis import Analysis, assign_domains, graph_diff, merge, reverse_degree, summarize
+from dpc.analysis import (
+    Analysis,
+    assign_domains,
+    graph_diff,
+    merge,
+    reverse_degree,
+    summarize,
+    units,
+)
 from dpc.audit import AuditLog
 from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import RoleThresholds
+from dpc.honeypots import MutantSet
 from dpc.ingest import Submission, ingest
-from dpc.ingest.volume import ingest_in_volume
+from dpc.ingest.volume import ingest_in_volume, volume_name
 from dpc.lean.executor import DockerExecutor, HostExecutor, LeanExecutor, Limits
+from dpc.lean.project import Manifest
+from dpc.lean.workspace import VolumeWorkspace
 from dpc.requirements import load_requirements
 from dpc.sim import ReviewerType, SimConfig, simulate
 
@@ -103,6 +114,29 @@ def cmd_audit_verify(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def cmd_mutate(args: argparse.Namespace) -> int:
+    """Mutants of an ingested submission's class-A units, in its Docker volume (M2)."""
+    submission = Submission.model_validate_json(Path(args.submission).read_text("utf-8"))
+    workdir = Path(args.workdir).resolve()
+    executor = DockerExecutor(limits=Limits(cpus=args.cpus, memory=args.memory,
+                                            timeout_s=args.timeout_h * 3600))
+    ws = VolumeWorkspace(executor, volume_name(submission), submission.project_dir)
+    fetch_image = ws.ensure_fetch_image()
+    toolchain = ws.read_text(ws.project / "lean-toolchain", fetch_image).strip()
+    manifest = Manifest.model_validate_json(
+        ws.read_text(ws.project / "lake-manifest.json", fetch_image))
+    image = executor.ensure_image(toolchain)
+    decls = args.decls or [u.name for u in units(Analysis.load(workdir / "analysis" / "core.jsonl"))
+                           .values() if u.in_tcb]
+    out = workdir / "mutants.jsonl"
+    result = ws.mutate(image, manifest, imports=[submission.root_module], decls=decls, out=out)
+    if not result.ok:
+        print(result.output, file=sys.stderr)
+        return 1
+    _print(MutantSet.load(out).stats() | {"declarations": decls, "file": str(out)})
+    return 0
+
+
 def cmd_simulate(args: argparse.Namespace) -> int:
     """Agent-based simulation of class-A review (M3)."""
     reviewers = [ReviewerType("honest", args.honest)]
@@ -168,6 +202,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("log")
     p.add_argument("--head", help="expected head hash (detects truncation)")
     p.set_defaults(func=cmd_audit_verify)
+
+    p = sub.add_parser("mutate", help="honeypot mutants of an ingested submission (M2)")
+    p.add_argument("submission")
+    p.add_argument("--workdir", required=True, help="workdir of the earlier ingest")
+    p.add_argument("--decl", dest="decls", action="append",
+                   help="declarations (default: all class-A units)")
+    p.add_argument("--cpus", type=float, default=Limits.cpus)
+    p.add_argument("--memory", default=Limits.memory)
+    p.add_argument("--timeout-h", type=float, default=Limits.timeout_s / 3600)
+    p.set_defaults(func=cmd_mutate)
 
     p = sub.add_parser("simulate", help="agent-based simulation of class-A review (M3)")
     p.add_argument("--items", type=int, default=300)

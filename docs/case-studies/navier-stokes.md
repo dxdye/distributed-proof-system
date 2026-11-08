@@ -62,6 +62,36 @@ case for maintainer corrections (SR-04).
 
 TPM "build + analysis for 300 k lines" (SE §12): target ≤ 2 h — met.
 
+## Honeypot candidates (M2)
+
+`dpc mutate` on the 8 class-A units (constructor fields of the condition
+structures, the main statement, the body of `divergence`):
+
+| Candidates | Type-incorrect | Provably equivalent | Invisible | Usable |
+|---|---|---|---|---|
+| 64 | 17 | 0 | 0 | **47** (constant 16, drop hypothesis 16, relation 9, interval 6) |
+
+The mutants hit exactly the review checklist of concept §17.1, for example:
+
+| Mutant | Meaning |
+|---|---|
+| `ForceCondition`: smooth on `Set.Ici 0` → `Set.Ioi 0` | force smooth only for t > 0 — the "f only smooth on [0, T*)" trap |
+| `ForceConditionDecay`: field `ForceCondition f` dropped | decay without smoothness |
+| `InitialVelocityCondition`: `divergence u₀ x = 0` → `= 1`, or dropped | initial data no longer divergence-free |
+| `NavierStokesExistenceAndSmoothnessRn`: energy bound `∀ t ≥ 0` → `t ≥ 1` | energy bound only from t = 1 on |
+| main theorem: `ν > 0` → `ν ≥ 0`, or hypothesis dropped | includes viscosity 0 (Euler) / negative viscosity |
+
+**Limit of the local equivalence filter.** Some candidates are equivalent for
+mathematical reasons the local check cannot see, e.g. `C / (1 + ‖x‖)^K` →
+`C / (2 + ‖x‖)^K` or `≤` → `<` under `∃ C` — the constant absorbs the change.
+A careful reviewer would rightly accept them. Mitigations: (1) the manual
+sample check of verification §11.2, here feasible for the whole pool (47
+items); (2) for definitions and structure fields, additionally attempt
+equivalence of the *whole field* (meaningful there, unlike for proven
+theorems), although automatic tactics rarely succeed on analysis statements
+with `∃ C`; (3) operator heuristics, e.g. not changing additive constants
+inside bounds scaled by an existential constant.
+
 ## Consequences for the design
 
 1. **Assumption AS-1 does not hold for this case.** The workload estimate in

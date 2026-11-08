@@ -29,6 +29,9 @@ class VolumeIngestResult:
     unverified_hardened: tuple[str, ...]
 
 
+CACHE_ATTEMPTS = 3
+
+
 def volume_name(submission: Submission) -> str:
     """Deterministic, so a rerun reuses the fetched sources and caches."""
     origin = sha256_hex(f"{submission.repo_url}\n{submission.project_dir}".encode())[:8]
@@ -85,7 +88,14 @@ def ingest_in_volume(
         if ws.untrusted_ran(image):
             raise IngestError(f"volume {ws.volume} ran untrusted code but has no trusted "
                               "snapshot; remove it and start from scratch")
-        cache = ws.fetch_cache(image, manifest)
+        # Downloads can fail transiently; the step is idempotent and trusted.
+        cache = None
+        for attempt in range(1, CACHE_ATTEMPTS + 1):
+            cache = ws.fetch_cache(image, manifest)
+            if cache is None or cache.ok or attempt == CACHE_ATTEMPTS:
+                break
+            log.append("cache.retry", {"artifact_key": key, "attempt": attempt,
+                                       "output_sha256": sha256_hex(cache.output.encode())})
         if cache is not None:
             _step(cache, "cache", log)
         heads = ws.package_heads(image, manifest)
