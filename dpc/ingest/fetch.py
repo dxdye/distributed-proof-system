@@ -70,6 +70,6 @@ def fetch_dependencies(project: Path, manifest: Manifest) -> list[FetchedPackage
             )
         if not pkg.rev or not COMMIT_RE.match(pkg.rev):
             raise FetchError(f"package {pkg.name!r} is not pinned to a commit")
-        clone_at_commit(pkg.url, pkg.rev, project / manifest.packages_dir / pkg.name)
+        clone_at_commit(pkg.url, pkg.rev, project / manifest.packages_dir / pkg.dir_name)
         fetched.append(FetchedPackage(pkg.name, pkg.url, pkg.rev))
     return fetched

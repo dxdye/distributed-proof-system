@@ -32,6 +32,18 @@ def test_hardened_package_from_a_fork_is_rejected() -> None:
     validate_packages(Manifest(packages=(MATHLIB, OTHER)))  # official + ordinary: fine
 
 
+def test_escaped_package_names_map_to_plain_directories() -> None:
+    """Manifests store `«tate-curves-theta»`; Lake's directory is `tate-curves-theta`
+    (observed on openai/math)."""
+    pkg = OTHER.model_copy(update={"name": "«tate-curves-theta»"})
+    assert pkg.dir_name == "tate-curves-theta"
+    assert OTHER.dir_name == "carleson"
+    ws = VolumeWorkspace(DockerExecutor(), "vol")
+    from dpc.lean.project import lean_path
+    paths = lean_path(ws.project, Manifest(packages=(pkg,)))
+    assert paths[1].endswith(".lake/packages/tate-curves-theta/.lake/build/lib/lean")
+
+
 def test_url_normalisation() -> None:
     assert is_official(MATHLIB)
     assert is_official(MATHLIB.model_copy(update={"url": MATHLIB.url.removesuffix(".git") + "/"}))

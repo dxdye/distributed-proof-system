@@ -48,6 +48,15 @@ class Package(BaseModel):
     sub_dir: str | None = Field(default=None, alias="subDir")
     dir: str | None = None
 
+    @property
+    def dir_name(self) -> str:
+        """Directory below the packages dir. Manifests store Lean-escaped names
+        (`«tate-curves-theta»`), Lake's directories use the plain name."""
+        name = self.name
+        if name.startswith("«") and name.endswith("»"):
+            name = name[1:-1]
+        return name
+
 
 class Manifest(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, populate_by_name=True)
@@ -81,7 +90,7 @@ def lean_path(root: PurePosixPath | Path, manifest: Manifest) -> list[str]:
     pkg_root = root / manifest.packages_dir
     dirs = [root / ".lake" / "build" / "lib" / "lean"]
     for pkg in manifest.packages:
-        base = pkg_root / pkg.name
+        base = pkg_root / pkg.dir_name
         if pkg.sub_dir:
             base = base / pkg.sub_dir
         dirs.append(base / ".lake" / "build" / "lib" / "lean")

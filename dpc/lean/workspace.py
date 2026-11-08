@@ -214,7 +214,7 @@ class VolumeWorkspace:
         if not reused:
             packages = self.project / manifest.packages_dir
             script = " && ".join(
-                _clone_script(p.url or "", p.rev or "", packages / p.name)
+                _clone_script(p.url or "", p.rev or "", packages / p.dir_name)
                 for p in manifest.packages
             ) or "true"
             self._require(self._script(image, script, network=True), "cloning dependencies")
@@ -250,7 +250,7 @@ class VolumeWorkspace:
         packages = self.project / manifest.packages_dir
         script = "; ".join(
             f"printf '%s %s\\n' {shlex.quote(p.name)} "
-            f"\"$(git -C {shlex.quote(str(packages / p.name))} rev-parse HEAD)\""
+            f"\"$(git -C {shlex.quote(str(packages / p.dir_name))} rev-parse HEAD)\""
             for p in manifest.packages
         ) or "true"
         out = self._require(self._script(image, script, network=False), "reading revisions")
@@ -288,7 +288,8 @@ class VolumeWorkspace:
         is *detected* instead: see :func:`compare_digests`. ``save=True`` stores
         the result as the trusted snapshot (only right after the trusted steps)."""
         packages = self.project / manifest.packages_dir
-        dirs = [shlex.quote(str(packages / p.name)) for p in manifest.packages if is_official(p)]
+        dirs = [shlex.quote(str(packages / p.dir_name))
+                for p in manifest.packages if is_official(p)]
         if not dirs:
             return {}
         names = " -o ".join(f"-name {shlex.quote(p)}" for p in self.DIGEST_PATTERNS)
@@ -351,8 +352,8 @@ class VolumeWorkspace:
         parts = ['echo "@core"; cd "$(lean --print-prefix)/lib/lean" && find . -name "*.olean"']
         for pkg in manifest.packages:
             if is_official(pkg):
-                parts.append(f"echo @{shlex.quote(pkg.name)}; "
-                             f"git -C {shlex.quote(str(packages / pkg.name))} ls-files '*.lean'")
+                where = shlex.quote(str(packages / pkg.dir_name))
+                parts.append(f"echo @{shlex.quote(pkg.name)}; git -C {where} ls-files '*.lean'")
         out = self._require(self._script(image, "; ".join(parts), network=False),
                             "listing official modules")
         result: dict[str, set[str]] = {}
