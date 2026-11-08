@@ -26,12 +26,12 @@ RUN curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-ini
  && lean --version
 
 COPY --chown=lean:lean lean/analyzer /opt/dpc/analyzer
-COPY --chown=lean:lean sandbox/analyze.sh /opt/dpc/analyze.sh
+COPY --chown=lean:lean sandbox/run-tool.sh /opt/dpc/run-tool.sh
 
 RUN cd /opt/dpc/analyzer \
  && rm -rf .lake \
  && echo "$LEAN_TOOLCHAIN" > lean-toolchain \
  && lake build \
- && chmod 0555 /opt/dpc/analyze.sh
+ && chmod 0555 /opt/dpc/run-tool.sh
 
 WORKDIR /work

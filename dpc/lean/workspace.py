@@ -33,11 +33,13 @@ from dpc.audit.canonical import sha256_hex
 from dpc.ingest.fetch import FetchError
 from dpc.lean.executor import (
     REPO_ROOT,
+    TOOL_ENTRY,
     DockerExecutor,
     Mode,
     Mount,
     RunResult,
     _analyzer_args,
+    _mutate_args,
     _run,
 )
 from dpc.lean.project import COMMIT_RE, Manifest, Package, ProjectError, lean_path
@@ -319,18 +321,27 @@ class VolumeWorkspace:
         return self.executor._exec(image, ["lake", "build", *targets],
                                    self.build_mounts(manifest), env)
 
-    def analyze(self, image: str, manifest: Manifest, *, root: str, imports: Sequence[str],
-                mode: Mode, out: Path) -> RunResult:
+    def _tool(self, image: str, manifest: Manifest, program: str, args: Sequence[str],
+              out: Path) -> RunResult:
+        """Run an analyzer tool: everything read-only except the output directory."""
         out.parent.mkdir(parents=True, exist_ok=True)
-        work, out_dir = self.executor.WORK, self.executor.OUT
+        work = self.executor.WORK
         mounts = [
             Mount(self.volume, str(work), volume=True, subpath=self._sub(self.project)),
-            Mount(out.parent, str(out_dir), read_only=False),
+            Mount(out.parent, str(self.executor.OUT), read_only=False),
         ]
-        command = ["/opt/dpc/analyze.sh",
-                   *_analyzer_args(root, imports, mode, str(out_dir / out.name))]
         env = {"LEAN_PATH": ":".join(lean_path(work, manifest)), "HOME": "/tmp"}
-        return self.executor._exec(image, command, mounts, env)
+        return self.executor._exec(image, [TOOL_ENTRY, program, *args], mounts, env)
+
+    def analyze(self, image: str, manifest: Manifest, *, root: str, imports: Sequence[str],
+                mode: Mode, out: Path) -> RunResult:
+        args = _analyzer_args(root, imports, mode, str(self.executor.OUT / out.name))
+        return self._tool(image, manifest, "dpc-analyze", args, out)
+
+    def mutate(self, image: str, manifest: Manifest, *, imports: Sequence[str],
+               decls: Sequence[str], out: Path) -> RunResult:
+        args = _mutate_args(imports, decls, str(self.executor.OUT / out.name))
+        return self._tool(image, manifest, "dpc-mutate", args, out)
 
     # ----------------------------------------------------- hardening evidence
     def official_modules(self, image: str, manifest: Manifest) -> dict[str, frozenset[str]]:

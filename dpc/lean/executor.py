@@ -32,6 +32,8 @@ Mode = Literal["core", "metadata"]
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ANALYZER_SRC = REPO_ROOT / "lean" / "analyzer"
 DOCKERFILE = REPO_ROOT / "sandbox" / "lean.Dockerfile"
+#: Entry script in the sandbox image: `run-tool.sh <program> <args…>`.
+TOOL_ENTRY = "/opt/dpc/run-tool.sh"
 
 
 @dataclass(frozen=True)
@@ -82,6 +84,15 @@ def _analyzer_args(root: str, imports: Sequence[str], mode: Mode, out: str) -> l
     return [*args, "--out", out]
 
 
+def _mutate_args(imports: Sequence[str], decls: Sequence[str], out: str) -> list[str]:
+    args: list[str] = []
+    for module in imports:
+        args += ["--import", module]
+    for decl in decls:
+        args += ["--decl", decl]
+    return [*args, "--out", out]
+
+
 def _run(argv: Sequence[str], *, cwd: Path | None, env: dict[str, str] | None,
          timeout_s: float, on_timeout: Sequence[str] | None = None) -> RunResult:
     start = time.monotonic()
@@ -115,13 +126,13 @@ class HostExecutor:
         self.cache_dir = cache_dir
         self.timeout_s = timeout_s
 
-    def analyzer_exe(self, toolchain: str) -> Path:
-        """Analyzer built for exactly ``toolchain`` (olean formats are version-bound)."""
+    def analyzer_exe(self, toolchain: str, program: str = "dpc-analyze") -> Path:
+        """Analyzer tools built for exactly ``toolchain`` (olean formats are version-bound)."""
         key = f"{toolchain_slug(toolchain)}-{analyzer_source_hash()[:12]}"
         target = self.cache_dir / "analyzer" / key
-        exe = target / ".lake" / "build" / "bin" / (
-            "dpc-analyze.exe" if sys.platform == "win32" else "dpc-analyze"
-        )
+        bin_dir = target / ".lake" / "build" / "bin"
+        suffix = ".exe" if sys.platform == "win32" else ""
+        exe = bin_dir / f"{program}{suffix}"
         if exe.is_file():
             return exe
         if target.exists():
@@ -136,17 +147,26 @@ class HostExecutor:
     def build(self, project: Path, targets: Sequence[str]) -> RunResult:
         return _run(["lake", "build", *targets], cwd=project, env=None, timeout_s=self.timeout_s)
 
-    def analyze(
-        self, project: Path, *, root: str, imports: Sequence[str], mode: Mode, out: Path
-    ) -> RunResult:
-        exe = self.analyzer_exe(read_toolchain(project))
+    def _tool(self, project: Path, program: str, args: Sequence[str], out: Path) -> RunResult:
+        exe = self.analyzer_exe(read_toolchain(project), program)
         out.parent.mkdir(parents=True, exist_ok=True)
         sysroot = _run(["lean", "--print-prefix"], cwd=project, env=None, timeout_s=60)
         if not sysroot.ok:
             return sysroot
         env = runtime_env(Path(sysroot.stdout.strip()), lean_path(project, read_manifest(project)))
-        argv = [str(exe), *_analyzer_args(root, imports, mode, str(out))]
-        return _run(argv, cwd=project, env=env, timeout_s=self.timeout_s)
+        return _run([str(exe), *args], cwd=project, env=env, timeout_s=self.timeout_s)
+
+    def analyze(
+        self, project: Path, *, root: str, imports: Sequence[str], mode: Mode, out: Path
+    ) -> RunResult:
+        return self._tool(project, "dpc-analyze",
+                          _analyzer_args(root, imports, mode, str(out)), out)
+
+    def mutate(
+        self, project: Path, *, imports: Sequence[str], decls: Sequence[str], out: Path
+    ) -> RunResult:
+        """Mutants and equivalence filter (M2) for the given declarations."""
+        return self._tool(project, "dpc-mutate", _mutate_args(imports, decls, str(out)), out)
 
 
 # -------------------------------------------------------------------- docker
@@ -271,14 +291,23 @@ class DockerExecutor:
         (project / ".lake" / "build").mkdir(parents=True, exist_ok=True)
         return self._exec(image, ["lake", "build", *targets], self.build_mounts(project))
 
-    def analyze(
-        self, project: Path, *, root: str, imports: Sequence[str], mode: Mode, out: Path
-    ) -> RunResult:
+    def _tool(self, project: Path, program: str, args: Sequence[str], out: Path) -> RunResult:
         image = self.ensure_image(read_toolchain(project))
         out.parent.mkdir(parents=True, exist_ok=True)
         search = lean_path(self.WORK, read_manifest(project))
-        command = ["/opt/dpc/analyze.sh",
-                   *_analyzer_args(root, imports, mode, str(self.OUT / out.name))]
         # The container is Linux: ':' separates search path entries.
-        return self._exec(image, command, self.analyze_mounts(project, out.parent),
+        return self._exec(image, [TOOL_ENTRY, program, *args],
+                          self.analyze_mounts(project, out.parent),
                           env={"LEAN_PATH": ":".join(search)})
+
+    def analyze(
+        self, project: Path, *, root: str, imports: Sequence[str], mode: Mode, out: Path
+    ) -> RunResult:
+        return self._tool(project, "dpc-analyze",
+                          _analyzer_args(root, imports, mode, str(self.OUT / out.name)), out)
+
+    def mutate(
+        self, project: Path, *, imports: Sequence[str], decls: Sequence[str], out: Path
+    ) -> RunResult:
+        return self._tool(project, "dpc-mutate",
+                          _mutate_args(imports, decls, str(self.OUT / out.name)), out)
