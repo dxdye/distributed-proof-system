@@ -1,6 +1,6 @@
 name = "dpc-analyzer"
 version = "0.1.0"
-defaultTargets = ["dpc-analyze"]
+defaultTargets = ["dpc-analyze", "dpc-mutate"]
 
 # Deliberately no dependencies (no Mathlib): the analyzer is rebuilt for the
 # exact toolchain of every analysed repository (see docs/adr/0004), which only
@@ -13,4 +13,9 @@ name = "DpcAnalyzer"
 name = "dpc-analyze"
 root = "Main"
 # Imported modules' `initialize` blocks are interpreted when extensions load.
+supportInterpreter = true
+
+[[lean_exe]]
+name = "dpc-mutate"
+root = "MutateMain"
 supportInterpreter = true
