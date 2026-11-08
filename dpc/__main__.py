@@ -6,14 +6,18 @@ import argparse
 import json
 import sys
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 from dpc.analysis import Analysis, assign_domains, graph_diff, merge, reverse_degree, summarize
 from dpc.audit import AuditLog
+from dpc.domain.decision import DecisionParams
+from dpc.domain.trust import RoleThresholds
 from dpc.ingest import Submission, ingest
 from dpc.ingest.volume import ingest_in_volume
 from dpc.lean.executor import DockerExecutor, HostExecutor, LeanExecutor, Limits
 from dpc.requirements import load_requirements
+from dpc.sim import ReviewerType, SimConfig, simulate
 
 DEFAULT_CACHE = Path(".dpc-cache")
 
@@ -99,6 +103,26 @@ def cmd_audit_verify(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def cmd_simulate(args: argparse.Namespace) -> int:
+    """Agent-based simulation of class-A review (M3)."""
+    reviewers = [ReviewerType("honest", args.honest)]
+    if args.clickers:
+        reviewers.append(ReviewerType("clicker", args.clickers, behaviour="clicker"))
+    if args.lookup:
+        reviewers.append(ReviewerType("lookup", args.lookup, behaviour="lookup"))
+    base = SimConfig(
+        items=args.items, error_rate=args.error_rate, blind_share=args.blind_share,
+        honeypot_share=args.honeypot_share, reviewers=tuple(reviewers),
+        decision=DecisionParams(prior_error=args.error_rate, delta_a=args.delta_a,
+                                k_min=args.k_min, max_rounds=args.max_rounds),
+        roles=RoleThresholds(theta_pv=args.theta_pv, theta_pvv=args.theta_pvv),
+    )
+    seeds = range(args.seed, args.seed + args.runs)
+    runs = [simulate(replace(base, seed=s)).as_dict() for s in seeds]
+    _print(runs[0] if len(runs) == 1 else runs)
+    return 0
+
+
 def cmd_requirements(_: argparse.Namespace) -> int:
     reqs = load_requirements()
     _print({"total": len(reqs),
@@ -144,6 +168,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("log")
     p.add_argument("--head", help="expected head hash (detects truncation)")
     p.set_defaults(func=cmd_audit_verify)
+
+    p = sub.add_parser("simulate", help="agent-based simulation of class-A review (M3)")
+    p.add_argument("--items", type=int, default=300)
+    p.add_argument("--error-rate", type=float, default=0.05)
+    p.add_argument("--blind-share", type=float, default=0.0, help="ρ, correlated blind spots")
+    p.add_argument("--honeypot-share", type=float, default=0.1, help="h")
+    p.add_argument("--honest", type=int, default=40)
+    p.add_argument("--clickers", type=int, default=0, help="'always correct' reviewers")
+    p.add_argument("--lookup", type=int, default=0, help="honeypot lookup attackers")
+    p.add_argument("--delta-a", type=float, default=1e-3)
+    p.add_argument("--k-min", type=int, default=3)
+    p.add_argument("--max-rounds", type=int, default=4)
+    p.add_argument("--theta-pv", type=float, default=0.45)
+    p.add_argument("--theta-pvv", type=float, default=0.7)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--runs", type=int, default=1, help="replications with consecutive seeds")
+    p.set_defaults(func=cmd_simulate)
 
     p = sub.add_parser("requirements", help="requirement catalogue statistics")
     p.set_defaults(func=cmd_requirements)

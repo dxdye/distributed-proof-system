@@ -24,9 +24,9 @@ makes the reliability of that judgement measurable:
 | Milestone | Content | State |
 |---|---|---|
 | M0 | Scaffold, audit log, requirement traceability | ✅ |
-| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ (case studies pending) |
+| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ (case studies running) |
 | M2 | Mutation generator and equivalence filter (honeypots) | planned |
-| M3 | Trust model and simulation | planned |
+| M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation | 🚧 domain core and simulation done, parameter study open |
 | M4 | Web prototype for class A, pilot | planned |
 | M5 | Class B, certificate, signed report | planned |
 
@@ -63,8 +63,20 @@ pixi run dpc ingest submission.json --workdir work/run1 --log data/audit.sqlite
 pixi run dpc audit-verify data/audit.sqlite
 ```
 
-Repositories that depend on Mathlib are not supported yet: fetching Mathlib's
-`.olean` cache safely is still open (see ADR 0005).
+Real-world repositories (e.g. with Mathlib) run in a Docker volume, with the
+Mathlib cache fetched without executing the submission (ADR 0005):
+
+```bash
+pixi run dpc ingest submission.json --executor docker-volume --workdir work/run1 \
+    --cpus 7 --memory 24g --timeout-h 6
+```
+
+Simulate the review process (M3), e.g. with "always correct" clickers and
+honeypot lookup attackers:
+
+```bash
+pixi run dpc simulate --items 300 --clickers 5 --lookup 5 --error-rate 0.1 --runs 3
+```
 
 ## Layout
 
@@ -73,7 +85,10 @@ dpc/                  Python package
   audit/              canonical JSON, hash-chained audit log (C11)
   analysis/           analyzer output model, TCB/units, axioms, merge, graph diff, domains
   lean/               Lake projects, host and Docker executors (C1, C2, C7)
-  ingest/             submission, trusted fetch, ingest pipeline
+  ingest/             submission, trusted fetch, ingest pipeline (host and Docker volume)
+  domain/             pure review model: trust, decision rule, Dawid–Skene, sampling,
+                      lenses, leases, PRL and priority, attention, forecast, anomalies
+  sim/                agent-based simulation of the review process (M3)
   tools/              pytest traceability plugin
 lean/analyzer/        Lean 4 metaprogram `dpc-analyze` (TCB extraction, JSON Lines export)
 lean/fixtures/        test projects: `basic` (hand-checked TCB), `redteam` (sandbox escape attempts)
@@ -90,6 +105,7 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 - [0003](docs/adr/0003-central-coordination-distributed-compute.md) Central coordination, distributed computation
 - [0004](docs/adr/0004-tcb-extraction.md) Extracting the trusted computing base
 - [0005](docs/adr/0005-sandbox-and-dependency-fetch.md) Sandbox and dependency fetch
+- [0006](docs/adr/0006-honeypot-sources.md) Honeypot sources
 
 ## Conventions
 
