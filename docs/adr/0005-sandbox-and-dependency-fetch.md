@@ -29,8 +29,13 @@ specific to a particular case study.
    the submission's packages directory (same names, same pinned revisions).
    `lake exe cache get` then runs only code from official packages. Afterwards
    all dependencies are checked to still be at their pinned revisions.
-3. *Snapshot:* SHA-256 of every source and build artifact of the hardened
-   packages.
+3. *Snapshot:* SHA-256 of every source, build artifact and configuration file
+   of the hardened packages (`*.lean`, `*.olean*`, `*.ilean`, `*.ir`,
+   `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`). Lake's own
+   bookkeeping (`*.hash`, `*.trace`) is excluded: the first Navier–Stokes run
+   showed Lake legitimately rewriting an `.olean.hash` while the `.olean` stayed
+   identical. The snapshot is stored in the volume *outside* every mount used
+   by untrusted steps.
 4. *Untrusted build (sandbox, no network):* `docker run` with `--network none`,
    read-only root filesystem, read-only source tree, only `.lake/` writable,
    all capabilities dropped, `no-new-privileges`, unprivileged user, limits for
@@ -42,6 +47,14 @@ specific to a particular case study.
    output directory; core and metadata runs are cross-checked (ADR 0004); every
    module marked hardened must be shipped by the toolchain or an official
    package (`dpc/analysis/hardening.py`).
+
+**No trusted step after foreign code.** A marker is set before the first
+untrusted step. A volume that has run foreign code never runs a trusted step
+again (network, Lake on hardened packages): an untrusted build could have
+rewritten a hardened package's lakefile, which the next cache fetch would
+execute with network access. A reused volume is first compared with its stored
+snapshot; a mismatch, or a marker without snapshot, means: discard the volume
+and start from scratch.
 
 **Where the files live.** Real submissions are processed in a Docker named
 volume (`VolumeWorkspace`), not on the host: repositories may contain file

@@ -108,6 +108,15 @@ class IntegrityReport:
         return not self.changed and not self.added
 
 
+def _parse_digests(text: str) -> dict[str, str]:
+    digests: dict[str, str] = {}
+    for line in text.splitlines():
+        digest, _, path = line.partition("  ")
+        if path:
+            digests[path] = digest
+    return digests
+
+
 def compare_digests(before: Mapping[str, str], after: Mapping[str, str]) -> IntegrityReport:
     """Any change to a hardened source or `.olean` is blocking: either the build
     tampered with it, or it rebuilt a hardened module outside the trusted step."""
@@ -247,29 +256,52 @@ class VolumeWorkspace:
         return {k: v.strip() for k, v in heads.items()}
 
     # ------------------------------------------- integrity of the hardened set
-    DIGEST_PATTERNS = ("*.lean", "*.olean", "*.olean.*", "*.ilean", "*.ir")
+    # Only content that Lean reads. Lake's own bookkeeping (`*.hash`, `*.trace`,
+    # `*.log.json`) may legitimately be rewritten by any build and is excluded.
+    # Package configuration is included: a tampered lakefile would otherwise run
+    # with network access in the next trusted step.
+    DIGEST_PATTERNS = (
+        "*.lean", "*.olean", "*.olean.server", "*.olean.private", "*.ilean", "*.ir",
+        "lakefile.toml", "lake-manifest.json", "lean-toolchain",
+    )
+    #: Trusted snapshot, outside every mount used by untrusted steps.
+    SNAPSHOT = PurePosixPath("/ws/.dpc-hardened.sha256")
+    #: Set before the first untrusted step. From then on no trusted step
+    #: (network, Lake on hardened packages) may run in this volume again.
+    UNTRUSTED_MARKER = PurePosixPath("/ws/.dpc-untrusted-ran")
 
-    def digest_hardened(self, image: str, manifest: Manifest) -> dict[str, str]:
+    def mark_untrusted(self, image: str) -> None:
+        self._require(self._script(image, f"touch {self.UNTRUSTED_MARKER}", network=False),
+                      "writing the untrusted marker")
+
+    def untrusted_ran(self, image: str) -> bool:
+        return self._script(image, f"test -e {self.UNTRUSTED_MARKER}", network=False).ok
+
+    def digest_hardened(self, image: str, manifest: Manifest, *, save: bool = False
+                        ) -> dict[str, str]:
         """SHA-256 of every source and build artifact of the official packages.
 
-        Taken right after the trusted cache step and again after the untrusted
-        build. The build cannot be denied write access to these packages (Lake
-        caches input hashes next to source files, e.g. in ProofWidgets), so
-        tampering is *detected* instead: see :func:`compare_digests`."""
+        The build cannot be denied write access to these packages (Lake caches
+        input hashes next to source files, e.g. in ProofWidgets), so tampering
+        is *detected* instead: see :func:`compare_digests`. ``save=True`` stores
+        the result as the trusted snapshot (only right after the trusted steps)."""
         packages = self.project / manifest.packages_dir
         dirs = [shlex.quote(str(packages / p.name)) for p in manifest.packages if is_official(p)]
         if not dirs:
             return {}
         names = " -o ".join(f"-name {shlex.quote(p)}" for p in self.DIGEST_PATTERNS)
+        target = shlex.quote(str(self.SNAPSHOT)) if save else "/tmp/digest"
         script = (f"find {' '.join(dirs)} -type f \\( {names} \\) -print0 "
-                  "| xargs -0 -r -P 8 -n 512 sha256sum")
+                  f"| xargs -0 -r -P 8 -n 512 sha256sum > {target} && cat {target}")
         out = self._require(self._script(image, script, network=False), "hashing hardened files")
-        digests: dict[str, str] = {}
-        for line in out.stdout.splitlines():
-            digest, _, path = line.partition("  ")
-            if path:
-                digests[path] = digest
-        return digests
+        return _parse_digests(out.stdout)
+
+    def trusted_snapshot(self, image: str) -> dict[str, str] | None:
+        """The snapshot saved after the trusted steps, if this volume has one.
+        Reused volumes must compare against it — re-snapshotting after an
+        untrusted build had run would bless any tampering."""
+        probe = self._script(image, f"cat {shlex.quote(str(self.SNAPSHOT))}", network=False)
+        return _parse_digests(probe.stdout) if probe.ok else None
 
     # ----------------------------------------------- 3./4. build and analyse
     def build_mounts(self, manifest: Manifest) -> list[Mount]:

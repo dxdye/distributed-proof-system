@@ -79,20 +79,36 @@ def ingest_in_volume(
     )
 
     image = executor.ensure_image(fetched.toolchain)
-    cache = ws.fetch_cache(image, manifest)
-    if cache is not None:
-        _step(cache, "cache", log)
-    heads = ws.package_heads(image, manifest)
-    drift = sorted(p.name for p in manifest.packages if heads.get(p.name) != p.rev)
-    if drift:
-        log.append("repo.drift", {"artifact_key": key, "packages": drift})
-        raise IngestError(f"dependencies no longer at their pinned revisions: {drift}")
+    snapshot = ws.trusted_snapshot(image)
+    if snapshot is None:
+        # Invariant: trusted steps only run in a volume that never saw foreign code.
+        if ws.untrusted_ran(image):
+            raise IngestError(f"volume {ws.volume} ran untrusted code but has no trusted "
+                              "snapshot; remove it and start from scratch")
+        cache = ws.fetch_cache(image, manifest)
+        if cache is not None:
+            _step(cache, "cache", log)
+        heads = ws.package_heads(image, manifest)
+        drift = sorted(p.name for p in manifest.packages if heads.get(p.name) != p.rev)
+        if drift:
+            log.append("repo.drift", {"artifact_key": key, "packages": drift})
+            raise IngestError(f"dependencies no longer at their pinned revisions: {drift}")
+        # Snapshot of the hardened set after the last trusted step (docs/adr/0005).
+        before = ws.digest_hardened(image, manifest, save=True)
+        log.append("hardened.snapshot", {"artifact_key": key, "files": len(before),
+                                         "sha256": _digest_of(before)})
+    else:
+        # Reused volume: verify against the stored snapshot before anything runs.
+        before = snapshot
+        current = compare_digests(before, ws.digest_hardened(image, manifest))
+        log.append("hardened.reverified", {"artifact_key": key, "ok": current.ok,
+                                           "changed": list(current.changed[:50]),
+                                           "added": list(current.added[:50])})
+        if not current.ok:
+            raise IngestError(f"volume {ws.volume} no longer matches its trusted snapshot; "
+                              "remove it and start from scratch")
 
-    # Snapshot of the hardened set after the last trusted step (docs/adr/0005).
-    before = ws.digest_hardened(image, manifest)
-    log.append("hardened.snapshot", {"artifact_key": key, "files": len(before),
-                                     "sha256": _digest_of(before)})
-
+    ws.mark_untrusted(image)
     build = ws.build(image, manifest, [submission.root_module])
     after = ws.digest_hardened(image, manifest)
     integrity = compare_digests(before, after)
