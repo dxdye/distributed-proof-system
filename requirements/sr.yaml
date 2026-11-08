@@ -1,0 +1,315 @@
+# System requirements SR-01 .. SR-60.
+#
+# Translated from the systems engineering document (draft 2026-10-13, structured
+# after ISO/IEC/IEEE 15288). "concept §x" refers to the concept paper.
+#
+# Fields
+#   text        requirement statement
+#   needs       stakeholder needs (SN-n) it traces back to
+#   verify      verification methods: I inspection, A analysis, D demonstration, T test
+#   milestone   milestone that primarily implements it (M0 scaffold, M1..M5 roadmap,
+#               M6 = after the roadmap)
+#
+# Tests link to requirements with `@pytest.mark.req("SR-xx")`;
+# `pixi run trace` renders the traceability matrix.
+
+SR-01:
+  text: For a repository at a fixed commit, the system shall run the build reproducibly (pinned lean-toolchain and lake-manifest.json).
+  needs: [1, 9]
+  verify: [T]
+  milestone: M1
+SR-02:
+  text: The system shall determine Ax(T) and report every deviation from Ax0 as a blocking finding.
+  needs: [1]
+  verify: [T]
+  milestone: M1
+SR-03:
+  text: The system shall compute TCB(T), TCB_new(T) and B(T) as defined in concept §2.
+  needs: [2]
+  verify: [T, A]
+  milestone: M1
+SR-04:
+  text: Every declaration in TCB_new(T) shall be assigned a domain. Maintainers can correct the assignment.
+  needs: [2]
+  verify: [D]
+  milestone: M1
+SR-05:
+  text: Class-A tickets shall be generated for 100 % of TCB_new(T).
+  needs: [1]
+  verify: [I, T]
+  milestone: M4
+SR-06:
+  text: The honeypot share h shall be configurable between 0 and 20 % (default 10 %). Honeypots shall be indistinguishable from real tickets in the user interface.
+  needs: [5]
+  verify: [T]
+  milestone: M2
+SR-07:
+  text: Mutants shall be type-correct and pass the equivalence filter (concept §5.1).
+  needs: [5]
+  verify: [T]
+  milestone: M2
+SR-08:
+  text: "Assignment shall enforce the exclusion rules: authorship, self-review, no pair repetition within Δ_pair."
+  needs: [5]
+  verify: [T]
+  milestone: M4
+SR-09:
+  text: A review shall capture verdict and justification, optionally a Lean evidence file. An "incorrect" verdict without justification is rejected.
+  needs: [1, 6]
+  verify: [D]
+  milestone: M4
+SR-10:
+  text: "Evidence shall be checked against the fixed commit: only axioms from Ax0, no sorry, time limit."
+  needs: [1, 5]
+  verify: [T]
+  milestone: M4
+SR-11:
+  text: The decision rule of concept §6.4 shall be implemented with configurable k_min, δ_A and R.
+  needs: [1]
+  verify: [A, T]
+  milestone: M3
+SR-12:
+  text: The trust model of concept §6 shall be maintained per person and domain, with decay λ.
+  needs: [5]
+  verify: [A, T]
+  milestone: M3
+SR-13:
+  text: PVV re-checks shall happen at rate ρ_u. Every "incorrect" verdict in class A shall go to a PVV.
+  needs: [5]
+  verify: [T]
+  milestone: M3
+SR-14:
+  text: The class-B sample shall be drawn with weights according to concept §7.1, and every π_d shall be logged.
+  needs: [1]
+  verify: [T]
+  milestone: M5
+SR-15:
+  text: The certificate shall bound ε_w using LB(q̂) (concept §7.2).
+  needs: [1]
+  verify: [A]
+  milestone: M5
+SR-16:
+  text: On a new commit, a graph diff shall invalidate exactly the tickets whose declaration or TCB dependencies have changed.
+  needs: [9]
+  verify: [T]
+  milestone: M1
+SR-17:
+  text: The report (concept §16) shall be reproducible from the audit log alone and shall be signed.
+  needs: [1]
+  verify: [D]
+  milestone: M5
+SR-18:
+  text: Findings shall be exportable as upstream issues (with evidence, commit and declaration).
+  needs: [6]
+  verify: [D]
+  milestone: M5
+SR-19:
+  text: All events shall be stored in an append-only, hash-chained audit log.
+  needs: [1, 5]
+  verify: [I, T]
+  milestone: M0
+SR-20:
+  text: "Foreign code shall run isolated: no network, read-only source tree, limits for CPU, RAM and time. Reason: Lean executes code during the build (macros, initialize, #eval)."
+  needs: [8]
+  verify: [T, I]
+  milestone: M1
+SR-21:
+  text: Class-A tickets shall be workable in the browser with an infoview (types, go-to-definition), without a local Lean installation.
+  needs: [3]
+  verify: [D]
+  milestone: M4
+SR-22:
+  text: The system shall process at least 2000 reviews per week.
+  needs: [7]
+  verify: [T]
+  milestone: M4
+SR-23:
+  text: Accounts are pseudonymous. Trust values are only published in aggregate (GDPR).
+  needs: [4, 5]
+  verify: [I]
+  milestone: M4
+SR-24:
+  text: The mapping from paper to Lean shall not come from the model or system that generated the proof, and PVs shall be able to mark it as wrong.
+  needs: [1]
+  verify: [I]
+  milestone: M6
+SR-25:
+  text: Operating costs in the pilot shall stay below X €/month (open, see assumptions).
+  needs: [7]
+  verify: [A]
+  milestone: M4
+SR-26:
+  text: Tickets shall be leased with duration τ = F⁻¹(1 − α) per class and difficulty, extendable once. Returning a ticket actively carries no penalty.
+  needs: [12, 15]
+  verify: [T]
+  milestone: M4
+SR-27:
+  text: Expired leases may only change the reliability r_u, not s, c or κ. r_u determines the WIP limit.
+  needs: [5, 15]
+  verify: [T]
+  milestone: M4
+SR-28:
+  text: Class-A tickets shall be issued in parallel to k_min + 1 persons (configurable).
+  needs: [12]
+  verify: [T]
+  milestone: M4
+SR-29:
+  text: Processing time shall be recorded. Reviews below t_min(i) are down-weighted according to concept §9.3.
+  needs: [5]
+  verify: [T]
+  milestone: M4
+SR-30:
+  text: The user interface shall not show a countdown, only the expected duration.
+  needs: [15]
+  verify: [I]
+  milestone: M4
+SR-31:
+  text: The five hand-over types of concept §9.4 shall be implemented, with at most 2 hand-overs per ticket and chain bookkeeping (n_eff).
+  needs: [5, 13]
+  verify: [T]
+  milestone: M6
+SR-32:
+  text: A recommendation may only increase the probability that the ticket appears in the recipient's choice set. Notes are not transferred. The recommendation graph is logged.
+  needs: [5, 13]
+  verify: [T]
+  milestone: M6
+SR-33:
+  text: For every ticket a difficulty b_i shall be estimated from static and empirical features (concept §8.1).
+  needs: [14]
+  verify: [A]
+  milestone: M3
+SR-34:
+  text: For tickets with b_i above a threshold, lenses shall be assigned greedily according to concept §8.4 and two Delphi rounds shall be held. Only round 1 counts as independent.
+  needs: [14]
+  verify: [T, A]
+  milestone: M6
+SR-35:
+  text: Every justified "incorrect" verdict shall create a claim ticket and must not be outvoted (concept §8.5).
+  needs: [1, 14]
+  verify: [T]
+  milestone: M4
+SR-36:
+  text: Aids that can anchor the verdict (e.g. back-translation) shall only be shown after round 1.
+  needs: [1]
+  verify: [I]
+  milestone: M6
+SR-37:
+  text: Honeypots shall only be resolved with delay and in batches.
+  needs: [5]
+  verify: [I]
+  milestone: M4
+SR-38:
+  text: "Choice sets: n_S random tickets from different papers, random order, no popularity display before the choice. ψ_j^(g) via Plackett–Luce per group."
+  needs: [5, 11]
+  verify: [T, A]
+  milestone: M4
+SR-39:
+  text: The attention signal shall not influence class-A coverage.
+  needs: [1]
+  verify: [I, T]
+  milestone: M4
+SR-40:
+  text: PRL and PRL_eff shall be computed across repository boundaries.
+  needs: [11]
+  verify: [T]
+  milestone: M5
+SR-41:
+  text: External accounts are linked via OAuth, each at most once. Prior according to concept §6.5 with cap a_max.
+  needs: [5, 10]
+  verify: [T]
+  milestone: M6
+SR-42:
+  text: Interim reports appear at a fixed cadence, with P50/P85 forecasts from the measured throughput (Monte Carlo).
+  needs: [12]
+  verify: [D, A]
+  milestone: M5
+SR-43:
+  text: Talent and scout signals shall only be collected and shown with explicit consent.
+  needs: [15]
+  verify: [I]
+  milestone: M6
+SR-44:
+  text: Labs pay a submission fee by size, in advance and independent of the result. They have no influence on assignment.
+  needs: [16]
+  verify: [I]
+  milestone: M6
+SR-45:
+  text: Payouts follow concept §12.5 and happen only after the PVV window. Apart from the bonus for confirmed findings they do not depend on the direction of the verdict.
+  needs: [5, 17]
+  verify: [T, A]
+  milestone: M6
+SR-46:
+  text: Credits shall be redeemable with a provider of choice.
+  needs: [16, 17]
+  verify: [D]
+  milestone: M6
+SR-47:
+  text: Reports shall always be published, including negative ones and those of withdrawn submissions.
+  needs: [1, 16]
+  verify: [I]
+  milestone: M5
+SR-48:
+  text: AI use during review must be declared. Models of the provider of the reviewed proof are excluded. Justifications are checked for suspicious similarity.
+  needs: [1, 5]
+  verify: [T, I]
+  milestone: M6
+SR-49:
+  text: Review data is openly licensed. Registration discloses the possible use as training data.
+  needs: [6, 15]
+  verify: [I]
+  milestone: M4
+SR-50:
+  text: Anyone employed or commissioned by the submitting lab must declare it and is excluded from class A of that submission.
+  needs: [5]
+  verify: [I, T]
+  milestone: M4
+SR-51:
+  text: Streak bonus and self-commitment may only grant or forgo bonuses. Deposits or deductions are not allowed.
+  needs: [15, 17]
+  verify: [I]
+  milestone: M6
+SR-52:
+  text: "Every confirmed finding creates a finding record (location, evidence, commit, finder) and is classified by location: axiom, definition, statement, proof internals, paper (concept §13.1)."
+  needs: [18]
+  verify: [T]
+  milestone: M6
+SR-53:
+  text: All results in R(d) are provisionally set to PRL ≤ 1 within 1 h, including propagation via PRL_eff. Authors and dependent projects are notified.
+  needs: [18, 11]
+  verify: [T]
+  milestone: M6
+SR-54:
+  text: The reach R(d) shall be computed across repository boundaries.
+  needs: [18]
+  verify: [T]
+  milestone: M6
+SR-55:
+  text: A semantic diff shall separate type changes in the TCB from pure proof changes. Only type changes create new class-A tickets.
+  needs: [2, 18]
+  verify: [T]
+  milestone: M6
+SR-56:
+  text: The implications P ⇒ P′ and P′ ⇒ P are attempted automatically. If that fails, a ticket for experts is created.
+  needs: [18]
+  verify: [T]
+  milestone: M6
+SR-57:
+  text: The outcome K0–K4 is recorded. Until it is clarified, K3 applies.
+  needs: [1, 18]
+  verify: [I]
+  milestone: M6
+SR-58:
+  text: Priority Prio(f) is computed according to concept §13.4. LOC must not enter Prio(f), only the effort E(f). The repair order follows WSJF.
+  needs: [18]
+  verify: [A]
+  milestone: M3
+SR-59:
+  text: "Every correction appears as an erratum in the report: statement before and after, outcome class, reach, PRL before → after."
+  needs: [1, 18]
+  verify: [I]
+  milestone: M6
+SR-60:
+  text: The system never modifies reviewed repositories itself. Corrections go through patches or pull requests and pass class A.
+  needs: [1, 6]
+  verify: [I]
+  milestone: M6
