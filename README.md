@@ -24,8 +24,8 @@ makes the reliability of that judgement measurable:
 | Milestone | Content | State |
 |---|---|---|
 | M0 | Scaffold, audit log, requirement traceability | ✅ |
-| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ (case studies running) |
-| M2 | Mutation generator and equivalence filter (honeypots) | planned |
+| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ Navier–Stokes measured ([report](docs/case-studies/navier-stokes.md)), QRH 7/8 running |
+| M2 | Mutation generator, local equivalence filter, honeypot sources and mixing | 🚧 works on fixtures; real-repository runs and further sources open |
 | M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation | 🚧 domain core and simulation done, parameter study open |
 | M4 | Web prototype for class A, pilot | planned |
 | M5 | Class B, certificate, signed report | planned |
@@ -86,12 +86,16 @@ dpc/                  Python package
   analysis/           analyzer output model, TCB/units, axioms, merge, graph diff, domains
   lean/               Lake projects, host and Docker executors (C1, C2, C7)
   ingest/             submission, trusted fetch, ingest pipeline (host and Docker volume)
+  honeypots/          mutant model, pluggable honeypot sources, mixing into the ticket stream
   domain/             pure review model: trust, decision rule, Dawid–Skene, sampling,
                       lenses, leases, PRL and priority, attention, forecast, anomalies
   sim/                agent-based simulation of the review process (M3)
   tools/              pytest traceability plugin
-lean/analyzer/        Lean 4 metaprogram `dpc-analyze` (TCB extraction, JSON Lines export)
-lean/fixtures/        test projects: `basic` (hand-checked TCB), `redteam` (sandbox escape attempts)
+lean/analyzer/        Lean 4 metaprograms `dpc-analyze` (TCB extraction) and `dpc-mutate`
+                      (mutants + local equivalence filter), JSON Lines export
+lean/fixtures/        test projects: `basic` (hand-checked TCB), `mutation` (known
+                      equivalent / non-equivalent mutants), `redteam` (sandbox escape attempts)
+docs/case-studies/    measurements on real formalizations
 sandbox/              Dockerfile and entry script of the sandbox image
 requirements/sr.yaml  system requirements SR-01 … SR-60
 docs/adr/             architecture decision records
@@ -106,6 +110,7 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 - [0004](docs/adr/0004-tcb-extraction.md) Extracting the trusted computing base
 - [0005](docs/adr/0005-sandbox-and-dependency-fetch.md) Sandbox and dependency fetch
 - [0006](docs/adr/0006-honeypot-sources.md) Honeypot sources
+- [0007](docs/adr/0007-local-equivalence-filter.md) Local equivalence filter for mutants
 
 ## Conventions
 
