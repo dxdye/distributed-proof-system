@@ -6,9 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import copy_fixture
 from dpc.honeypots import MutantSet
 from dpc.lean.executor import HostExecutor
+
+from conftest import copy_fixture
 
 pytestmark = [pytest.mark.lean, pytest.mark.req("SR-07")]
 
