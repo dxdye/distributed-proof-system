@@ -1,0 +1,5 @@
+# The sandbox image only needs the analyzer sources and the sandbox scripts.
+*
+!lean/analyzer
+!sandbox
+**/.lake
