@@ -1,0 +1,109 @@
+# Distributed Proof Check
+
+Reference implementation of a trust-based ticket system in which many
+volunteers harden large — in particular AI-generated — Lean 4 formalizations.
+
+The Lean kernel guarantees that a proof derives its formal statement from the
+axioms used. It does **not** guarantee that the statement means what the paper
+claims, that definitions mean what their names suggest, or that unusual axioms
+are intended. Distributed Proof Check closes that gap with human judgement and
+makes the reliability of that judgement measurable:
+
+- **Class A — trusted computing base (TCB):** every declaration the meaning of
+  the main theorem depends on is reviewed completely, by reviewers with proven
+  trust in the field.
+- **Class B — proof internals:** sampled, with a statistical error bound.
+- **Ground truth** comes from honeypots (mutated declarations with known
+  errors) and machine-checked refutations, so trust cannot be built by mutual
+  agreement alone.
+- **Everything is logged** in an append-only, hash-chained audit log from which
+  the public report is derived.
+
+## Status
+
+| Milestone | Content | State |
+|---|---|---|
+| M0 | Scaffold, audit log, requirement traceability | ✅ |
+| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ (case studies pending) |
+| M2 | Mutation generator and equivalence filter (honeypots) | planned |
+| M3 | Trust model and simulation | planned |
+| M4 | Web prototype for class A, pilot | planned |
+| M5 | Class B, certificate, signed report | planned |
+
+All 60 system requirements live in [`requirements/sr.yaml`](requirements/sr.yaml);
+`pixi run trace` shows which ones are verified by which tests.
+
+## Quick start
+
+Requirements: [pixi](https://pixi.sh), [elan](https://github.com/leanprover/elan)
+(for the Lean tests), Docker (for the sandbox).
+
+```bash
+pixi install
+pixi run test-fast        # offline tests, no Lean or Docker needed
+pixi run test             # everything; Lean/Docker tests are skipped if unavailable
+pixi run check            # lint + type check + tests
+pixi run trace            # tests + traceability matrix in build/traceability.md
+```
+
+Analyse a trusted local project (here: the fixture with a hand-checked TCB):
+
+```bash
+pixi run dpc analyze-local lean/fixtures/basic --root Basic.main_theorem
+```
+
+Ingest a foreign repository in the sandbox (submission format: interface I-1):
+
+```bash
+cat > submission.json <<'EOF'
+{"repo_url": "https://github.com/<org>/<repo>", "commit": "<40-char hash>",
+ "root": "<Namespace.mainTheorem>", "root_module": "<Module>", "paper_ref": "arXiv:…"}
+EOF
+pixi run dpc ingest submission.json --workdir work/run1 --log data/audit.sqlite
+pixi run dpc audit-verify data/audit.sqlite
+```
+
+Repositories that depend on Mathlib are not supported yet: fetching Mathlib's
+`.olean` cache safely is still open (see ADR 0005).
+
+## Layout
+
+```
+dpc/                  Python package
+  audit/              canonical JSON, hash-chained audit log (C11)
+  analysis/           analyzer output model, TCB/units, axioms, merge, graph diff, domains
+  lean/               Lake projects, host and Docker executors (C1, C2, C7)
+  ingest/             submission, trusted fetch, ingest pipeline
+  tools/              pytest traceability plugin
+lean/analyzer/        Lean 4 metaprogram `dpc-analyze` (TCB extraction, JSON Lines export)
+lean/fixtures/        test projects: `basic` (hand-checked TCB), `redteam` (sandbox escape attempts)
+sandbox/              Dockerfile and entry script of the sandbox image
+requirements/sr.yaml  system requirements SR-01 … SR-60
+docs/adr/             architecture decision records
+tests/                pytest; `tests/data` holds recorded analyzer output
+```
+
+## Design decisions
+
+- [0001](docs/adr/0001-english-as-project-language.md) English as the project language
+- [0002](docs/adr/0002-event-sourced-audit-log.md) The audit log is the single source of truth
+- [0003](docs/adr/0003-central-coordination-distributed-compute.md) Central coordination, distributed computation
+- [0004](docs/adr/0004-tcb-extraction.md) Extracting the trusted computing base
+- [0005](docs/adr/0005-sandbox-and-dependency-fetch.md) Sandbox and dependency fetch
+
+## Conventions
+
+- Python 3.12, type-annotated, `mypy --strict` on `dpc/`, `ruff` for style.
+- Tests reference requirements with `@pytest.mark.req("SR-xx")`; tests that need
+  Lean or Docker are marked `lean` / `docker`.
+- Commit messages: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
+
+## License
+
+Source-available for non-commercial use; commercial use is not permitted
+without a separate license from the copyright holder. The exact license text
+is being finalised. Contributions require agreeing to a contributor license
+agreement, so that the copyright stays with a single holder.
+
+Reviews and reports produced *by* the system are a separate matter: they are
+published under an open license (SR-49).
