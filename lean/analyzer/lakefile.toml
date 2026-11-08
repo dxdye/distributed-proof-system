@@ -1,0 +1,16 @@
+name = "dpc-analyzer"
+version = "0.1.0"
+defaultTargets = ["dpc-analyze"]
+
+# Deliberately no dependencies (no Mathlib): the analyzer is rebuilt for the
+# exact toolchain of every analysed repository (see docs/adr/0004), which only
+# stays cheap if it depends on Lean core alone.
+
+[[lean_lib]]
+name = "DpcAnalyzer"
+
+[[lean_exe]]
+name = "dpc-analyze"
+root = "Main"
+# Imported modules' `initialize` blocks are interpreted when extensions load.
+supportInterpreter = true
