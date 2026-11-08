@@ -6,7 +6,14 @@ equivalence filter).
 
 from dpc.honeypots.mixing import MAX_SHARE, Slot, TicketView, plan_stream
 from dpc.honeypots.model import SCHEMA, Mutant, MutantSet
-from dpc.honeypots.sources import HoneypotPool, HoneypotSource, MutantFileSource, Origin
+from dpc.honeypots.sources import (
+    HoneypotPool,
+    HoneypotSource,
+    MutantFileSource,
+    Origin,
+    SourceSpec,
+    load_registry,
+)
 
 __all__ = [
     "MAX_SHARE",
@@ -18,6 +25,8 @@ __all__ = [
     "MutantSet",
     "Origin",
     "Slot",
+    "SourceSpec",
     "TicketView",
+    "load_registry",
     "plan_stream",
 ]

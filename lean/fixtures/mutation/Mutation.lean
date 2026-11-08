@@ -32,6 +32,14 @@ theorem succ_pos' (n : Nat) : 0 < n + 1 := Nat.succ_pos n
 
 def double (n : Nat) : Nat := 2 * n
 
+/-- `n < 3` → `n < 2` makes the hypotheses contradictory: an automatic vacuity
+check finds that, so the mutant would measure the checker (auto-detected). -/
+theorem window (n : Nat) (h₁ : 2 ≤ n) (h₂ : n < 3) : n = 2 := by omega
+
+/-- `0 < n` → `0 ≤ n` changes the conjunct, but the whole body stays equivalent
+because of `1 ≤ n` (discarded by the component-level check). -/
+def positive (n : Nat) : Prop := 0 < n ∧ 1 ≤ n
+
 /-- A structure: its meaning lives in the fields of the constructor. -/
 structure Bounded (f : Nat → Nat) : Prop where
   bound : ∀ n, f n ≤ 10

@@ -72,15 +72,33 @@ def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
   let env ← getEnv
   let some ci := env.find? name | throwError "unknown declaration {name}"
   let scripts := if args.scripts.isEmpty then defaultScripts else args.scripts
+  let isTheorem := match ci with | .thmInfo _ => true | _ => false
   let mut out := #[]
   for (target, label, original, expected) in ← mutationTargets env ci do
     let mut candidates := ← siteMutations env original args.maxSites
     if target != .value then  -- ∀-telescopes: statements and constructor fields
       candidates := candidates ++ (← telescopeMutations original)
     let originalText ← pp original
+    let lintable := target != .value
+    let originalLints ← if lintable then lints original isTheorem args.heartbeats
+      else pure { vacuous := false, trivial := false }
     for m in candidates do
       let ok ← typeChecks m.result (some expected)
-      let proof ← if ok then proveWith m.goal scripts args.heartbeats else pure none
+      -- 1. local equivalence (always meaningful)
+      let mut proof ← if ok then proveWith m.goal scripts args.heartbeats else pure none
+      let mut level : Option String := proof.map fun _ => "local"
+      -- 2. component equivalence (definitions and structure fields only)
+      if ok && proof.isNone && target != .type then
+        let goal? ← match target with
+          | .value => valueGoal original m.result
+          | _ => fieldGoal original m.result
+        if let some goal := goal? then
+          proof ← proveWith goal scripts args.heartbeats
+          level := proof.map fun _ => "component"
+      -- 3. automatic detection (§5.2 checks) of the remaining candidates
+      let detected ← if ok && proof.isNone && lintable then
+          pure (autoDetected originalLints (← lints m.result isTheorem args.heartbeats))
+        else pure none
       let mutantText ← pp m.result
       out := out.push <| Json.mkObj [
         ("kind", toJson "mutant"),
@@ -91,7 +109,9 @@ def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
         ("detail", toJson m.detail),
         ("type_correct", toJson ok),
         ("equivalent", if ok then toJson proof.isSome else Json.null),
+        ("equivalent_by", (level.map toJson).getD Json.null),
         ("proof_script", (proof.map toJson).getD Json.null),
+        ("auto_detected", (detected.map toJson).getD Json.null),
         ("visible", toJson (mutantText != originalText)),
         ("original", toJson originalText),
         ("mutant", toJson mutantText),

@@ -47,6 +47,21 @@ including rejected ones, so the filter rates can be measured (verification
 - The filter is a semi-decision: a mutant that is equivalent but not provably
   so is kept. The manual sample check of verification §11.2 remains necessary.
 - The specification text of concept §5.1 should be updated accordingly
-  ("`M ↔ D`" → "the changed part is equivalent in its local context").
-- Further filters may follow, e.g. discarding mutants that an automatic lint
-  already detects (they would measure the linter, not the reviewer).
+  ("`M ↔ D`" → "the changed part is equivalent in its local context"); see
+  docs/spec-change-proposals.md, C-05.
+
+## Additions (2026-11-08)
+
+- **Component level.** For definition bodies and structure fields — which are
+  not proven truths — the filter additionally tries `∀ xs, body ↔ body'` (or
+  `=`), respectively `field ↔ field'` under the earlier binders. Example:
+  `0 < n ∧ 1 ≤ n` → `0 ≤ n ∧ 1 ≤ n` is not equivalent locally but as a whole.
+  Output field `equivalent_by`: `local` or `component`.
+- **Automatically detectable mutants.** The checks of concept §5.2 — vacuity
+  (`False` from the hypotheses or fields) and triviality (the statement falls
+  to trivial tactics) — run on the original and on each remaining mutant. A
+  mutant flagged where the original is not (`auto_detected`) would measure the
+  checker, not the reviewer, and is not usable. The same checks will run as
+  lints on real tickets (M4).
+- **Visibility.** A mutant whose rendering (with binder types) equals the
+  original's is not usable.

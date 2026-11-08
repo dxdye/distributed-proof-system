@@ -198,4 +198,80 @@ def proveWith (goal : Expr) (scripts : Array String) (heartbeats : Nat) :
     if ok then return some script
   return none
 
+/-! ## Component-level equivalence (definitions and structure fields)
+
+For a proven theorem only the local check is meaningful (ADR 0007). Definition
+bodies and structure fields are not truths, so equivalence of the *whole*
+component is meaningful there and catches changes compensated elsewhere, e.g.
+`0 < n ∧ 1 ≤ n` → `0 ≤ n ∧ 1 ≤ n`. -/
+
+/-- `∀ xs, body ↔ body'` (or `=` for non-propositions) for two definition bodies
+with the same λ-telescope. -/
+def valueGoal (original mutant : Expr) : MetaM (Option Expr) :=
+  lambdaTelescope original fun xs body => do
+    let body' := mutant.beta xs
+    if body'.isLambda then return none  -- telescopes do not line up
+    try
+      if ← isProp body then
+        return some (← mkForallFVars xs (mkApp2 (mkConst ``Iff) body body'))
+      return some (← mkForallFVars xs (← mkEq body body'))
+    catch _ => return none
+
+/-- `∀ earlier binders, field ↔ field'` for the first ∀-binder (constructor field)
+whose type differs between `original` and `mutant`. -/
+partial def fieldGoal (original mutant : Expr) (fvars : Array Expr := #[]) :
+    MetaM (Option Expr) := do
+  match original, mutant with
+  | .forallE n t b bi, .forallE _ t' b' _ =>
+    let ti := t.instantiateRev fvars
+    let ti' := t'.instantiateRev fvars
+    if ti == ti' then
+      withLocalDecl n bi ti fun x => fieldGoal b b' (fvars.push x)
+    else if ← isProp ti then
+      return some (← mkForallFVars fvars (mkApp2 (mkConst ``Iff) ti ti'))
+    else
+      return none
+  | _, _ => return none
+
+/-! ## Automatic detection (the checks of concept §5.2)
+
+A mutant that an automatic check already flags measures the checker, not the
+reviewer. Same checks as the machine-checked refutations of concept §5.2:
+* vacuity — `False` follows from the hypotheses (or structure fields),
+* triviality — the statement is proven by trivial tactics. -/
+
+def vacuityScripts : Array String :=
+  #["intros; omega", "intros; simp_all", "intros; contradiction", "intros; decide"]
+
+def trivialityScripts : Array String :=
+  #["intros; trivial", "intros; rfl", "intros; decide", "intros; omega", "intros; simp"]
+
+/-- `∀ xs, False` over the ∀-telescope of `t`, if it has a propositional binder. -/
+def vacuityGoal (t : Expr) : MetaM (Option Expr) :=
+  forallTelescope t fun xs _ => do
+    let hasHyp ← xs.anyM fun x => do isProp (← inferType x)
+    if !hasHyp then return none
+    return some (← mkForallFVars xs (mkConst ``False))
+
+/-- Result of the automatic checks on one statement. -/
+structure Lints where
+  vacuous : Bool
+  trivial : Bool
+
+def lints (t : Expr) (isTheorem : Bool) (heartbeats : Nat) : TermElabM Lints := do
+  let vacuous ← match ← vacuityGoal t with
+    | some g => pure (← proveWith g vacuityScripts heartbeats).isSome
+    | none => pure false
+  let trivial ← if isTheorem && (← isProp t) then
+      pure (← proveWith t trivialityScripts heartbeats).isSome
+    else pure false
+  return { vacuous, trivial }
+
+/-- Which check flags the mutant but not the original (the honeypot would then
+measure the checker). -/
+def autoDetected (original mutant : Lints) : Option String :=
+  if mutant.vacuous && !original.vacuous then some "vacuous"
+  else if mutant.trivial && !original.trivial then some "trivial"
+  else none
+
 end DpcAnalyzer.Mutate

@@ -14,7 +14,7 @@ from conftest import copy_fixture
 pytestmark = [pytest.mark.lean, pytest.mark.req("SR-07")]
 
 DECLS = ["Mut.pos_le", "Mut.total", "Mut.redundant", "Mut.exists_gt", "Mut.succ_pos'",
-         "Mut.double", "Mut.plusZero", "Mut.Bounded"]
+         "Mut.double", "Mut.plusZero", "Mut.Bounded", "Mut.window", "Mut.positive"]
 
 
 @pytest.fixture(scope="module")
@@ -42,7 +42,31 @@ def test_meaning_preserving_changes_are_discarded(mutants: MutantSet) -> None:
         "∀ (n : Nat), 1 < n → 2 ≤ n",  # dropped h₂ follows from h₁
         "∀ (n : Nat), 1 < n → 0 ≤ n → 2 ≤ n",  # 0 < n ↔ 0 ≤ n given 1 < n
         "∀ (n : Nat), 0 ≤ n + 1",  # 0 < n + 1 ↔ 0 ≤ n + 1
+        "fun (n : Nat) => 0 ≤ n ∧ 1 ≤ n",  # equivalent as a whole body (component)
+        "fun (n : Nat) => 0 < n ∧ 0 ≤ n",  # idem
     }
+
+
+def test_component_equivalence_for_definitions(mutants: MutantSet) -> None:
+    """Locally `0 < n ↔ 0 ≤ n` fails, but the whole body is equivalent because
+    of the other conjunct — meaningful for definitions, not for theorems."""
+    by_component = {m.mutant for m in mutants.mutants if m.equivalent_by == "component"}
+    assert by_component == {"fun (n : Nat) => 0 ≤ n ∧ 1 ≤ n", "fun (n : Nat) => 0 < n ∧ 0 ≤ n"}
+    assert "fun (n : Nat) => 0 < n ∧ 1 < n" in _texts(mutants, equivalent=False)
+
+
+def test_automatically_detectable_mutants_are_not_usable(mutants: MutantSet) -> None:
+    """Contradictory hypotheses are found by the vacuity check of concept §5.2;
+    such a honeypot would measure the checker, not the reviewer."""
+    vacuous = {m.mutant for m in mutants.mutants if m.auto_detected == "vacuous"}
+    assert vacuous == {
+        "∀ (n : Nat), 3 ≤ n → n < 3 → n = 3",
+        "∀ (n : Nat), 2 < n → n < 3 → n = 2",
+        "∀ (n : Nat), 2 ≤ n → n < 2 → n = 2",
+    }
+    assert not any(m.usable for m in mutants.mutants if m.auto_detected)
+    # pos_le is trivially provable itself, so trivial mutants of it are not flagged
+    assert not any(m.auto_detected for m in mutants.mutants if m.decl == "Mut.pos_le")
 
 
 def test_true_but_different_claims_are_kept(mutants: MutantSet) -> None:
@@ -78,8 +102,9 @@ def test_binder_types_are_rendered(mutants: MutantSet) -> None:
 def test_stats(mutants: MutantSet) -> None:
     stats = mutants.stats()
     assert stats["candidates"] == len(mutants.mutants)
-    assert stats["equivalent"] == 3
-    assert stats["usable"] == len(mutants.mutants) - 3
+    assert stats["equivalent"] == 5
+    assert stats["auto_detected"] == 3
+    assert stats["usable"] == len(mutants.mutants) - 5 - 3
 
 
 def test_unknown_declaration_fails(host_executor: HostExecutor, tmp_path: Path) -> None:

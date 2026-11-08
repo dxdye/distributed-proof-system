@@ -24,7 +24,9 @@ class Mutant(BaseModel):
     detail: str
     type_correct: bool
     equivalent: bool | None  # None if not type-correct
+    equivalent_by: Literal["local", "component"] | None = None
     proof_script: str | None
+    auto_detected: Literal["vacuous", "trivial"] | None = None  # §5.2 checks fire
     visible: bool = True  # rendering differs from the original
     original: str
     mutant: str
@@ -32,9 +34,11 @@ class Mutant(BaseModel):
 
     @property
     def usable(self) -> bool:
-        """Type-correct, not provably equivalent (SR-07) and visible: a change
-        that the rendering does not show cannot fairly be expected to be found."""
-        return self.type_correct and self.equivalent is False and self.visible
+        """Type-correct, not provably equivalent (SR-07), visible (a change the
+        rendering does not show cannot fairly be expected to be found), and not
+        already flagged by an automatic check (it would measure the checker)."""
+        return (self.type_correct and self.equivalent is False and self.visible
+                and self.auto_detected is None)
 
 
 @dataclass(frozen=True)
@@ -60,6 +64,9 @@ class MutantSet:
             "candidates": total,
             "type_incorrect": sum(not m.type_correct for m in self.mutants),
             "equivalent": sum(m.equivalent is True for m in self.mutants),
+            "equivalent_by_component": sum(m.equivalent_by == "component"
+                                           for m in self.mutants),
+            "auto_detected": sum(m.auto_detected is not None for m in self.mutants),
             "invisible": sum(m.type_correct and m.equivalent is False and not m.visible
                              for m in self.mutants),
             "usable": len(self.usable),

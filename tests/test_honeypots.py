@@ -16,7 +16,9 @@ from dpc.honeypots import (
     MutantFileSource,
     MutantSet,
     Origin,
+    SourceSpec,
     TicketView,
+    load_registry,
     plan_stream,
 )
 
@@ -100,3 +102,47 @@ def test_views_do_not_reveal_honeypots(mutant_file: Path) -> None:
     assert len(set(ids)) == len(ids)
     positions = [i for i, s in enumerate(slots) if s.is_honeypot]
     assert positions != list(range(len(slots) - len(positions), len(slots)))  # not appended
+
+
+# ------------------------------------------------- registry and policies (ADR 0006)
+def _registry(tmp_path: Path, mutant_file: Path) -> Path:
+    private = tmp_path / "private.jsonl"
+    lines = mutant_file.read_text("utf-8").splitlines()
+    private.write_text("\n".join([lines[0]] + [
+        line.replace('"mutant_hash": "', '"mutant_hash": "private:') for line in lines[1:6]
+    ]), "utf-8")
+    registry = tmp_path / "sources.yaml"
+    registry.write_text(
+        "sources:\n"
+        f"  - {{name: campaign, path: {mutant_file.name}, origin: own_repository, public: true}}\n"
+        "  - {name: seminar, path: private.jsonl, origin: private_pool, public: false}\n",
+        "utf-8")
+    return registry
+
+
+def test_registry_loads_sources_with_origin_and_visibility(tmp_path: Path,
+                                                         mutant_file: Path) -> None:
+    sources = load_registry(_registry(tmp_path, mutant_file))
+    assert [(s.name, s.origin, s.public) for s in sources] == [
+        ("campaign", Origin.OWN_REPOSITORY, True), ("seminar", Origin.PRIVATE_POOL, False)]
+    pool = HoneypotPool(sources, np.random.default_rng(0))
+    assert pool.composition() == {"own_repository/public": 20, "private_pool/private": 5}
+
+
+def test_private_pool_cannot_be_public() -> None:
+    with pytest.raises(ValueError, match="private pool"):
+        SourceSpec(name="x", path="p", origin=Origin.PRIVATE_POOL, public=True)
+
+
+@pytest.mark.parametrize("policy", ["prefer_private", "private_only"])
+def test_policies_avoid_publicly_retrievable_originals(tmp_path: Path, mutant_file: Path,
+                                                      policy: str) -> None:
+    sources = load_registry(_registry(tmp_path, mutant_file))
+    pool = HoneypotPool(sources, np.random.default_rng(1), policy=policy)  # type: ignore[arg-type]
+    first = [pool.draw() for _ in range(5)]
+    assert all(not c.public for c in first)  # private supply is used first
+    if policy == "private_only":
+        with pytest.raises(LookupError):
+            pool.draw()
+    else:
+        assert pool.draw().public  # then it falls back to public candidates

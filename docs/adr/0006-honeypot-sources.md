@@ -47,6 +47,14 @@ who game it do not reveal themselves).
      review is about. Covers fidelity errors only, and needs independent
      paraphrases for all tickets (SR-24).
 
+## Implementation (2026-11-08)
+
+Sources are listed in a YAML registry with origin (`own_repository`,
+`foreign_repository`, `private_pool`) and whether their originals are publicly
+retrievable; a private pool cannot be public. The pool draws spread over
+operators under a policy: `any`, `prefer_private` (non-public candidates first)
+or `private_only`. See `dpc/honeypots/sources.py`.
+
 ## Consequences
 
 - Sensitivity estimates of reviewers may be inflated by gaming until AS-5 is
