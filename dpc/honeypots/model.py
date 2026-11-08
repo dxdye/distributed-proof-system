@@ -18,20 +18,23 @@ class Mutant(BaseModel):
 
     kind: Literal["mutant"]
     decl: str
-    target: Literal["type", "value"]
+    target: Literal["type", "value", "ctor"]
+    component: str = ""  # e.g. the constructor for target "ctor"
     operator: str
     detail: str
     type_correct: bool
     equivalent: bool | None  # None if not type-correct
     proof_script: str | None
+    visible: bool = True  # rendering differs from the original
     original: str
     mutant: str
     mutant_hash: str
 
     @property
     def usable(self) -> bool:
-        """Type-correct and not provably equivalent (SR-07)."""
-        return self.type_correct and self.equivalent is False
+        """Type-correct, not provably equivalent (SR-07) and visible: a change
+        that the rendering does not show cannot fairly be expected to be found."""
+        return self.type_correct and self.equivalent is False and self.visible
 
 
 @dataclass(frozen=True)
@@ -57,6 +60,8 @@ class MutantSet:
             "candidates": total,
             "type_incorrect": sum(not m.type_correct for m in self.mutants),
             "equivalent": sum(m.equivalent is True for m in self.mutants),
+            "invisible": sum(m.type_correct and m.equivalent is False and not m.visible
+                             for m in self.mutants),
             "usable": len(self.usable),
             "by_operator": dict(sorted(Counter(m.operator for m in self.usable).items())),
         }

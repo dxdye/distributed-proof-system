@@ -32,6 +32,10 @@ theorem succ_pos' (n : Nat) : 0 < n + 1 := Nat.succ_pos n
 
 def double (n : Nat) : Nat := 2 * n
 
+/-- A structure: its meaning lives in the fields of the constructor. -/
+structure Bounded (f : Nat → Nat) : Prop where
+  bound : ∀ n, f n ≤ 10
+
 /-- A definition whose literal can be changed without changing its meaning:
 `n + 0 = n`, so the mutant `n + 0` → … is checked against the original. -/
 def plusZero (n : Nat) : Nat := n + 0

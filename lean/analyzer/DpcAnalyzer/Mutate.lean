@@ -32,11 +32,13 @@ namespace DpcAnalyzer.Mutate
 inductive Target where
   | type
   | value
+  | ctor  -- constructor of an inductive type / structure (its fields carry the meaning)
   deriving BEq
 
 def Target.toString : Target → String
   | .type => "type"
   | .value => "value"
+  | .ctor => "ctor"
 
 /-- One applied mutation. `goal` is the closed proposition whose proof shows
 that the change preserves meaning. -/

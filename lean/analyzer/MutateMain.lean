@@ -48,40 +48,54 @@ def parseArgs : List String → Args → Except String Args
 @[implemented_by enableInitializersExecution]
 opaque allowInitializers : BaseIO Unit
 
-def pp (e : Expr) : MetaM String := return toString (← ppExpr e)
+/-- Rendering for tickets and honeypots alike: binder types are always shown,
+otherwise a change hidden in a type (ℝ³ → ℝ⁴) would be invisible. -/
+def pp (e : Expr) : MetaM String :=
+  withOptions (fun o => o.setBool `pp.funBinderTypes true |>.setBool `pp.piBinderTypes true) do
+    return toString (← ppExpr e)
+
+/-- What is mutated in a declaration: `(target, label, original, expected type)`. -/
+def mutationTargets (env : Environment) (ci : ConstantInfo) :
+    MetaM (Array (Target × String × Expr × Expr)) := do
+  let mut out := #[(Target.type, "", ci.type, ← inferType ci.type)]
+  match ci with
+  | .defnInfo v => out := out.push (.value, "", v.value, ci.type)
+  | .inductInfo v =>
+    for c in v.ctors do
+      if let some cinfo := env.find? c then
+        out := out.push (.ctor, toString c, cinfo.type, ← inferType cinfo.type)
+  | _ => pure ()
+  return out
 
 /-- Mutants of one declaration as JSON records. -/
 def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
   let env ← getEnv
   let some ci := env.find? name | throwError "unknown declaration {name}"
   let scripts := if args.scripts.isEmpty then defaultScripts else args.scripts
-  let mut candidates : Array (Target × Mutation) := #[]
-  for m in ← siteMutations env ci.type args.maxSites do
-    candidates := candidates.push (.type, m)
-  for m in ← telescopeMutations ci.type do
-    candidates := candidates.push (.type, m)
-  if let .defnInfo v := ci then
-    for m in ← siteMutations env v.value args.maxSites do
-      candidates := candidates.push (.value, m)
-  let sort ← inferType ci.type
   let mut out := #[]
-  for (target, m) in candidates do
-    let original := if target == .type then ci.type else ci.value?.getD ci.type
-    let expected := if target == .type then sort else ci.type
-    let ok ← typeChecks m.result (some expected)
-    let proof ← if ok then proveWith m.goal scripts args.heartbeats else pure none
-    out := out.push <| Json.mkObj [
-      ("kind", toJson "mutant"),
-      ("decl", toJson (toString name)),
-      ("target", toJson target.toString),
-      ("operator", toJson m.operator),
-      ("detail", toJson m.detail),
-      ("type_correct", toJson ok),
-      ("equivalent", if ok then toJson proof.isSome else Json.null),
-      ("proof_script", (proof.map toJson).getD Json.null),
-      ("original", toJson (← pp original)),
-      ("mutant", toJson (← pp m.result)),
-      ("mutant_hash", toJson (toString m.result.hash))]
+  for (target, label, original, expected) in ← mutationTargets env ci do
+    let mut candidates := ← siteMutations env original args.maxSites
+    if target != .value then  -- ∀-telescopes: statements and constructor fields
+      candidates := candidates ++ (← telescopeMutations original)
+    let originalText ← pp original
+    for m in candidates do
+      let ok ← typeChecks m.result (some expected)
+      let proof ← if ok then proveWith m.goal scripts args.heartbeats else pure none
+      let mutantText ← pp m.result
+      out := out.push <| Json.mkObj [
+        ("kind", toJson "mutant"),
+        ("decl", toJson (toString name)),
+        ("target", toJson target.toString),
+        ("component", toJson label),
+        ("operator", toJson m.operator),
+        ("detail", toJson m.detail),
+        ("type_correct", toJson ok),
+        ("equivalent", if ok then toJson proof.isSome else Json.null),
+        ("proof_script", (proof.map toJson).getD Json.null),
+        ("visible", toJson (mutantText != originalText)),
+        ("original", toJson originalText),
+        ("mutant", toJson mutantText),
+        ("mutant_hash", toJson (toString m.result.hash))]
   return out
 
 def main (argv : List String) : IO UInt32 := do

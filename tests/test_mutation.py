@@ -14,7 +14,7 @@ from conftest import copy_fixture
 pytestmark = [pytest.mark.lean, pytest.mark.req("SR-07")]
 
 DECLS = ["Mut.pos_le", "Mut.total", "Mut.redundant", "Mut.exists_gt", "Mut.succ_pos'",
-         "Mut.double", "Mut.plusZero"]
+         "Mut.double", "Mut.plusZero", "Mut.Bounded"]
 
 
 @pytest.fixture(scope="module")
@@ -57,8 +57,22 @@ def test_true_but_different_claims_are_kept(mutants: MutantSet) -> None:
 def test_all_operators_are_exercised(mutants: MutantSet) -> None:
     operators = {m.operator for m in mutants.usable}
     assert operators >= {"relation", "constant", "drop_hypothesis", "swap_quantifiers"}
-    assert "∃ m, ∀ (n : Nat), n < m" in _texts(mutants, equivalent=False)
-    assert {m.target for m in mutants.usable} == {"type", "value"}
+    assert "∃ (m : Nat), ∀ (n : Nat), n < m" in _texts(mutants, equivalent=False)
+    assert {m.target for m in mutants.usable} == {"type", "value", "ctor"}
+
+
+def test_structure_fields_are_mutated(mutants: MutantSet) -> None:
+    """The meaning of a structure lives in its constructor's fields."""
+    fields = {m.mutant for m in mutants.usable if m.decl == "Mut.Bounded"}
+    assert "∀ {f : Nat → Nat}, (∀ (n : Nat), f n < 10) → Mut.Bounded f" in fields
+    assert "∀ {f : Nat → Nat}, Mut.Bounded f" in fields  # condition dropped
+    assert {m.component for m in mutants.usable if m.decl == "Mut.Bounded"} == {"Mut.Bounded.mk"}
+
+
+def test_binder_types_are_rendered(mutants: MutantSet) -> None:
+    """Changes inside binder types (e.g. ℝ³ → ℝ⁴) must be visible to reviewers."""
+    assert "fun (n : Nat) => 3 * n" in _texts(mutants, equivalent=False)
+    assert all(m.visible for m in mutants.mutants)
 
 
 def test_stats(mutants: MutantSet) -> None:

@@ -36,18 +36,19 @@ def mutant_file(tmp_path: Path) -> Path:
                                f"mutant {i}"))
     records.append(_mutant("D9", "relation", "equivalent one", equivalent=True))
     records.append(_mutant("D9", "relation", "ill-typed", equivalent=None, type_correct=False))
+    records.append(_mutant("D9", "constant", "orig D9", ) | {"visible": False})
     path = tmp_path / "mutants.jsonl"
     path.write_text("\n".join(json.dumps(r) for r in records), "utf-8")
     return path
 
 
 @pytest.mark.req("SR-07")
-def test_only_type_correct_non_equivalent_mutants_are_usable(mutant_file: Path) -> None:
+def test_only_type_correct_non_equivalent_visible_mutants_are_usable(mutant_file: Path) -> None:
     mutants = MutantSet.load(mutant_file)
-    assert len(mutants.mutants) == 22
+    assert len(mutants.mutants) == 23
     assert len(mutants.usable) == 20
-    assert mutants.stats()["equivalent"] == 1
-    assert mutants.stats()["type_incorrect"] == 1
+    stats = mutants.stats()
+    assert (stats["equivalent"], stats["type_incorrect"], stats["invisible"]) == (1, 1, 1)
 
 
 def test_pool_spreads_over_operators_and_never_repeats(mutant_file: Path) -> None:
