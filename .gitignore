@@ -14,10 +14,10 @@ __pycache__/
 lake-packages/
 
 # --- Generated ---
-build/
-data/
-work/
-.dpc-cache/
+/build/
+/data/
+/work/
+/.dpc-cache/
 
 # --- Editor / OS ---
 .vscode/
