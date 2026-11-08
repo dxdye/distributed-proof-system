@@ -1,0 +1,31 @@
+# --- Pixi / Python ---
+.pixi/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.venv/
+
+# --- Lean / Lake ---
+.lake/
+lake-packages/
+
+# --- Generated ---
+build/
+data/
+work/
+.dpc-cache/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Local config overrides ---
+config.local.yaml
+
+doc

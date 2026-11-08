@@ -1,0 +1,38 @@
+[workspace]
+name = "distributed-proof-check"
+version = "0.1.0"
+description = "Reference implementation of Distributed Proof Check: trust-based, distributed human review of large (AI-generated) Lean 4 formalizations."
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+
+[dependencies]
+python = "3.12.*"
+pydantic = ">=2.6"
+pyyaml = ">=6.0"
+# --- dev / verification ---
+pytest = ">=8.0"
+hypothesis = ">=6.100"
+ruff = ">=0.5"
+mypy = ">=1.10"
+types-pyyaml = "*"
+
+[tasks]
+# --- Verification (V-model, right-hand side) ---
+test = "python -m pytest"
+test-fast = "python -m pytest -m \"not lean and not docker\""
+lint = "ruff check dpc tests"
+format = "ruff format dpc tests"
+typecheck = "mypy dpc"
+check = { depends-on = ["lint", "typecheck", "test"] }
+# Traceability matrix: requirements/sr.yaml x pytest markers -> build/traceability.md
+trace = "python -m pytest -q --trace-matrix=build/traceability.md"
+
+# --- Lean side ---
+build-analyzer = { cmd = "lake build", cwd = "lean/analyzer" }
+
+# --- CLI ---
+dpc = "python -m dpc"
+
+[activation.env]
+DO_NOT_TRACK = "1"
+PYTHONUTF8 = "1"
