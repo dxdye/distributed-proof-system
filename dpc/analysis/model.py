@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA_VERSION = "dpc.analysis/1"
+SCHEMA_VERSION = "dpc.analysis/2"
 
 DeclKind = Literal["axiom", "def", "theorem", "opaque", "quot", "inductive", "ctor", "recursor"]
 Mode = Literal["core", "metadata"]
@@ -63,8 +63,9 @@ class Decl(_Record):
     in_tcb: bool
     tcb_deps: tuple[str, ...]
     all_deps: tuple[str, ...] | None
-    type_hash: str
-    value_hash: str | None
+    type_hash: str  # SHA-256 Merkle digest of the type (docs/adr/0004)
+    value_hash: str | None  # SHA-256 of a definition body; None otherwise
+    proof_hash: str | None  # structural hash of a proof / opaque body (not cryptographic)
     # Only present in metadata mode:
     range: Range | None = None
     flags: Flags | None = None
@@ -77,8 +78,7 @@ class Decl(_Record):
     def meaning_hash(self) -> tuple[str, str | None, str]:
         """Everything that determines the meaning (concept §2.2): proof terms of
         theorems and bodies of opaque constants are excluded."""
-        value = None if self.decl_kind in ("theorem", "opaque") else self.value_hash
-        return (self.type_hash, value, self.decl_kind)
+        return (self.type_hash, self.value_hash, self.decl_kind)
 
 
 class SchemaError(ValueError):

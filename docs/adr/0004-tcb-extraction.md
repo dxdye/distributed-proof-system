@@ -43,6 +43,19 @@ every imported module — foreign code. Therefore:
 `Lean.collectAxioms` is not used because it trusts axiom lists precomputed
 inside imported `.olean` files.
 
+**Content hashes (schema `dpc.analysis/2`).** Types and definition bodies —
+everything that determines meaning — carry a SHA-256 Merkle digest of the
+expression: each node hashes its constructor tag and its children's digests,
+with a cache over shared subterms, so the cost stays linear in the size of the
+expression DAG. Binder names, binder info and metadata are not encoded, so the
+digest is invariant under α-renaming. Lean core has no cryptographic hash; the
+analyzer ships a small SHA-256 implementation checked against the FIPS 180-4
+test vectors (`dpc-analyze --selftest`). Proof terms and opaque bodies keep
+Lean's structural 64-bit `Expr.hash` as `proof_hash`: they do not affect
+meaning, the kernel re-checks proofs anyway, and a proof-only change matters
+only for class B. (Schema v1 used `Expr.hash` everywhere, which a hostile
+update could have collided to slip past the graph diff, SR-16.)
+
 **Toolchain.** `.olean` files are bound to the exact Lean version, so the
 analyzer is rebuilt per toolchain (cached by toolchain and analyzer source
 hash). It depends on Lean core only, which keeps that cheap.
@@ -57,10 +70,6 @@ hash). It depends on Lean core only, which keeps that cheap.
 
 ## Open points
 
-- **Content hashes are `Expr.hash` (64 bit, not cryptographic).** Fine for
-  detecting accidental changes, but a hostile update could be crafted to
-  collide and slip past the graph diff (SR-16). Replace with SHA-256 over a
-  canonical serialisation of the expression.
 - Definitions whose type is a proposition behave like theorems but are
   currently treated as definitions (conservative: more review, not less).
 - Very large definitions (concept §19, first open question) are one unit; how

@@ -1,6 +1,7 @@
 import Lean
 import DpcAnalyzer.Classify
 import DpcAnalyzer.Closure
+import DpcAnalyzer.Digest
 
 /-!
 # JSON Lines export (interface I-2)
@@ -30,7 +31,8 @@ open Lean
 
 namespace DpcAnalyzer
 
-def schemaVersion : String := "dpc.analysis/1"
+/-- v2: SHA-256 Merkle digests for types and definition bodies, `proof_hash`. -/
+def schemaVersion : String := "dpc.analysis/2"
 
 /-- Root namespaces treated as hardened (`H`) unless disabled on the CLI. -/
 def defaultHardenedPrefixes : Array Name :=
@@ -99,9 +101,18 @@ def coreFields (env : Environment) (hardened : Name → Bool) (inTcb : Bool) (n 
     ("in_tcb", toJson inTcb),
     ("tcb_deps", namesJson (sortedNames (tcbEdges ci))),
     ("all_deps", if isH then Json.null else namesJson (sortedNames (allEdges ci))),
-    ("type_hash", toJson (toString ci.type.hash)),
-    ("value_hash",
-      optJson ((ci.value? (allowOpaque := true)).map fun v => toJson (toString v.hash))) ]
+    -- Meaning: SHA-256 Merkle digests (forgery-resistant, used by the graph diff).
+    ("type_hash", toJson (Digest.hexDigest ci.type)),
+    ("value_hash", match ci with
+      | .defnInfo v => toJson (Digest.hexDigest v.value)
+      | _ => Json.null),
+    -- Proof terms and opaque bodies do not affect meaning (proof irrelevance, the
+    -- kernel never unfolds opaque bodies); a cheap structural hash suffices to
+    -- notice proof-only changes, which matter for class B only.
+    ("proof_hash", match ci with
+      | .thmInfo v => toJson (toString v.value.hash)
+      | .opaqueInfo v => toJson (toString v.value.hash)
+      | _ => Json.null) ]
 
 /-- Presentation metadata; needs loaded environment extensions. -/
 def metadataFields (env : Environment) (hardened : Name → Bool) (n : Name)

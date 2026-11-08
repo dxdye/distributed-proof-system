@@ -20,6 +20,7 @@ _SUBSTANCE = (
     "all_deps",
     "type_hash",
     "value_hash",
+    "proof_hash",
 )
 
 

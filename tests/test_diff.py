@@ -37,7 +37,7 @@ def test_changed_definition_invalidates_exactly_its_dependents(basic: Analysis) 
 
 
 def test_proof_change_invalidates_no_class_a_ticket(basic: Analysis) -> None:
-    new = _modify(basic, "Basic.main_theorem", value_hash="another-proof")
+    new = _modify(basic, "Basic.main_theorem", proof_hash="another-proof")
     diff = graph_diff(basic, new)
     assert diff.proof_only_changed == {"Basic.main_theorem"}
     assert not diff.meaning_changed
@@ -45,7 +45,7 @@ def test_proof_change_invalidates_no_class_a_ticket(basic: Analysis) -> None:
 
 
 def test_opaque_body_change_is_not_a_meaning_change(basic: Analysis) -> None:
-    new = _modify(basic, "Basic.secret", value_hash="other-witness")
+    new = _modify(basic, "Basic.secret", proof_hash="other-witness")
     assert not graph_diff(basic, new).invalidated_units
 
 

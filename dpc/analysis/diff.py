@@ -34,7 +34,7 @@ def _changed(old: Mapping[str, Decl], new: Mapping[str, Decl]) -> tuple[set[str]
         o, n = old[name], new[name]
         if o.meaning_hash != n.meaning_hash:
             meaning.add(name)
-        elif o.value_hash != n.value_hash:
+        elif o.proof_hash != n.proof_hash:
             proof_only.add(name)
     return meaning, proof_only
 

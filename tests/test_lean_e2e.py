@@ -110,6 +110,39 @@ def test_changing_a_definition_invalidates_its_dependents(
     assert untouched <= diff.kept_units
 
 
+@pytest.mark.req("SR-16")
+def test_renaming_bound_variables_is_not_a_change(
+    host_executor: HostExecutor, tmp_path: Path
+) -> None:
+    """Content hashes are α-invariant: renaming a bound variable keeps every
+    ticket, whereas the definition-change test above invalidates them."""
+    old = _load(_analyse(host_executor, copy_fixture("basic", tmp_path / "old"), tmp_path / "o"))
+    project = _variant(tmp_path, "new", "def double (n : Nat) : Nat := n + n",
+                       "def double (m : Nat) : Nat := m + m")
+    new = _load(_analyse(host_executor, project, tmp_path / "n"))
+    diff = graph_diff(old, new)
+    assert not diff.meaning_changed
+    assert not diff.invalidated_units
+
+
+def test_sha256_known_answers(host_executor: HostExecutor) -> None:
+    """FIPS 180-4 test vectors for the Lean SHA-256 used in content hashes."""
+    import subprocess
+
+    from dpc.lean.project import runtime_env
+
+    exe = host_executor.analyzer_exe("leanprover/lean4:v4.33.1")
+    sysroot = subprocess.run(["lean", "--print-prefix"], cwd=exe.parents[3], check=True,
+                             capture_output=True, text=True).stdout.strip()
+    out = subprocess.run([str(exe), "--selftest"], env=runtime_env(Path(sysroot), []),
+                         check=True, capture_output=True, text=True).stdout.split()
+    assert out[0::2] == [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+    ]
+
+
 def test_unknown_root_fails_cleanly(host_executor: HostExecutor, tmp_path: Path) -> None:
     project = copy_fixture("basic", tmp_path)
     assert host_executor.build(project, ["Basic"]).ok

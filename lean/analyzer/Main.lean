@@ -41,7 +41,14 @@ def parseArgs : List String → Args → Except String Args
 @[implemented_by enableInitializersExecution]
 opaque allowInitializers : BaseIO Unit
 
+/-- Known-answer tests of the SHA-256 implementation (FIPS 180-4 examples). -/
+def selftest : IO UInt32 := do
+  for msg in ["", "abc", "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"] do
+    IO.println s!"{Sha256.hashString msg} {msg.length}"
+  return 0
+
 def main (argv : List String) : IO UInt32 := do
+  if argv == ["--selftest"] then return ← selftest
   let args ← match parseArgs argv {} with
     | .ok a => pure a
     | .error e => do
