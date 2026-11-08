@@ -128,11 +128,41 @@ def compare_digests(before: Mapping[str, str], after: Mapping[str, str]) -> Inte
 
 
 @dataclass(frozen=True)
+class AppliedPatch:
+    """A dependency patch declared by the submission (e.g. for toolchain
+    compatibility). Patched code is no longer the upstream revision; the patch
+    belongs to what is reviewed (docs/adr/0005)."""
+
+    package: str
+    file: str
+    sha256: str
+
+
+def map_patches(listing: str, manifest: Manifest) -> tuple[AppliedPatch, ...]:
+    """Map ``"<sha256> <file>"`` lines to packages (longest name prefix wins).
+    Patches to hardened packages are refused: H must stay the official code."""
+    names = sorted((p.dir_name for p in manifest.packages), key=len, reverse=True)
+    official = {p.dir_name for p in manifest.packages if is_official(p)}
+    result = []
+    for line in listing.splitlines():
+        digest, _, file = line.partition(" ")
+        package = next((n for n in names if file.startswith(n + "-")), None)
+        if package is None:
+            raise FetchError(f"patch {file!r} does not belong to any dependency")
+        if package in official:
+            raise FetchError(f"patch {file!r} would modify the hardened package {package!r}; "
+                             "hardened libraries must stay unmodified")
+        result.append(AppliedPatch(package, file, digest))
+    return tuple(result)
+
+
+@dataclass(frozen=True)
 class Fetched:
     toolchain: str
     manifest: Manifest
     manifest_sha256: str
     reused: bool
+    patches: tuple[AppliedPatch, ...] = ()
 
 
 @dataclass
@@ -190,7 +220,7 @@ class VolumeWorkspace:
     # ------------------------------------------------------- 1. fetch (trusted)
     MARKER = PurePosixPath("/ws/.dpc-fetched")
 
-    def fetch(self, repo_url: str, commit: str) -> Fetched:
+    def fetch(self, repo_url: str, commit: str, patch_dir: str | None = None) -> Fetched:
         """Clone the repository and all dependencies at their pinned commits.
 
         Idempotent: a volume that already holds this commit is reused."""
@@ -218,9 +248,37 @@ class VolumeWorkspace:
                 for p in manifest.packages
             ) or "true"
             self._require(self._script(image, script, network=True), "cloning dependencies")
+        patches = self.list_patches(image, manifest, patch_dir) if patch_dir else ()
+        if not reused:
+            if patches:
+                self.apply_patches(image, manifest, patch_dir or "", patches)
             self._require(self._script(image, f"echo {commit} > {self.MARKER}", network=False),
                           "writing the fetch marker")
-        return Fetched(toolchain, manifest, sha256_hex(raw.encode("utf-8")), reused)
+        return Fetched(toolchain, manifest, sha256_hex(raw.encode("utf-8")), reused, patches)
+
+    # --------------------------------------------- dependency patches (trusted)
+    def list_patches(self, image: str, manifest: Manifest, patch_dir: str
+                     ) -> tuple[AppliedPatch, ...]:
+        """Patch files ``<package>-*.patch`` in ``patch_dir`` (relative to the
+        project), mapped to packages by the longest matching name, with hashes."""
+        if ".." in PurePosixPath(patch_dir).parts or patch_dir.startswith("/"):
+            raise FetchError("patch directory must stay inside the project")
+        where = shlex.quote(str(self.project / patch_dir))
+        out = self._require(self._script(
+            image, f"cd {where} && for f in *.patch; do [ -f \"$f\" ] && "
+                   "printf '%s %s\\n' \"$(sha256sum \"$f\" | cut -d' ' -f1)\" \"$f\"; done; true",
+            network=False), "listing dependency patches").stdout
+        return map_patches(out, manifest)
+
+    def apply_patches(self, image: str, manifest: Manifest, patch_dir: str,
+                      patches: Sequence[AppliedPatch]) -> None:
+        """`git apply` only — patch files are data, no repository code runs."""
+        packages = self.project / manifest.packages_dir
+        source = self.project / patch_dir
+        script = " && ".join(
+            f"git -C {shlex.quote(str(packages / p.package))} apply "
+            f"{shlex.quote(str(source / p.file))}" for p in patches)
+        self._require(self._script(image, script, network=False), "applying dependency patches")
 
     # ------------------------------------------------- 2. mathlib cache (trusted)
     def fetch_cache(self, image: str, manifest: Manifest) -> RunResult | None:

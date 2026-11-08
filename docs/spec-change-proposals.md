@@ -141,6 +141,16 @@ weights, IRT calibration in the pilot).
 constructor fields. A ticket unit is the structure with its fields; for large
 structures, one ticket per field (or per group of fields) is a natural split.
 
+### C-16 · §16 Dependency patches · new
+*Proposed:* Formalizations may patch their dependencies for toolchain
+compatibility (`openai/math`: 24 patches, partly applied by the lakefile at
+configuration time). State that declared patches are applied by the system,
+hashed and published in the report, and that patched dependency code belongs
+to the review — the build is "repository + dependencies at pinned revisions +
+declared patches", not upstream code. Patches to hardened libraries are not
+allowed.
+*Evidence:* ADR 0005, `dpc/lean/workspace.py` (`map_patches`), QRH case study.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -157,6 +167,12 @@ bottleneck moves to class B.
 repositories pinned to full commit hashes; the submission's lakefile is not
 executed outside the sandbox."
 *Evidence:* `dpc/ingest`, `tests/test_ingest.py`.
+
+### S-02a · SR-01 Dependency patches · refine
+*Proposed addition:* "Declared dependency patches are applied by the system,
+hashed and listed in the report; patches to hardened libraries are rejected."
+Observed: `openai/math` at `4eaee87` does not build from the pinned manifest
+alone (`rellich-kondrachov` fails against the pinned Mathlib without its patch).
 
 ### S-03 · SR-07 Mutants · refine
 *Proposed:* "Mutants shall be type-correct, *visible* in the ticket rendering, and

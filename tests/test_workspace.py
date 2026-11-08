@@ -110,3 +110,25 @@ def test_volume_name_is_deterministic() -> None:
     assert volume_name(sub) != volume_name(sub.model_copy(update={"project_dir": ""}))
     with pytest.raises(ValueError):
         Submission(repo_url="x", commit=REV, root="A", root_module="A", project_dir="../etc")
+
+
+def test_dependency_patches_map_to_packages_and_spare_hardened_ones() -> None:
+    """Observed on openai/math: 24 compatibility patches for third-party packages."""
+    from dpc.lean.workspace import map_patches
+
+    schoen = OTHER.model_copy(update={"name": "«schoenflies-lean»"})
+    schoen_core = OTHER.model_copy(update={"name": "schoenflies"})
+    manifest = Manifest(packages=(MATHLIB, OTHER, schoen, schoen_core))
+    listing = ("a" * 64 + " carleson-lean4341.patch\n"
+               + "b" * 64 + " schoenflies-lean-lean4341.patch\n")
+    patches = map_patches(listing, manifest)
+    assert [(p.package, p.file) for p in patches] == [
+        ("carleson", "carleson-lean4341.patch"),
+        ("schoenflies-lean", "schoenflies-lean-lean4341.patch"),  # longest prefix wins
+    ]
+    with pytest.raises(FetchError, match="hardened"):
+        map_patches("c" * 64 + " mathlib-fix.patch\n", manifest)
+    with pytest.raises(FetchError, match="does not belong"):
+        map_patches("d" * 64 + " unknown-x.patch\n", manifest)
+    with pytest.raises(ValueError):
+        Submission(repo_url="x", commit=REV, root="A", root_module="A", patch_dir="../evil")

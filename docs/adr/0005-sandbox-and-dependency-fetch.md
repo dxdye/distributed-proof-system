@@ -56,6 +56,16 @@ execute with network access. A reused volume is first compared with its stored
 snapshot; a mismatch, or a marker without snapshot, means: discard the volume
 and start from scratch.
 
+**Dependency patches.** Some formalizations patch third-party dependencies to
+make them compile with their toolchain (observed: `openai/math` ships 24
+`patches/<package>-lean4341.patch` files; its lakefile applies 11 of them at
+configuration time, the rest via `lake update`). The pinned revisions alone are
+then not buildable. A submission may declare a patch directory; every
+`<package>-*.patch` is applied with `git apply` in the trusted fetch step
+(patch files are data — no repository code runs), recorded with its SHA-256 in
+the audit log, and refused for hardened packages. Patched code is no longer the
+upstream revision: the patches belong to what is reviewed.
+
 **Where the files live.** Real submissions are processed in a Docker named
 volume (`VolumeWorkspace`), not on the host: repositories may contain file
 names the host cannot represent (observed: `openai/math` on Windows), and bind

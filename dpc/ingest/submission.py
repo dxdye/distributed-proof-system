@@ -21,6 +21,11 @@ class Submission(BaseModel):
         pattern=r"^(?:[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*)?$",
         description="sub-directory of the repository that contains the Lake project",
     )
+    patch_dir: str | None = Field(
+        default=None,
+        description="directory (relative to the project) with dependency patches "
+                    "`<package>-*.patch`, applied with git before the build",
+    )
     paper_ref: str | None = None
 
     @field_validator("project_dir")
@@ -28,4 +33,11 @@ class Submission(BaseModel):
     def _no_parent(cls, value: str) -> str:
         if ".." in value.split("/"):
             raise ValueError("project_dir must stay inside the repository")
+        return value
+
+    @field_validator("patch_dir")
+    @classmethod
+    def _patch_dir_inside(cls, value: str | None) -> str | None:
+        if value is not None and (".." in value.split("/") or value.startswith("/")):
+            raise ValueError("patch_dir must stay inside the project")
         return value

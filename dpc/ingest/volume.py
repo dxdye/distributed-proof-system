@@ -73,7 +73,7 @@ def ingest_in_volume(
     ws = VolumeWorkspace(executor, volume_name(submission), submission.project_dir)
     ws.create()
 
-    fetched = ws.fetch(submission.repo_url, submission.commit)
+    fetched = ws.fetch(submission.repo_url, submission.commit, submission.patch_dir)
     manifest = fetched.manifest
     key = artifact_key(fetched.toolchain, fetched.manifest_sha256, submission.commit)
     log.append(
@@ -86,6 +86,10 @@ def ingest_in_volume(
             "artifact_key": key,
             "volume": ws.volume,
             "reused": fetched.reused,
+            "dependency_patches": [
+                {"package": p.package, "file": p.file, "sha256": p.sha256}
+                for p in fetched.patches
+            ],
         },
     )
 
