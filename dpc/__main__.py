@@ -29,6 +29,7 @@ from dpc.lean.project import Manifest
 from dpc.lean.workspace import VolumeWorkspace
 from dpc.requirements import load_requirements
 from dpc.sim import ReviewerType, SimConfig, simulate
+from dpc.sim.study import Grid, render_markdown, run_study
 
 DEFAULT_CACHE = Path(".dpc-cache")
 
@@ -157,6 +158,17 @@ def cmd_simulate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_study(args: argparse.Namespace) -> int:
+    """Parameter study (M3) rendered as Markdown."""
+    grid = Grid(items=args.items, seeds=tuple(range(args.seeds)))
+    text = render_markdown(run_study(grid), grid)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    print(f"wrote {out}")
+    return 0
+
+
 def cmd_requirements(_: argparse.Namespace) -> int:
     reqs = load_requirements()
     _print({"total": len(reqs),
@@ -229,6 +241,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--runs", type=int, default=1, help="replications with consecutive seeds")
     p.set_defaults(func=cmd_simulate)
+
+    p = sub.add_parser("study", help="parameter study of the review process (M3)")
+    p.add_argument("--items", type=int, default=300)
+    p.add_argument("--seeds", type=int, default=2)
+    p.add_argument("--out", default="docs/simulation/parameter-study.md")
+    p.set_defaults(func=cmd_study)
 
     p = sub.add_parser("requirements", help="requirement catalogue statistics")
     p.set_defaults(func=cmd_requirements)

@@ -26,7 +26,7 @@ makes the reliability of that judgement measurable:
 | M0 | Scaffold, audit log, requirement traceability | ✅ |
 | M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ Navier–Stokes measured ([report](docs/case-studies/navier-stokes.md)), QRH 7/8 running |
 | M2 | Mutation generator, local equivalence filter, honeypot sources and mixing | 🚧 works on fixtures; real-repository runs and further sources open |
-| M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation | 🚧 domain core and simulation done, parameter study open |
+| M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ first study done ([findings](docs/simulation/README.md)); lenses, IRT, Sybil not yet simulated |
 | M4 | Web prototype for class A, pilot | planned |
 | M5 | Class B, certificate, signed report | planned |
 
@@ -76,6 +76,7 @@ honeypot lookup attackers:
 
 ```bash
 pixi run dpc simulate --items 300 --clickers 5 --lookup 5 --error-rate 0.1 --runs 3
+pixi run dpc study --seeds 5          # parameter study -> docs/simulation/parameter-study.md
 ```
 
 ## Layout
