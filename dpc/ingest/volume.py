@@ -1,0 +1,144 @@
+"""Ingest of real-world submissions inside a Docker volume (case studies).
+
+Same steps and audit events as :mod:`dpc.ingest.pipeline`, plus the Mathlib
+cache step and the provenance check of the hardened set.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+from dpc.analysis import Analysis, AnalysisMismatch, Summary, merge, summarize
+from dpc.analysis.hardening import unverified_hardened_modules
+from dpc.audit import AuditLog, canonical_json, sha256_hex
+from dpc.ingest.pipeline import IngestError, artifact_key
+from dpc.ingest.submission import Submission
+from dpc.lean.executor import DockerExecutor, RunResult
+from dpc.lean.workspace import VolumeWorkspace, compare_digests
+
+
+@dataclass(frozen=True)
+class VolumeIngestResult:
+    volume: str
+    core_path: Path
+    metadata_path: Path
+    analysis: Analysis
+    summary: Summary
+    artifact_key: str
+    unverified_hardened: tuple[str, ...]
+
+
+def volume_name(submission: Submission) -> str:
+    """Deterministic, so a rerun reuses the fetched sources and caches."""
+    origin = sha256_hex(f"{submission.repo_url}\n{submission.project_dir}".encode())[:8]
+    return f"dpc-ws-{submission.commit[:12]}-{origin}"
+
+
+def _digest_of(digests: dict[str, str]) -> str:
+    return sha256_hex(canonical_json(dict(sorted(digests.items()))))
+
+
+def _step(result: RunResult, step: str, log: AuditLog) -> None:
+    log.append(
+        f"{step}.completed",
+        {
+            "ok": result.ok,
+            "executor": "docker-volume",
+            "duration_s": int(result.duration_s),
+            "timed_out": result.timed_out,
+            "output_sha256": sha256_hex(result.output.encode("utf-8")),
+        },
+    )
+    if not result.ok:
+        raise IngestError(f"{step} failed (exit {result.returncode}):\n"
+                          f"{result.output.strip()[-3000:]}")
+
+
+def ingest_in_volume(
+    submission: Submission, *, executor: DockerExecutor, log: AuditLog, out_dir: Path
+) -> VolumeIngestResult:
+    log.append("submission.received", submission.model_dump())
+    ws = VolumeWorkspace(executor, volume_name(submission), submission.project_dir)
+    ws.create()
+
+    fetched = ws.fetch(submission.repo_url, submission.commit)
+    manifest = fetched.manifest
+    key = artifact_key(fetched.toolchain, fetched.manifest_sha256, submission.commit)
+    log.append(
+        "repo.fetched",
+        {
+            "commit": submission.commit,
+            "toolchain": fetched.toolchain,
+            "manifest_sha256": fetched.manifest_sha256,
+            "packages": [{"name": p.name, "rev": p.rev, "url": p.url} for p in manifest.packages],
+            "artifact_key": key,
+            "volume": ws.volume,
+            "reused": fetched.reused,
+        },
+    )
+
+    image = executor.ensure_image(fetched.toolchain)
+    cache = ws.fetch_cache(image, manifest)
+    if cache is not None:
+        _step(cache, "cache", log)
+    heads = ws.package_heads(image, manifest)
+    drift = sorted(p.name for p in manifest.packages if heads.get(p.name) != p.rev)
+    if drift:
+        log.append("repo.drift", {"artifact_key": key, "packages": drift})
+        raise IngestError(f"dependencies no longer at their pinned revisions: {drift}")
+
+    # Snapshot of the hardened set after the last trusted step (docs/adr/0005).
+    before = ws.digest_hardened(image, manifest)
+    log.append("hardened.snapshot", {"artifact_key": key, "files": len(before),
+                                     "sha256": _digest_of(before)})
+
+    build = ws.build(image, manifest, [submission.root_module])
+    after = ws.digest_hardened(image, manifest)
+    integrity = compare_digests(before, after)
+    log.append("hardened.verified", {
+        "artifact_key": key, "ok": integrity.ok, "changed": list(integrity.changed[:50]),
+        "added": list(integrity.added[:50]), "sha256": _digest_of(after),
+    })
+    if not integrity.ok:
+        raise IngestError(
+            "the build modified hardened packages — refusing to analyse: "
+            f"{len(integrity.changed)} changed, {len(integrity.added)} added, "
+            f"e.g. {(integrity.changed + integrity.added)[:5]}"
+        )
+    _step(build, "build", log)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths = {mode: out_dir / f"{mode}.jsonl" for mode in ("core", "metadata")}
+    for mode, path in paths.items():
+        result = ws.analyze(image, manifest, root=submission.root,
+                            imports=[submission.root_module], mode=mode,  # type: ignore[arg-type]
+                            out=path)
+        _step(result, f"analysis_{mode}", log)
+
+    try:
+        analysis = merge(Analysis.load(paths["core"]), Analysis.load(paths["metadata"]))
+    except AnalysisMismatch as exc:
+        log.append("analysis.mismatch", {"artifact_key": key, "reason": str(exc)})
+        raise IngestError(f"core and metadata analysis disagree: {exc}") from exc
+
+    unverified = unverified_hardened_modules(analysis, ws.official_modules(image, manifest))
+    summary = summarize(analysis)
+    log.append(
+        "analysis.completed",
+        {
+            "artifact_key": key,
+            "core_sha256": sha256_hex(paths["core"].read_bytes()),
+            "metadata_sha256": sha256_hex(paths["metadata"].read_bytes()),
+            "summary": summary.as_dict(),
+            "unverified_hardened_modules": unverified,
+        },
+    )
+    for finding in summary.findings:
+        log.append("finding.axiom", {"artifact_key": key, "axiom": finding.axiom,
+                                     "kind": finding.kind, "blocking": finding.blocking})
+    if unverified:
+        log.append("finding.hardening", {"artifact_key": key, "modules": unverified,
+                                         "blocking": True})
+    return VolumeIngestResult(ws.volume, paths["core"], paths["metadata"], analysis, summary,
+                              key, tuple(unverified))
