@@ -26,7 +26,7 @@ def test_sorted_keys_and_no_whitespace() -> None:
 
 
 def test_utf8_is_not_escaped() -> None:
-    text = "Navier–Stokes ℝ³"  # noqa: RUF001
+    text = "Navier–Stokes ℝ³"
     assert canonical_json({"name": text}) == ('{"name":"' + text + '"}').encode()
 
 
@@ -34,7 +34,7 @@ def test_utf8_is_not_escaped() -> None:
     "value",
     [
         1.5, {"x": 0.0}, [float("nan")], 2**53 + 1, {1: "non-string key"}, b"bytes",
-        {"𝔸": 1}, "\ud800", {"\udfff": 1},  # noqa: RUF001
+        {"𝔸": 1}, "\ud800", {"\udfff": 1},
     ],
 )
 def test_rejects_ambiguous_values(value: Any) -> None:

@@ -16,6 +16,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+# Greek letters and typographic dashes are deliberate: docstrings and comments
+# use the notation of the concept paper (κ, ρ, δ_A, Dawid–Skene, …).
+ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["dpc"]
@@ -26,3 +29,7 @@ python_version = "3.12"
 strict = true
 packages = ["dpc"]
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["scipy", "scipy.*"]
+ignore_missing_imports = true
