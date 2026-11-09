@@ -108,12 +108,18 @@ def test_stats(mutants: MutantSet) -> None:
     assert stats["usable"] == len(mutants.mutants) - 5 - 3
 
 
-def test_unknown_declaration_fails(host_executor: HostExecutor, tmp_path: Path) -> None:
+def test_a_failing_declaration_is_reported_and_the_others_still_run(
+        host_executor: HostExecutor, tmp_path: Path) -> None:
     project = copy_fixture("mutation", tmp_path)
     assert host_executor.build(project, ["Mutation"]).ok
-    result = host_executor.mutate(project, imports=["Mutation"], decls=["Mut.nope"],
-                                  out=tmp_path / "x.jsonl")
-    assert not result.ok
+    out = tmp_path / "x.jsonl"
+    result = host_executor.mutate(project, imports=["Mutation"],
+                                  decls=["Mut.nope", "Mut.pos_le"], out=out)
+    assert result.ok, result.output
+    mutants = MutantSet.load(out)
+    assert [d for d, _ in mutants.errors] == ["Mut.nope"]
+    assert "unknown declaration" in mutants.errors[0][1]
+    assert mutants.mutants and all(m.decl == "Mut.pos_le" for m in mutants.mutants)
 
 
 # ------------------------------------------------------ ticket views (M4, SR-21)

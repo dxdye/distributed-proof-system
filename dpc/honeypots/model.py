@@ -48,13 +48,19 @@ class Mutant(BaseModel):
 class MutantSet:
     toolchain: str
     mutants: tuple[Mutant, ...]
+    #: Declarations `dpc-mutate` could not process, with the reason.
+    errors: tuple[tuple[str, str], ...] = ()
 
     @classmethod
     def load(cls, path: Path) -> MutantSet:
         lines = [json.loads(line) for line in path.read_text("utf-8").splitlines() if line]
         if not lines or lines[0].get("schema") != SCHEMA:
             raise ValueError(f"{path}: expected schema {SCHEMA}")
-        return cls(str(lines[0]["toolchain"]), tuple(Mutant.model_validate(r) for r in lines[1:]))
+        records = lines[1:]
+        errors = tuple((str(r["decl"]), str(r["error"])) for r in records
+                       if r.get("kind") == "error")
+        mutants = tuple(Mutant.model_validate(r) for r in records if r.get("kind") != "error")
+        return cls(str(lines[0]["toolchain"]), mutants, errors)
 
     @property
     def usable(self) -> tuple[Mutant, ...]:
@@ -73,5 +79,6 @@ class MutantSet:
             "invisible": sum(m.type_correct and m.equivalent is False and not m.visible
                              for m in self.mutants),
             "usable": len(self.usable),
+            "failed_declarations": [d for d, _ in self.errors],
             "by_operator": dict(sorted(Counter(m.operator for m in self.usable).items())),
         }

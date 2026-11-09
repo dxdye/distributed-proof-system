@@ -181,10 +181,15 @@ def main (argv : List String) : IO UInt32 := do
   let run : CoreM (Array Json) := do
     let mut lines := #[header]
     for name in args.decls do
-      if args.render then
-        lines := lines.push (← (viewOf name).run')
-      else
-        lines := lines ++ (← (mutantsOf name args).run'.run')
+      -- Each declaration gets the full heartbeat budget, and one that fails
+      -- (e.g. a timeout while rendering) is reported instead of ending the run.
+      let one : CoreM (Array Json) := withCurrHeartbeats do
+        if args.render then return #[← (viewOf name).run']
+        else (mutantsOf name args).run'.run'
+      let records ← tryCatchRuntimeEx one fun e => do
+        return #[Json.mkObj [("kind", toJson "error"), ("decl", toJson (toString name)),
+                             ("error", toJson (← e.toMessageData.toString))]]
+      lines := lines ++ records
     return lines
   let (lines, _) ← run.toIO ctx st
   IO.FS.writeFile out (String.intercalate "\n" (lines.toList.map Json.compress) ++ "\n")
