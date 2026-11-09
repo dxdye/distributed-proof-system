@@ -85,8 +85,15 @@ class AuditLog:
     def __init__(self, path: str | Path, clock: Callable[[], datetime] = utc_now) -> None:
         self._path = str(path)
         self._clock = clock
-        # Autocommit mode; transactions are opened explicitly in `append`.
-        self._conn = sqlite3.connect(self._path, isolation_level=None, timeout=30.0)
+        # Autocommit mode; transactions are opened explicitly in `append`. The
+        # connection may be used from several threads (web server); callers
+        # serialise access (the coordination service holds a lock).
+        self._conn = sqlite3.connect(self._path, isolation_level=None, timeout=30.0,
+                                     check_same_thread=False)
+        # Write-ahead log, still durable on every commit (one fsync instead of
+        # several with the rollback journal).
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA synchronous=FULL")
         self._conn.executescript(_SCHEMA)
 
     def __enter__(self) -> AuditLog:
