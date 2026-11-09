@@ -23,7 +23,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["dpc"]
-known-local-folder = ["conftest"]
+known-local-folder = ["conftest", "test_coord"]
 
 [tool.mypy]
 python_version = "3.12"
