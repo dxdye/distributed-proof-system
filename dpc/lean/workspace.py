@@ -26,11 +26,12 @@ import json
 import re
 import shlex
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 
 from dpc.audit.canonical import sha256_hex
 from dpc.ingest.fetch import FetchError
+from dpc.lean.evidence import EVIDENCE_FILE, EVIDENCE_MODULE, EvidenceCheck
 from dpc.lean.executor import (
     REPO_ROOT,
     TOOL_ENTRY,
@@ -41,6 +42,7 @@ from dpc.lean.executor import (
     _analyzer_args,
     _mutate_args,
     _run,
+    compile_failure,
 )
 from dpc.lean.project import COMMIT_RE, Manifest, Package, ProjectError, lean_path
 
@@ -402,6 +404,35 @@ class VolumeWorkspace:
         """Untrusted step: loads the submission's environment extensions."""
         args = _mutate_args(imports, decls, str(self.executor.OUT / out.name), render)
         return self._tool(image, manifest, "dpc-mutate", args, out)
+
+    def check_evidence(self, image: str, manifest: Manifest, *, target: str, kind: str,
+                       source: str, workdir: Path, timeout_s: float = 300.0) -> EvidenceCheck:
+        """SR-10: compile the evidence (foreign code, sandbox), then replay and
+        check it with ``dpc-evidence`` in a second, fresh container."""
+        src, build = workdir / "src", workdir / "build"
+        for d in (src, build):
+            d.mkdir(parents=True, exist_ok=True)
+        (src / EVIDENCE_FILE).write_text(source, encoding="utf-8")
+        work, out = self.executor.WORK, self.executor.OUT
+        mounts = [
+            Mount(self.volume, str(work), volume=True, subpath=self._sub(self.project)),
+            Mount(src, "/evidence"),
+            Mount(build, str(out), read_only=False),
+        ]
+        env = {"LEAN_PATH": ":".join([*lean_path(work, manifest), str(out)]), "HOME": "/tmp"}
+        executor = replace(self.executor,
+                           limits=replace(self.executor.limits, timeout_s=timeout_s))
+        compiled = executor._exec(image, [TOOL_ENTRY, "lean-compile", "/evidence",
+                                          f"/evidence/{EVIDENCE_FILE}",
+                                          f"{out}/{EVIDENCE_MODULE}.olean"], mounts, env)
+        if failure := compile_failure(compiled):
+            return failure
+        checked = executor._exec(image, [TOOL_ENTRY, "dpc-evidence", "--target", target,
+                                         "--kind", kind, "--out", f"{out}/result.json"],
+                                 mounts, env)
+        if not checked.ok or not (build / "result.json").is_file():
+            return EvidenceCheck.failed("the checker failed", checked.output)
+        return EvidenceCheck.from_file(build / "result.json", compiled.output)
 
     # ----------------------------------------------------- hardening evidence
     def official_modules(self, image: str, manifest: Manifest) -> dict[str, frozenset[str]]:

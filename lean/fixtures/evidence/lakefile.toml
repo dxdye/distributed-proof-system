@@ -1,0 +1,6 @@
+name = "evidence"
+version = "0.1.0"
+defaultTargets = ["Claims"]
+
+[[lean_lib]]
+name = "Claims"

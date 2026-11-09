@@ -1,6 +1,6 @@
 name = "dpc-analyzer"
 version = "0.1.0"
-defaultTargets = ["dpc-analyze", "dpc-mutate"]
+defaultTargets = ["dpc-analyze", "dpc-mutate", "dpc-evidence"]
 
 # Deliberately no dependencies (no Mathlib): the analyzer is rebuilt for the
 # exact toolchain of every analysed repository (see docs/adr/0004), which only
@@ -19,3 +19,7 @@ supportInterpreter = true
 name = "dpc-mutate"
 root = "MutateMain"
 supportInterpreter = true
+
+[[lean_exe]]
+name = "dpc-evidence"
+root = "EvidenceMain"

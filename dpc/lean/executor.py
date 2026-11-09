@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Literal, Protocol
 
+from dpc.lean.evidence import EVIDENCE_FILE, EVIDENCE_MODULE, EvidenceCheck
 from dpc.lean.project import lean_path, read_manifest, read_toolchain, runtime_env, toolchain_slug
 
 Mode = Literal["core", "metadata"]
@@ -32,6 +33,8 @@ Mode = Literal["core", "metadata"]
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ANALYZER_SRC = REPO_ROOT / "lean" / "analyzer"
 DOCKERFILE = REPO_ROOT / "sandbox" / "lean.Dockerfile"
+#: Further inputs of the sandbox image (part of its tag, so that changing them rebuilds it).
+IMAGE_INPUTS = (DOCKERFILE, REPO_ROOT / "sandbox" / "run-tool.sh")
 #: Entry script in the sandbox image: `run-tool.sh <program> <args…>`.
 TOOL_ENTRY = "/opt/dpc/run-tool.sh"
 
@@ -75,6 +78,14 @@ def analyzer_source_hash() -> str:
     return digest.hexdigest()
 
 
+def image_inputs_hash() -> str:
+    """Analyzer sources plus Dockerfile and tool runner: the sandbox image tag."""
+    digest = hashlib.sha256(analyzer_source_hash().encode())
+    for path in IMAGE_INPUTS:
+        digest.update(path.name.encode() + b"\0" + path.read_bytes() + b"\0")
+    return digest.hexdigest()
+
+
 def _analyzer_args(root: str, imports: Sequence[str], mode: Mode, out: str) -> list[str]:
     args = ["--root", root]
     for module in imports:
@@ -92,6 +103,14 @@ def _mutate_args(imports: Sequence[str], decls: Sequence[str], out: str,
     for decl in decls:
         args += ["--decl", decl]
     return [*args, *(["--render"] if render else []), "--out", out]
+
+
+def compile_failure(compiled: RunResult) -> EvidenceCheck | None:
+    if compiled.timed_out:
+        return EvidenceCheck.failed("time limit exceeded (SR-10)", compiled.output)
+    if not compiled.ok:
+        return EvidenceCheck.failed("the evidence file does not compile", compiled.output)
+    return None
 
 
 def _run(argv: Sequence[str], *, cwd: Path | None, env: dict[str, str] | None,
@@ -172,6 +191,31 @@ class HostExecutor:
         return self._tool(project, "dpc-mutate",
                           _mutate_args(imports, decls, str(out), render), out)
 
+    def check_evidence(self, project: Path, *, target: str, kind: str, source: str,
+                       workdir: Path, timeout_s: float = 300.0) -> EvidenceCheck:
+        """SR-10 on the host — for *own* evidence files only (tests)."""
+        src, build = workdir / "src", workdir / "build"
+        for d in (src, build):
+            d.mkdir(parents=True, exist_ok=True)
+        (src / EVIDENCE_FILE).write_text(source, encoding="utf-8")
+        sysroot = _run(["lean", "--print-prefix"], cwd=project, env=None, timeout_s=60)
+        if not sysroot.ok:
+            return EvidenceCheck.failed("no Lean toolchain", sysroot.output)
+        paths = [*lean_path(project, read_manifest(project)), str(build)]
+        env = runtime_env(Path(sysroot.stdout.strip()), paths)
+        compiled = _run(["lean", f"--root={src}", str(src / EVIDENCE_FILE),
+                         "-o", str(build / f"{EVIDENCE_MODULE}.olean")],
+                        cwd=project, env=env, timeout_s=timeout_s)
+        if failure := compile_failure(compiled):
+            return failure
+        exe = self.analyzer_exe(read_toolchain(project), "dpc-evidence")
+        out = build / "result.json"
+        checked = _run([str(exe), "--target", target, "--kind", kind, "--out", str(out)],
+                       cwd=project, env=env, timeout_s=timeout_s)
+        if not checked.ok or not out.is_file():
+            return EvidenceCheck.failed("the checker failed", checked.output)
+        return EvidenceCheck.from_file(out, compiled.output)
+
 
 # -------------------------------------------------------------------- docker
 @dataclass(frozen=True)
@@ -216,7 +260,7 @@ class DockerExecutor:
 
     def image_for(self, toolchain: str) -> str:
         tag = re.sub(r"[^A-Za-z0-9_.-]", "_", toolchain)
-        return f"{self.image_repo}:{tag}-{analyzer_source_hash()[:12]}"
+        return f"{self.image_repo}:{tag}-{image_inputs_hash()[:12]}"
 
     def ensure_image(self, toolchain: str) -> str:
         """Build the sandbox image if missing. Trusted step; needs network."""

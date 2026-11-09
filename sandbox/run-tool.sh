@@ -1,15 +1,20 @@
 #!/bin/sh
-# Runs one of the analyzer tools (dpc-analyze, dpc-mutate) inside the sandbox
-# with the toolchain's core library and runtime on the search path:
-#   run-tool.sh <program> <args...>
+# Runs one of the analyzer tools inside the sandbox with the toolchain's core
+# library and runtime on the search path:
+#   run-tool.sh <dpc-analyze|dpc-mutate|dpc-evidence> <args...>
+#   run-tool.sh lean-compile <root dir> <file.lean> <out.olean>   (evidence, SR-10)
 set -eu
 program="$1"
 shift
-case "$program" in
-  dpc-analyze|dpc-mutate) ;;
-  *) echo "unknown tool: $program" >&2; exit 2 ;;
-esac
 LEAN_SYSROOT="$(lean --print-prefix)"
 export LEAN_SYSROOT
 export LD_LIBRARY_PATH="$LEAN_SYSROOT/lib/lean${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-exec "/opt/dpc/analyzer/.lake/build/bin/$program" "$@"
+case "$program" in
+  dpc-analyze|dpc-mutate|dpc-evidence)
+    exec "/opt/dpc/analyzer/.lake/build/bin/$program" "$@" ;;
+  lean-compile)
+    exec lean --root="$1" "$2" -o "$3" ;;
+  *)
+    echo "unknown tool: $program" >&2
+    exit 2 ;;
+esac

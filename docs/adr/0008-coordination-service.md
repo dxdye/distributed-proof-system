@@ -123,9 +123,29 @@ leases and decisions, take about 40 s on a laptop
 
 ## Open points
 
-- **Evidence check (SR-10).** A sandboxed Lean job against the fixed commit
-  (only Ax0, no `sorry`, time limit). `Coordinator.confirm_by_machine` is the
-  hook.
+- **Evidence check (SR-10): implemented, not yet wired to claims.**
+  - *How it works.* `dpc-evidence` checks a Lean evidence file in the sandbox.
+    The file is compiled by plain `lean`; then all its declarations are
+    replayed through the kernel from an environment containing only its
+    imports. The check requires `dpc_evidence`, the standard axioms only, and
+    a time limit. For vacuity it also requires exactly the vacuity goal of the
+    target. A proof that `lean` accepted under `debug.skipKernelTC` is rejected
+    by the replay (`tests/test_evidence.py`). `Coordinator.confirm_by_machine`
+    is the hook for confirmed results.
+  - *Why it is not wired yet.* A honeypot's statement does not exist in the
+    Lean environment, so a check against the declaration of the same name would
+    never confirm a claim on a honeypot. Claimants could then recognise
+    honeypots by the missing machine confirmation. PVVs would see
+    evidence-backed claims mainly on honeypots, because confirmed real claims
+    never reach them.
+  - *What it needs.* The check must target the shown statement. The mutant
+    cannot be regenerated inside the checker: relation swaps synthesise
+    instances, which needs the environment extensions, and loading them would
+    run the submission's initializers inside the checker. The plan is to compile
+    every honeypot statement as a `def` in a separate target module (no
+    evidence code involved), check that it elaborates to the mutant
+    (`mutant_hash`), and drop candidates that do not round-trip.
+  - *Until then.* Claims are decided by PVVs alone.
 - **Delphi round 2 (concept §8.6).** Showing justifications and recording
   revisions as non-independent votes.
 - **Honeypots from foreign or private sources** need the *unit view* of their
