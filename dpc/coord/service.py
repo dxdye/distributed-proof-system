@@ -331,8 +331,7 @@ class Coordinator:
         and difficulty (SR-26), the expected duration is their median (SR-30)."""
         done = self.state.durations.get((duty, difficulty_bucket(ticket.difficulty)), [])
         if len(done) < self.params.lease_min_samples:
-            tau = self.params.default_lease_s
-            return tau, tau // 6
+            return self.params.default_lease_s, self.params.default_expected_s
         tau = max(3600, int(lease_duration(done, self.params.lease_alpha)))
         return tau, int(np.median(done))
 

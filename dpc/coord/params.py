@@ -8,7 +8,7 @@ in force.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any
 
 from dpc.domain.decision import DecisionParams
@@ -33,6 +33,7 @@ class CoordParams:
     lease_alpha: float = 0.1  # τ = F⁻¹(1 − α)
     lease_min_samples: int = 20  # below this, the default duration applies
     default_lease_s: int = 3 * DAY
+    default_expected_s: int = 45 * 60  # shown until enough tickets are finished (SR-30)
     # --- exclusion (SR-08) ---
     pair_window_s: int = 7 * DAY  # Δ_pair
     # --- processing time (SR-29) ---
@@ -61,6 +62,21 @@ class CoordParams:
     def t_min(self, difficulty: float) -> float:
         """``t_min(i)``: harder tickets need longer (concept §9.3)."""
         return float(self.t_min_s * 2.0 ** max(-2.0, min(2.0, difficulty)))
+
+    @classmethod
+    def from_overrides(cls, overrides: dict[str, Any]) -> CoordParams:
+        """Defaults with some fields replaced (e.g. from a JSON file);
+        ``decision`` and ``roles`` take dictionaries of their own fields."""
+        base = cls()
+        data = dict(overrides)
+        if "decision" in data:
+            data["decision"] = replace(base.decision, **data["decision"])
+        if "roles" in data:
+            data["roles"] = replace(base.roles, **data["roles"])
+        unknown = set(data) - set(cls.__dataclass_fields__)
+        if unknown:
+            raise ValueError(f"unknown parameters: {sorted(unknown)}")
+        return replace(base, **data)
 
     def as_log(self) -> dict[str, Any]:
         """Decimal strings instead of floats (canonical JSON, ADR 0002)."""

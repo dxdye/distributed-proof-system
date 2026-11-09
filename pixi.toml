@@ -39,6 +39,13 @@ build-analyzer = { cmd = "lake build", cwd = "lean/analyzer" }
 # --- CLI ---
 dpc = "python -m dpc"
 
+# --- Web (M4): React/TypeScript frontend in ./web, served by `dpc serve` ---
+install-web = { cmd = "npm install", cwd = "web" }
+build-web = { cmd = "npm run build", cwd = "web" }
+dev-web = { cmd = "npm run dev", cwd = "web" }
+serve = "python -m dpc serve"
+demo = "python -m dpc demo"
+
 [activation.env]
 DO_NOT_TRACK = "1"
 PYTHONUTF8 = "1"

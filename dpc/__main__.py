@@ -21,7 +21,7 @@ from dpc.analysis import (
     units,
 )
 from dpc.audit import AuditLog
-from dpc.coord import BlobStore, Coordinator, Vault
+from dpc.coord import BlobStore, Coordinator, CoordParams, Vault
 from dpc.coord.importer import load_views, ticket_specs
 from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import RoleThresholds
@@ -158,7 +158,26 @@ def _coordinator(args: argparse.Namespace) -> Coordinator:
     data = Path(args.data)
     data.mkdir(parents=True, exist_ok=True)
     log = AuditLog(Path(args.log) if args.log else data / "audit.sqlite")
-    return Coordinator(log, Vault(data / "vault.sqlite"), blobs=BlobStore(data / "blobs"))
+    params = CoordParams.from_overrides(json.loads(Path(args.params).read_text("utf-8"))) \
+        if getattr(args, "params", None) else None
+    return Coordinator(log, Vault(data / "vault.sqlite"), params,
+                       blobs=BlobStore(data / "blobs"))
+
+
+def cmd_demo(args: argparse.Namespace) -> int:
+    """Seed a local demo: the mutation fixture as a submission, one maintainer."""
+    from dpc.coord.demo import seed_demo
+
+    coord = _coordinator(args)
+    executor = HostExecutor(trusted=True, cache_dir=Path(args.cache).resolve())
+    info = seed_demo(coord, Path(args.data).resolve() / "demo-work", executor,
+                     share=args.share)
+    _, token = coord.register(args.maintainer, "expert", notice_acknowledged=True)
+    rid = coord.vault.reviewer_for_pseudonym(args.maintainer)
+    assert rid is not None
+    coord.appoint_maintainer(rid)
+    _print(info | {"maintainer": args.maintainer, "maintainer_token": token})
+    return 0
 
 
 def cmd_open_submission(args: argparse.Namespace) -> int:
@@ -329,6 +348,7 @@ def main(argv: list[str] | None = None) -> int:
     def coord_args(p: argparse.ArgumentParser) -> None:
         p.add_argument("--data", default="data/coord", help="audit log, vault and blobs")
         p.add_argument("--log", help="audit log (default: <data>/audit.sqlite)")
+        p.add_argument("--params", help="JSON file with parameter overrides (CoordParams)")
 
     p = sub.add_parser("open-submission", help="create the class-A tickets (M4)")
     p.add_argument("submission")
@@ -347,6 +367,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("pseudonym")
     coord_args(p)
     p.set_defaults(func=cmd_appoint)
+
+    p = sub.add_parser("demo", help="seed a local demo from the mutation fixture (M4)")
+    p.add_argument("--share", type=float, default=0.2, help="honeypot share h")
+    p.add_argument("--maintainer", default="maintainer", help="pseudonym of the maintainer")
+    p.add_argument("--cache", default=str(DEFAULT_CACHE))
+    coord_args(p)
+    p.set_defaults(func=cmd_demo, data="data/demo")
 
     p = sub.add_parser("serve", help="run the web service (M4)")
     p.add_argument("--host", default="127.0.0.1")
