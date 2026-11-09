@@ -57,7 +57,7 @@ snapshot; a mismatch, or a marker without snapshot, means: discard the volume
 and start from scratch.
 
 **Dependency patches.** Some formalizations patch third-party dependencies to
-make them compile with their toolchain (observed: `openai/math` ships 24
+make them compile with their toolchain (observed: `openai/math` ships 23
 `patches/<package>-lean4341.patch` files; its lakefile applies 11 of them at
 configuration time, the rest via `lake update`). The pinned revisions alone are
 then not buildable. A submission may declare a patch directory; every

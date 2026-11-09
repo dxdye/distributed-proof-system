@@ -24,10 +24,10 @@ makes the reliability of that judgement measurable:
 | Milestone | Content | State |
 |---|---|---|
 | M0 | Scaffold, audit log, requirement traceability | ✅ |
-| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ Navier–Stokes measured ([report](docs/case-studies/navier-stokes.md)), QRH 7/8 running |
-| M2 | Mutation generator, local and component equivalence filter, auto-detection filter, honeypot source registry and mixing | ✅ 47 honeypot candidates on Navier–Stokes; maintainer review of pools open |
+| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ measured on [Navier–Stokes](docs/case-studies/navier-stokes.md) (8 class-A units) and [ζ(s) ≠ 0 for Re s > 7/8](docs/case-studies/quasi-riemann.md) (1 class-A unit) |
+| M2 | Mutation generator, local and component equivalence filter, auto-detection filter, honeypot source registry and mixing | ✅ 47 + 7 honeypot candidates; maintainer review of pools open |
 | M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ study incl. lenses, IRT, Delphi, Sybil, collusion ([findings](docs/simulation/README.md)) |
-| M4 | Web prototype for class A, pilot | planned |
+| M4 | Coordination service (choice sets, leases, exclusion rules, claims, PVV, decisions, delayed honeypot reveal), HTTP API, web client with static infoview, evidence checker with kernel replay | ✅ MVP ([ADR 0008](docs/adr/0008-coordination-service.md)); evidence checks not yet wired to claims, pilot open |
 | M5 | Class B, certificate, signed report | planned |
 
 All 60 system requirements live in [`requirements/sr.yaml`](requirements/sr.yaml);
@@ -71,6 +71,26 @@ pixi run dpc ingest submission.json --executor docker-volume --workdir work/run1
     --cpus 7 --memory 24g --timeout-h 6
 ```
 
+Try the review web service locally (M4) — the mutation fixture becomes a
+submission with planted errors; needs elan and Node.js, no Docker:
+
+```bash
+pixi run install-web && pixi run build-web
+pixi run demo --params config/demo-params.json      # prints a maintainer token
+pixi run serve --data data/demo --params config/demo-params.json
+# open http://127.0.0.1:8000, register reviewers, sign in as maintainer with the token
+```
+
+For a real submission: ingest it (above), then render the ticket views,
+generate honeypot candidates and open it for review:
+
+```bash
+pixi run dpc render submission.json --workdir work/run1
+pixi run dpc mutate submission.json --workdir work/run1
+pixi run dpc open-submission submission.json --workdir work/run1 --title "…" --lab "…"
+pixi run serve
+```
+
 Simulate the review process (M3), e.g. with "always correct" clickers and
 honeypot lookup attackers:
 
@@ -91,11 +111,17 @@ dpc/                  Python package
   domain/             pure review model: trust, decision rule, Dawid–Skene, sampling,
                       lenses, leases, PRL and priority, attention, forecast, anomalies
   sim/                agent-based simulation of the review process (M3)
+  tickets/            ticket and review records, unit views, class-A generation
+  coord/              coordination service (M4): events, projection, vault, commands
+  api/                HTTP API (FastAPI)
   tools/              pytest traceability plugin
-lean/analyzer/        Lean 4 metaprograms `dpc-analyze` (TCB extraction) and `dpc-mutate`
-                      (mutants + local equivalence filter), JSON Lines export
+lean/analyzer/        Lean 4 metaprograms: `dpc-analyze` (TCB extraction), `dpc-mutate`
+                      (mutants, equivalence filter, ticket views), `dpc-evidence`
+                      (kernel replay and check of evidence files, SR-10)
 lean/fixtures/        test projects: `basic` (hand-checked TCB), `mutation` (known
-                      equivalent / non-equivalent mutants), `redteam` (sandbox escape attempts)
+                      equivalent / non-equivalent mutants), `redteam` (sandbox escape
+                      attempts), `evidence` (vacuous and honest claims)
+web/                  React/TypeScript client (Vite)
 docs/case-studies/    measurements on real formalizations
 sandbox/              Dockerfile and entry script of the sandbox image
 requirements/sr.yaml  system requirements SR-01 … SR-60
@@ -112,6 +138,7 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 - [0005](docs/adr/0005-sandbox-and-dependency-fetch.md) Sandbox and dependency fetch
 - [0006](docs/adr/0006-honeypot-sources.md) Honeypot sources
 - [0007](docs/adr/0007-local-equivalence-filter.md) Local equivalence filter for mutants
+- [0008](docs/adr/0008-coordination-service.md) Coordination service
 
 ## Conventions
 
