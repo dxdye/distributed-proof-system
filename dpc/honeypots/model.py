@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from dpc.tickets.views import GlossaryEntry
+
 SCHEMA = "dpc.mutants/1"
 
 
@@ -31,6 +33,7 @@ class Mutant(BaseModel):
     original: str
     mutant: str
     mutant_hash: str
+    glossary: tuple[GlossaryEntry, ...] = ()  # constants of the mutated component
 
     @property
     def usable(self) -> bool:

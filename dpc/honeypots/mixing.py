@@ -1,83 +1,99 @@
 """Mixing honeypots into the ticket stream (SR-06).
 
 The share ``h`` is configurable in ``[0, 0.2]`` (default 0.1). What a reviewer
-sees — the :class:`TicketView` — is built by the same code for real tickets and
-honeypots and has exactly the same fields; whether a ticket is a honeypot is
-stored server-side only (:class:`Slot`). Ticket ids are random, so neither
-their order nor their range reveals late-inserted honeypots.
+sees — a :class:`~dpc.tickets.views.UnitView` — is built from the same
+rendering for real tickets and honeypots: a honeypot is the view of its
+original unit with exactly one component replaced by the mutant. Whether a
+ticket is a honeypot is stored server-side only (:class:`Slot`, and a
+commitment in the audit log, see ``dpc.coord``).
 """
 
 from __future__ import annotations
 
-import secrets
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
 
+from dpc.honeypots.model import Mutant
 from dpc.honeypots.sources import Candidate, HoneypotPool
+from dpc.tickets.views import UnitView
 
 MAX_SHARE = 0.2
 DEFAULT_SHARE = 0.1
 
 
 @dataclass(frozen=True)
-class TicketView:
-    """Everything a reviewer sees. Identical shape for real tickets and honeypots."""
-
-    ticket_id: str
-    ticket_class: str
-    declaration: str
-    statement: str
-    context: tuple[str, ...]
-    questions: tuple[str, ...]
-
-
-@dataclass(frozen=True)
 class Slot:
     """Server-side record behind a view."""
 
-    view: TicketView
+    view: UnitView
     is_honeypot: bool
     honeypot: Candidate | None = None
 
 
-QUESTIONS_A = ("fidelity", "junk_values", "edge_cases", "vacuity", "quantifiers")
+class MutantMismatch(ValueError):
+    """The mutant does not fit the view (different rendering or component)."""
 
 
-def new_ticket_id(ticket_class: str) -> str:
-    return f"{ticket_class}-{secrets.token_hex(6)}"
+def honeypot_view(original: UnitView, mutant: Mutant) -> UnitView:
+    """The original view with the mutated component replaced.
+
+    Refuses if the mutant's ``original`` text differs from the component in the
+    view: then the two were rendered differently, and the honeypot would be
+    recognisable by its formatting alone."""
+    if mutant.decl != original.declaration:
+        raise MutantMismatch(f"mutant of {mutant.decl} for view of {original.declaration}")
+    comp = original.component(mutant.target, mutant.component)
+    if comp is None:
+        raise MutantMismatch(f"{original.declaration} has no component "
+                             f"{mutant.target} {mutant.component!r}")
+    if comp.text != mutant.original:
+        raise MutantMismatch(f"{original.declaration}: rendering differs from the mutant's")
+    replaced = comp.model_copy(update={"text": mutant.mutant,
+                                       "glossary": mutant.glossary or comp.glossary})
+    return original.model_copy(update={"components": tuple(
+        replaced if c is comp else c for c in original.components)})
+
+
+def fits(view: UnitView | None, mutant: Mutant) -> bool:
+    if view is None:
+        return False
+    try:
+        honeypot_view(view, mutant)
+    except MutantMismatch:
+        return False
+    return True
+
+
+def honeypot_count(real: int, share: float) -> int:
+    """Honeypots needed so that they make up ``share`` of the whole stream."""
+    if not 0.0 <= share <= MAX_SHARE:
+        raise ValueError(f"honeypot share must be within [0, {MAX_SHARE}] (SR-06)")
+    return round(real * share / (1 - share)) if share else 0
 
 
 def plan_stream(
-    real: Sequence[tuple[str, str, tuple[str, ...]]],
+    real: Sequence[UnitView],
     pool: HoneypotPool,
     rng: np.random.Generator,
     *,
     share: float = DEFAULT_SHARE,
-    ticket_class: str = "A",
-    id_factory: Callable[[str], str] = new_ticket_id,
-    contexts: Mapping[str, tuple[str, ...]] | None = None,
 ) -> list[Slot]:
     """Interleave honeypots so that they make up ``share`` of the stream.
 
-    ``real``: ``(declaration, statement, context)`` of the real tickets.
-    Honeypots carry the original declaration name and *its* context (from
-    ``real`` or ``contexts``), so the visible fields cannot tell them apart."""
-    known = {decl: ctx for decl, _, ctx in real} | dict(contexts or {})
-    if not 0.0 <= share <= MAX_SHARE:
-        raise ValueError(f"honeypot share must be within [0, {MAX_SHARE}] (SR-06)")
-    n_honeypots = round(len(real) * share / (1 - share)) if share else 0
-    n_honeypots = min(n_honeypots, len(pool))
-    slots = [
-        Slot(TicketView(id_factory(ticket_class), ticket_class, decl, stmt, ctx, QUESTIONS_A),
-             is_honeypot=False)
-        for decl, stmt, ctx in real
-    ]
-    for _ in range(n_honeypots):
-        cand = pool.draw()
-        view = TicketView(id_factory(ticket_class), ticket_class, cand.mutant.decl,
-                          cand.mutant.mutant, known.get(cand.mutant.decl, ()), QUESTIONS_A)
+    Only mutants of declarations that have a view in ``real`` are used: a
+    honeypot carries the original declaration name and context, so nothing
+    visible tells it apart. If the pool runs short, fewer honeypots are mixed
+    in (the actual share is in the result)."""
+    by_decl = {v.declaration: v for v in real}
+    slots = [Slot(view, is_honeypot=False) for view in real]
+    for _ in range(honeypot_count(len(real), share)):
+        try:
+            cand = pool.draw(accept=lambda c: fits(by_decl.get(c.mutant.decl), c.mutant))
+        except LookupError:
+            break
+        view = honeypot_view(by_decl[cand.mutant.decl], cand.mutant)
         slots.append(Slot(view, is_honeypot=True, honeypot=cand))
     order = rng.permutation(len(slots))
     return [slots[i] for i in order]

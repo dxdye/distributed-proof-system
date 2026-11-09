@@ -6,11 +6,18 @@ server-side only (see `dpc.honeypots.mixing.Slot`, SR-06).
 
 from __future__ import annotations
 
+import secrets
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 QUESTIONS_A = ("fidelity", "junk_values", "edge_cases", "vacuity", "quantifiers")
+
+
+def new_ticket_id(ticket_class: str) -> str:
+    """Random ids: neither their order nor their range reveals late-inserted
+    honeypots (SR-06)."""
+    return f"{ticket_class}-{secrets.token_hex(6)}"
 
 
 class _Model(BaseModel):

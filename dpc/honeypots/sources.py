@@ -24,7 +24,7 @@ repository; foreign repositories are ingested like any submission first.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -130,8 +130,11 @@ class HoneypotPool:
             for c in self.candidates if c.mutant.mutant_hash not in self.used
         ).items()))
 
-    def draw(self) -> Candidate:
-        fresh = [c for c in self.candidates if c.mutant.mutant_hash not in self.used]
+    def draw(self, accept: Callable[[Candidate], bool] | None = None) -> Candidate:
+        """Draw an unused candidate; ``accept`` restricts the choice (e.g. to
+        mutants of declarations that have a ticket in this submission)."""
+        fresh = [c for c in self.candidates if c.mutant.mutant_hash not in self.used
+                 and (accept is None or accept(c))]
         if not fresh:
             raise LookupError("honeypot pool exhausted")
         if self.policy == "prefer_private" and any(not c.public for c in fresh):

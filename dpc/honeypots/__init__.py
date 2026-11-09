@@ -4,7 +4,14 @@ Concept §5.1, SR-06, SR-07, docs/adr/0006 (sources) and docs/adr/0007 (local
 equivalence filter).
 """
 
-from dpc.honeypots.mixing import MAX_SHARE, Slot, TicketView, plan_stream
+from dpc.honeypots.mixing import (
+    MAX_SHARE,
+    MutantMismatch,
+    Slot,
+    honeypot_count,
+    honeypot_view,
+    plan_stream,
+)
 from dpc.honeypots.model import SCHEMA, Mutant, MutantSet
 from dpc.honeypots.sources import (
     HoneypotPool,
@@ -22,11 +29,13 @@ __all__ = [
     "HoneypotSource",
     "Mutant",
     "MutantFileSource",
+    "MutantMismatch",
     "MutantSet",
     "Origin",
     "Slot",
     "SourceSpec",
-    "TicketView",
+    "honeypot_count",
+    "honeypot_view",
     "load_registry",
     "plan_stream",
 ]

@@ -7,9 +7,8 @@ from collections.abc import Callable, Mapping, Sequence
 from dpc.analysis.domains import DomainAssignment
 from dpc.analysis.model import Analysis
 from dpc.analysis.tcb import units as compute_units
-from dpc.honeypots.mixing import new_ticket_id
 from dpc.tickets.difficulty import static_difficulty, static_features
-from dpc.tickets.model import Ticket
+from dpc.tickets.model import Ticket, new_ticket_id
 
 
 class CoverageError(ValueError):
