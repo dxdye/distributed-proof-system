@@ -9,6 +9,8 @@ from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
+import numpy as np
+
 from dpc.analysis import (
     Analysis,
     assign_domains,
@@ -19,9 +21,11 @@ from dpc.analysis import (
     units,
 )
 from dpc.audit import AuditLog
+from dpc.coord import BlobStore, Coordinator, Vault
+from dpc.coord.importer import load_views, ticket_specs
 from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import RoleThresholds
-from dpc.honeypots import MutantSet
+from dpc.honeypots import HoneypotPool, MutantFileSource, MutantSet, Origin, load_registry
 from dpc.ingest import Submission, ingest
 from dpc.ingest.volume import ingest_in_volume, volume_name
 from dpc.lean.executor import DockerExecutor, HostExecutor, LeanExecutor, Limits
@@ -115,8 +119,13 @@ def cmd_audit_verify(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
-def cmd_mutate(args: argparse.Namespace) -> int:
-    """Mutants of an ingested submission's class-A units, in its Docker volume (M2)."""
+def _class_a_names(workdir: Path) -> list[str]:
+    return [u.name for u in units(Analysis.load(workdir / "analysis" / "core.jsonl")).values()
+            if u.in_tcb]
+
+
+def _run_in_volume(args: argparse.Namespace, *, render: bool, out: Path) -> int:
+    """`dpc-mutate` in the submission's Docker volume (untrusted step)."""
     submission = Submission.model_validate_json(Path(args.submission).read_text("utf-8"))
     workdir = Path(args.workdir).resolve()
     executor = DockerExecutor(limits=Limits(cpus=args.cpus, memory=args.memory,
@@ -127,14 +136,89 @@ def cmd_mutate(args: argparse.Namespace) -> int:
     manifest = Manifest.model_validate_json(
         ws.read_text(ws.project / "lake-manifest.json", fetch_image))
     image = executor.ensure_image(toolchain)
-    decls = args.decls or [u.name for u in units(Analysis.load(workdir / "analysis" / "core.jsonl"))
-                           .values() if u.in_tcb]
-    out = workdir / "mutants.jsonl"
-    result = ws.mutate(image, manifest, imports=[submission.root_module], decls=decls, out=out)
+    decls = args.decls or _class_a_names(workdir)
+    result = ws.mutate(image, manifest, imports=[submission.root_module], decls=decls,
+                       out=out, render=render)
     if not result.ok:
         print(result.output, file=sys.stderr)
         return 1
-    _print(MutantSet.load(out).stats() | {"declarations": decls, "file": str(out)})
+    return 0
+
+
+def cmd_render(args: argparse.Namespace) -> int:
+    """Ticket views (components + glossary) of the class-A units (M4, SR-21)."""
+    out = Path(args.workdir).resolve() / "views.jsonl"
+    if (code := _run_in_volume(args, render=True, out=out)) != 0:
+        return code
+    _print({"views": len(load_views(out)), "file": str(out)})
+    return 0
+
+
+def _coordinator(args: argparse.Namespace) -> Coordinator:
+    data = Path(args.data)
+    data.mkdir(parents=True, exist_ok=True)
+    log = AuditLog(Path(args.log) if args.log else data / "audit.sqlite")
+    return Coordinator(log, Vault(data / "vault.sqlite"), blobs=BlobStore(data / "blobs"))
+
+
+def cmd_open_submission(args: argparse.Namespace) -> int:
+    """Open an ingested, rendered submission for review (SR-05, SR-06)."""
+    submission = Submission.model_validate_json(Path(args.submission).read_text("utf-8"))
+    workdir = Path(args.workdir).resolve()
+    core = workdir / "analysis" / "core.jsonl"
+    metadata = workdir / "analysis" / "metadata.jsonl"
+    analysis = Analysis.load(core)
+    if metadata.exists():
+        analysis = merge(analysis, Analysis.load(metadata))
+    specs = ticket_specs(analysis, submission.commit, load_views(workdir / "views.jsonl"))
+    coord = _coordinator(args)
+    rng = np.random.default_rng()
+    pool = None
+    if args.registry:
+        pool = HoneypotPool(load_registry(Path(args.registry)), rng, policy=args.policy)
+    elif (workdir / "mutants.jsonl").exists():
+        own = MutantFileSource(workdir / "mutants.jsonl", Origin.OWN_REPOSITORY, "own", True)
+        pool = HoneypotPool([own], rng, policy=args.policy)
+    authors = [rid for name in args.authors or []
+               if (rid := coord.vault.reviewer_for_pseudonym(name)) is not None]
+    sid = coord.open_submission(
+        title=args.title or submission.root, repo_url=submission.repo_url,
+        commit=submission.commit, tickets=specs, pool=pool, share=args.share, lab=args.lab,
+        authors=authors)
+    _print({"submission_id": sid, "units": len(specs),
+            "tickets": len(coord.state.submissions[sid].tickets)})
+    return 0
+
+
+def cmd_appoint(args: argparse.Namespace) -> int:
+    coord = _coordinator(args)
+    rid = coord.vault.reviewer_for_pseudonym(args.pseudonym)
+    if rid is None:
+        print(f"unknown pseudonym {args.pseudonym!r}", file=sys.stderr)
+        return 1
+    coord.appoint_maintainer(rid)
+    _print({"maintainer": args.pseudonym, "reviewer_id": rid})
+    return 0
+
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from dpc.api import create_app
+
+    coord = _coordinator(args)
+    web = Path(args.web) if args.web else None
+    uvicorn.run(create_app(coord, static_dir=web, tick_seconds=args.tick),
+                host=args.host, port=args.port)
+    return 0
+
+
+def cmd_mutate(args: argparse.Namespace) -> int:
+    """Mutants of an ingested submission's class-A units, in its Docker volume (M2)."""
+    out = Path(args.workdir).resolve() / "mutants.jsonl"
+    if (code := _run_in_volume(args, render=False, out=out)) != 0:
+        return code
+    _print(MutantSet.load(out).stats() | {"file": str(out)})
     return 0
 
 
@@ -231,6 +315,46 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--memory", default=Limits.memory)
     p.add_argument("--timeout-h", type=float, default=Limits.timeout_s / 3600)
     p.set_defaults(func=cmd_mutate)
+
+    p = sub.add_parser("render", help="ticket views of an ingested submission (M4)")
+    p.add_argument("submission")
+    p.add_argument("--workdir", required=True, help="workdir of the earlier ingest")
+    p.add_argument("--decl", dest="decls", action="append",
+                   help="declarations (default: all class-A units)")
+    p.add_argument("--cpus", type=float, default=Limits.cpus)
+    p.add_argument("--memory", default=Limits.memory)
+    p.add_argument("--timeout-h", type=float, default=1.0)
+    p.set_defaults(func=cmd_render)
+
+    def coord_args(p: argparse.ArgumentParser) -> None:
+        p.add_argument("--data", default="data/coord", help="audit log, vault and blobs")
+        p.add_argument("--log", help="audit log (default: <data>/audit.sqlite)")
+
+    p = sub.add_parser("open-submission", help="create the class-A tickets (M4)")
+    p.add_argument("submission")
+    p.add_argument("--workdir", required=True, help="with analysis/, views.jsonl, mutants")
+    p.add_argument("--title")
+    p.add_argument("--share", type=float, default=None, help="honeypot share h (SR-06)")
+    p.add_argument("--registry", help="honeypot source registry (ADR 0006)")
+    p.add_argument("--policy", choices=["any", "prefer_private", "private_only"],
+                   default="any")
+    p.add_argument("--lab", help="submitting lab (SR-50)")
+    p.add_argument("--author", dest="authors", action="append", help="author pseudonym")
+    coord_args(p)
+    p.set_defaults(func=cmd_open_submission)
+
+    p = sub.add_parser("appoint", help="appoint a maintainer")
+    p.add_argument("pseudonym")
+    coord_args(p)
+    p.set_defaults(func=cmd_appoint)
+
+    p = sub.add_parser("serve", help="run the web service (M4)")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8000)
+    p.add_argument("--web", default="web/dist", help="built frontend to serve")
+    p.add_argument("--tick", type=float, default=60.0, help="seconds between ticks")
+    coord_args(p)
+    p.set_defaults(func=cmd_serve)
 
     p = sub.add_parser("simulate", help="agent-based simulation of class-A review (M3)")
     p.add_argument("--items", type=int, default=300)

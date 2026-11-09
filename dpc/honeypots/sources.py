@@ -52,7 +52,8 @@ class Candidate:
 
 
 class HoneypotSource(Protocol):
-    name: str
+    @property
+    def name(self) -> str: ...
 
     def candidates(self) -> Sequence[Candidate]: ...
 
