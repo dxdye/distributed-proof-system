@@ -398,8 +398,9 @@ class VolumeWorkspace:
         return self._tool(image, manifest, "dpc-analyze", args, out)
 
     def mutate(self, image: str, manifest: Manifest, *, imports: Sequence[str],
-               decls: Sequence[str], out: Path) -> RunResult:
-        args = _mutate_args(imports, decls, str(self.executor.OUT / out.name))
+               decls: Sequence[str], out: Path, render: bool = False) -> RunResult:
+        """Untrusted step: loads the submission's environment extensions."""
+        args = _mutate_args(imports, decls, str(self.executor.OUT / out.name), render)
         return self._tool(image, manifest, "dpc-mutate", args, out)
 
     # ----------------------------------------------------- hardening evidence

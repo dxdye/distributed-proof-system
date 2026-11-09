@@ -84,13 +84,14 @@ def _analyzer_args(root: str, imports: Sequence[str], mode: Mode, out: str) -> l
     return [*args, "--out", out]
 
 
-def _mutate_args(imports: Sequence[str], decls: Sequence[str], out: str) -> list[str]:
+def _mutate_args(imports: Sequence[str], decls: Sequence[str], out: str,
+                 render: bool = False) -> list[str]:
     args: list[str] = []
     for module in imports:
         args += ["--import", module]
     for decl in decls:
         args += ["--decl", decl]
-    return [*args, "--out", out]
+    return [*args, *(["--render"] if render else []), "--out", out]
 
 
 def _run(argv: Sequence[str], *, cwd: Path | None, env: dict[str, str] | None,
@@ -163,10 +164,13 @@ class HostExecutor:
                           _analyzer_args(root, imports, mode, str(out)), out)
 
     def mutate(
-        self, project: Path, *, imports: Sequence[str], decls: Sequence[str], out: Path
+        self, project: Path, *, imports: Sequence[str], decls: Sequence[str], out: Path,
+        render: bool = False,
     ) -> RunResult:
-        """Mutants and equivalence filter (M2) for the given declarations."""
-        return self._tool(project, "dpc-mutate", _mutate_args(imports, decls, str(out)), out)
+        """Mutants and equivalence filter (M2) for the given declarations; with
+        ``render``, the ticket views of the declarations instead (M4)."""
+        return self._tool(project, "dpc-mutate",
+                          _mutate_args(imports, decls, str(out), render), out)
 
 
 # -------------------------------------------------------------------- docker
@@ -307,7 +311,8 @@ class DockerExecutor:
                           _analyzer_args(root, imports, mode, str(self.OUT / out.name)), out)
 
     def mutate(
-        self, project: Path, *, imports: Sequence[str], decls: Sequence[str], out: Path
+        self, project: Path, *, imports: Sequence[str], decls: Sequence[str], out: Path,
+        render: bool = False,
     ) -> RunResult:
         return self._tool(project, "dpc-mutate",
-                          _mutate_args(imports, decls, str(self.OUT / out.name)), out)
+                          _mutate_args(imports, decls, str(self.OUT / out.name), render), out)

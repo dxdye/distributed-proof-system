@@ -7,6 +7,12 @@ equivalence filter (concept §5.1, SR-07). Output: JSON Lines, schema
 `dpc.mutants/1`, one record per candidate mutant (rejected ones included, so
 the filter rates can be measured — verification §11.2).
 
+With `--render` it instead writes one `view` record per declaration: the
+components a reviewer sees (type, definition body, constructors), rendered by
+the same `pp` as the mutants, with a glossary of the constants each component
+uses (SR-21). Ticket views and honeypots are built from these records, so the
+two cannot be told apart by their formatting (SR-06).
+
 Loads environment extensions (simp sets, notation, delaborators), i.e. runs the
 imported modules' initializers: sandbox only (SR-20).
 -/
@@ -15,7 +21,7 @@ open Lean Meta Elab DpcAnalyzer DpcAnalyzer.Mutate
 
 def usage : String :=
   "usage: dpc-mutate --import MODULE [...] --decl NAME [...] [--tactic SCRIPT ...] " ++
-  "[--heartbeats N] [--max-sites N] --out FILE"
+  "[--heartbeats N] [--max-sites N] [--render] --out FILE"
 
 /-- Scripts tried on the closed equivalence goal `∀ ctx, a ↔ a'` (or `= `). -/
 def defaultScripts : Array String := #[
@@ -33,6 +39,7 @@ structure Args where
   scripts : Array String := #[]
   heartbeats : Nat := 20000
   maxSites : Nat := 64
+  render : Bool := false
   out : Option System.FilePath := none
 
 def parseArgs : List String → Args → Except String Args
@@ -43,6 +50,7 @@ def parseArgs : List String → Args → Except String Args
   | "--heartbeats" :: v :: rest, a => parseArgs rest { a with heartbeats := v.toNat! }
   | "--max-sites" :: v :: rest, a => parseArgs rest { a with maxSites := v.toNat! }
   | "--out" :: v :: rest, a => parseArgs rest { a with out := some v }
+  | "--render" :: rest, a => parseArgs rest { a with render := true }
   | x :: _, _ => .error s!"unexpected argument '{x}'"
 
 @[implemented_by enableInitializersExecution]
@@ -53,6 +61,20 @@ otherwise a change hidden in a type (ℝ³ → ℝ⁴) would be invisible. -/
 def pp (e : Expr) : MetaM String :=
   withOptions (fun o => o.setBool `pp.funBinderTypes true |>.setBool `pp.piBinderTypes true) do
     return toString (← ppExpr e)
+
+/-- The constants a component mentions, with their types: the static part of an
+infoview (SR-21). The declaration itself, internal names and instances are left
+out; sorted by name, so the output is deterministic. -/
+def glossary (e : Expr) (self : Name) : MetaM Json := do
+  let env ← getEnv
+  let names := e.getUsedConstants.qsort (fun a b => a.toString < b.toString)
+  let mut out := #[]
+  for c in names do
+    if c == self || c.isInternal then continue
+    if ← isInstance c then continue
+    let some ci := env.find? c | continue
+    out := out.push <| Json.mkObj [("name", toJson (toString c)), ("type", toJson (← pp ci.type))]
+  return Json.arr out
 
 /-- What is mutated in a declaration: `(target, label, original, expected type)`. -/
 def mutationTargets (env : Environment) (ci : ConstantInfo) :
@@ -66,6 +88,19 @@ def mutationTargets (env : Environment) (ci : ConstantInfo) :
         out := out.push (.ctor, toString c, cinfo.type, ← inferType cinfo.type)
   | _ => pure ()
   return out
+
+/-- The view of one declaration: every component a mutant could replace. -/
+def viewOf (name : Name) : MetaM Json := do
+  let env ← getEnv
+  let some ci := env.find? name | throwError "unknown declaration {name}"
+  let mut comps := #[]
+  for (target, label, e, _) in ← mutationTargets env ci do
+    comps := comps.push <| Json.mkObj [
+      ("target", toJson target.toString), ("label", toJson label),
+      ("text", toJson (← pp e)), ("glossary", ← glossary e name)]
+  return Json.mkObj [
+    ("kind", toJson "view"), ("decl", toJson (toString name)),
+    ("decl_kind", toJson (DpcAnalyzer.declKind ci)), ("components", Json.arr comps)]
 
 /-- Mutants of one declaration as JSON records. -/
 def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
@@ -100,6 +135,9 @@ def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
           pure (autoDetected originalLints (← lints m.result isTheorem args.heartbeats))
         else pure none
       let mutantText ← pp m.result
+      let usable := ok && proof.isNone && detected.isNone && mutantText != originalText
+      -- The glossary of what the reviewer will see (only for usable mutants: pp is slow).
+      let gloss ← if usable then glossary m.result name else pure (Json.arr #[])
       out := out.push <| Json.mkObj [
         ("kind", toJson "mutant"),
         ("decl", toJson (toString name)),
@@ -115,7 +153,8 @@ def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
         ("visible", toJson (mutantText != originalText)),
         ("original", toJson originalText),
         ("mutant", toJson mutantText),
-        ("mutant_hash", toJson (toString m.result.hash))]
+        ("mutant_hash", toJson (toString m.result.hash)),
+        ("glossary", gloss)]
   return out
 
 def main (argv : List String) : IO UInt32 := do
@@ -142,9 +181,13 @@ def main (argv : List String) : IO UInt32 := do
   let run : CoreM (Array Json) := do
     let mut lines := #[header]
     for name in args.decls do
-      lines := lines ++ (← (mutantsOf name args).run'.run')
+      if args.render then
+        lines := lines.push (← (viewOf name).run')
+      else
+        lines := lines ++ (← (mutantsOf name args).run'.run')
     return lines
   let (lines, _) ← run.toIO ctx st
   IO.FS.writeFile out (String.intercalate "\n" (lines.toList.map Json.compress) ++ "\n")
-  IO.println s!"dpc-mutate: wrote {lines.size - 1} mutants to {out}"
+  let what := if args.render then "views" else "mutants"
+  IO.println s!"dpc-mutate: wrote {lines.size - 1} {what} to {out}"
   return 0

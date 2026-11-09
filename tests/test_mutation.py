@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -113,3 +114,46 @@ def test_unknown_declaration_fails(host_executor: HostExecutor, tmp_path: Path) 
     result = host_executor.mutate(project, imports=["Mutation"], decls=["Mut.nope"],
                                   out=tmp_path / "x.jsonl")
     assert not result.ok
+
+
+# ------------------------------------------------------ ticket views (M4, SR-21)
+@pytest.fixture(scope="module")
+def views(host_executor: HostExecutor, tmp_path_factory: pytest.TempPathFactory
+          ) -> dict[str, dict[str, object]]:
+    tmp = tmp_path_factory.mktemp("render")
+    project = copy_fixture("mutation", tmp)
+    assert host_executor.build(project, ["Mutation"]).ok
+    out = tmp / "views.jsonl"
+    result = host_executor.mutate(project, imports=["Mutation"], decls=DECLS, out=out,
+                                  render=True)
+    assert result.ok, result.output
+    lines = [json.loads(line) for line in out.read_text("utf-8").splitlines() if line]
+    return {r["decl"]: r for r in lines[1:]}
+
+
+@pytest.mark.req("SR-21", "SR-06")
+def test_views_have_the_components_a_mutant_can_replace(
+        views: dict[str, dict[str, object]], mutants: MutantSet) -> None:
+    from dpc.honeypots import honeypot_view
+    from dpc.tickets.views import UnitView
+
+    unit = {name: UnitView.from_render(record) for name, record in views.items()}
+    assert [c.target for c in unit["Mut.pos_le"].components] == ["type"]
+    assert [c.target for c in unit["Mut.positive"].components] == ["type", "value"]
+    assert [(c.target, c.label) for c in unit["Mut.Bounded"].components][1] == \
+        ("ctor", "Mut.Bounded.mk")
+    usable = mutants.usable
+    assert usable
+    for m in usable:  # same rendering: every usable mutant fits its view
+        honeypot_view(unit[m.decl], m)
+        assert m.glossary or m.target == "value"
+
+
+@pytest.mark.req("SR-21")
+def test_glossary_lists_used_constants_with_types(views: dict[str, dict[str, object]]) -> None:
+    from dpc.tickets.views import UnitView
+
+    window = UnitView.from_render(views["Mut.window"])
+    names = {g.name for c in window.components for g in c.glossary}
+    assert "Nat" in names and "Mut.window" not in names
+    assert not any(n.startswith("inst") for n in names)  # instances are left out
