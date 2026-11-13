@@ -278,8 +278,11 @@ class Coordinator:
             self._reveal(openings, final=True, submission_id=submission_id)
 
     # -------------------------------------------------------- eligibility
-    def why_not(self, rid: str, ticket: TicketSt, duty: str) -> str | None:
-        """Reason why ``rid`` may not take ``duty`` on ``ticket`` (None: allowed)."""
+    def why_not(self, rid: str, ticket: TicketSt, duty: str, *,
+                check_wip: bool = True) -> str | None:
+        """Reason why ``rid`` may not take ``duty`` on ``ticket`` (None: allowed).
+        ``check_wip=False``: everything but the work-in-progress limit, for showing
+        a choice set to someone who first has to finish or return a ticket."""
         st, now = self.state, self.now()
         person = st.reviewers[rid]
         sub = st.submissions[ticket.submission_id]
@@ -306,7 +309,8 @@ class Coordinator:
             last = st.pairs.get(frozenset((rid, p)))
             if last is not None and now - last < window:
                 return "pair repetition within Δ_pair (SR-08)"
-        if len(st.active_leases(rid)) >= person.reliability.wip_limit(ticket.ticket_class):
+        if check_wip and \
+                len(st.active_leases(rid)) >= person.reliability.wip_limit(ticket.ticket_class):
             return "work-in-progress limit reached (SR-27)"
         if duty == "review":
             holding = sum(1 for lease in st.active_leases(ticket_id=ticket.ticket_id)
@@ -361,13 +365,16 @@ class Coordinator:
             person = st.reviewers[rid]
             current = st.choice_sets.get(st.latest_set.get(rid, ""))
             if current and not current.consumed and now < current.expires and any(
-                    self.why_not(rid, st.tickets[t], "review") is None for t in current.tickets):
+                    self.why_not(rid, st.tickets[t], "review", check_wip=False) is None
+                    for t in current.tickets):
                 return current
             recent = [t for t in st.sets_drawn[rid] if now - t < timedelta(days=1)]
             if len(recent) >= self.params.max_choice_sets_per_day:
                 raise Conflict("too many choice sets today")
-            eligible = [t for t in st.tickets.values()
-                        if t.ticket_class == "A" and self.why_not(rid, t, "review") is None]
+            # The set is drawn even at the work-in-progress limit, so that it can be
+            # shown; taking a ticket from it still respects the limit (lease()).
+            eligible = [t for t in st.tickets.values() if t.ticket_class == "A"
+                        and self.why_not(rid, t, "review", check_wip=False) is None]
             if not eligible:
                 return None
             order = [eligible[i] for i in self.rng.permutation(len(eligible))]

@@ -615,14 +615,13 @@ function handle(method: string, path: string, body: Json, auth: string | null): 
   if (path === "/api/me/affiliations") return { ok: true };
   if (path === "/api/domains")
     return [...new Set([...tickets.values()].map(({ t }) => t.domain))].sort();
-  if (path === "/api/choice-set") {
-    if (activeLeases(role).length >= PROFILE[role].wip)
-      throw new HttpError(409, "work-in-progress limit reached (SR-27)");
-    return drawSet(role);
-  }
+  // Shown also at the work-in-progress limit; taking a ticket respects it.
+  if (path === "/api/choice-set") return drawSet(role);
   if (path === "/api/leases" && method === "POST") {
     if (!p.set || p.set.set_id !== body.set_id || !p.set.tickets.includes(String(body.ticket_id)))
       throw new HttpError(409, "this choice set is no longer valid");
+    if (activeLeases(role).length >= PROFILE[role].wip)
+      throw new HttpError(409, "work-in-progress limit reached (SR-27)");
     const l: Lease = {
       lease_id: id("L"),
       role,

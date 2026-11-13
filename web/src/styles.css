@@ -1460,3 +1460,21 @@ button.user-signout:hover:not(:disabled) {
 .example-risks li {
   margin-bottom: 0.5rem;
 }
+
+/* Choice set at the work-in-progress limit: visible, not takeable */
+button.choice.blocked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+button.choice.blocked:hover:not(:disabled) {
+  border-color: var(--line);
+  box-shadow: none;
+}
+.blocked-note {
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.92rem;
+}

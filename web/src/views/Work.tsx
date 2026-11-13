@@ -113,9 +113,16 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
     }
   }, []);
 
+  // Drawn also at the limit: the set is shown, greyed out, until a ticket is
+  // finished or returned (taking one still respects the limit).
   useEffect(() => {
-    if (me.leases.length < me.wip_limit) void draw();
-  }, [draw, me.leases.length, me.wip_limit]);
+    void draw();
+  }, [draw, me.leases.length]);
+
+  const blocked = me.leases.length >= me.wip_limit;
+  const blockedHint =
+    `You already hold ${me.leases.length === 1 ? "a ticket" : `${me.leases.length} tickets`} ` +
+    `(your limit is ${me.wip_limit}). Finish or return it to take this one; returning carries no penalty.`;
 
   async function take(ticketId: string) {
     if (!set?.set_id) return;
@@ -183,19 +190,34 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
             void draw();
           }}
         />
-        {me.leases.length >= me.wip_limit ? (
-          <p className="muted">Finish or return a ticket first.</p>
-        ) : busy ? (
+        {busy ? (
           <p className="muted">Drawing…</p>
         ) : set && set.tickets.length > 0 ? (
           <>
-            <p className="muted small">
-              Pick one — your choice is binding: the ticket is lent to you until you submit or
-              return it.
-            </p>
+            {blocked ? (
+              <p className="blocked-note">
+                These are your next tickets. You already hold{" "}
+                <a href={`#/lease/${me.leases[0].lease_id}`}>
+                  <code>{me.leases[0].ticket.view.declaration}</code>
+                </a>
+                {me.leases.length > 1 ? ` and ${me.leases.length - 1} more` : ""}: finish or return
+                it to take one of these. Returning carries no penalty.
+              </p>
+            ) : (
+              <p className="muted small">
+                Pick one — your choice is binding: the ticket is lent to you until you submit or
+                return it.
+              </p>
+            )}
             <div className="cards">
               {set.tickets.map((t) => (
-                <button key={t.ticket_id} className="choice" onClick={() => take(t.ticket_id)}>
+                <button
+                  key={t.ticket_id}
+                  className={blocked ? "choice blocked" : "choice"}
+                  aria-disabled={blocked}
+                  title={blocked ? blockedHint : undefined}
+                  onClick={() => (blocked ? undefined : take(t.ticket_id))}
+                >
                   <span className="card-badges">
                     <span className="badge">{t.decl_kind}</span>
                     <TierBadge tier={t.tier} />

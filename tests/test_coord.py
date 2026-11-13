@@ -508,6 +508,27 @@ def tiered(prefix: str, difficulties: list[float], domain: str = "analysis") -> 
             for i, b in enumerate(difficulties)]
 
 
+@pytest.mark.req("SR-27", "SR-38")
+def test_the_choice_set_is_shown_at_the_limit_but_cannot_be_taken(env: Env) -> None:
+    """Someone holding as many tickets as allowed still sees the set drawn for
+    them (it is the same random set), but taking one waits until a ticket is
+    returned or finished."""
+    env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
+                              tickets=specs("P", 3))
+    env.coord.open_submission(title="Q", repo_url="https://x/q", commit="d" * 40,
+                              tickets=specs("Q", 3))
+    rid = env.people(1)[0]
+    held = env.take(rid)
+    cs = env.coord.choice_set(rid)
+    assert cs is not None and cs.tickets
+    with pytest.raises(Conflict, match="work-in-progress"):
+        env.coord.lease(rid, cs.set_id, cs.tickets[0])
+    env.coord.return_lease(rid, held)
+    again = env.coord.choice_set(rid)
+    assert again is not None and again.set_id == cs.set_id  # the same set, now usable
+    env.coord.lease(rid, cs.set_id, cs.tickets[0])
+
+
 def test_difficulty_tiers() -> None:
     assert [tier_of(b) for b in (-1.0, -0.5, 0.0, 0.5, 1.4, 1.5, 3.0)] == [
         "easy", "medium", "medium", "hard", "hard", "excellence", "excellence"]
