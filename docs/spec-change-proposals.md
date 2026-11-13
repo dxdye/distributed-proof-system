@@ -151,6 +151,116 @@ declared patches", not upstream code. Patches to hardened libraries are not
 allowed.
 *Evidence:* ADR 0005, `dpc/lean/workspace.py` (`map_patches`), QRH case study.
 
+### C-17 · §12.6 AI use during review — goal and enforcement · refine
+*Current:* "KI-Hilfe ist erlaubt, muss aber angegeben werden." Models of the
+provider of the reviewed proof are excluded; similar justifications are
+searched for.
+*Proposed:*
+1. State the goal: **verdict and justification must be the reviewer's own.**
+   AI may be used as a tool (looking up definitions, explaining notation,
+   translating), but a verdict passed on from a model is not what the system
+   credits.
+2. State how the rule is enforced. A ban cannot be enforced, because nobody can
+   see whether a reviewer has a model open in another window. Delegation is
+   made unprofitable instead: an account that hands tickets to a model inherits
+   the model's misses on honeypots and loses trust, whether or not it declared
+   the use. The honeypots are the enforcement mechanism.
+3. Name the condition this rests on: **honeypots must be as hard for models as
+   real errors.** A mutant that current models detect reliably measures the
+   model, not the reviewer, just as a mutant that a lint detects measures the
+   lint (C-08). Such mutants are removed from the pool by a model-detection
+   filter, re-run against current models for every campaign. Otherwise
+   delegating accounts earn *more* trust than honest reviewers, which is the
+   lookup attack of C-07 in another form.
+*Evidence:* `docs/simulation/README.md`: lookup attackers out-earn honest
+reviewers; honeypots 2.5 IRT units easier than real errors raise the miss rate
+from 4.9 % to 8.0 %. Open: measure how many honeypots of the case studies
+current models miss, compared with real errors.
+
+### C-18 · §16 Pipeline, §2.2 — Kernel replay and trust by location · new
+*Proposed:* Lean does not re-check `.olean` files on import, and the build runs
+the submission's code. Add a pipeline step after the build: every module that
+is not loaded from the toolchain or an official package is replayed through
+the kernel. Modules are trusted by the place they are loaded from, not by
+their name. The search path lists the toolchain first, then the official
+packages, then the project; otherwise a build could shadow `Mathlib` or `Init`
+with forged copies in its own build directory. A rejected module is a blocking
+finding.
+*Evidence:* ADR 0009, `tests/test_replay.py`:
+- A theorem added under `debug.skipKernelTC` passes the build and the axiom
+  check, but not the replay.
+- A planted `Init` in the build directory is never loaded.
+
+Quasi-Riemann: 2 943 modules with 53 394 declarations replayed in 19.6 min, none
+rejected.
+
+### C-19 · §8.8 Tools in the ticket — two renderings · new
+*Proposed:* A submission's own display rules (notation, coercions, unexpanders,
+delaborators) can change what reviewers see, e.g. print `a ≤ b` as `a < b`.
+Every component is therefore also rendered without them, by a process that
+runs no code of the submission. Where the two renderings differ, both are
+shown, and the plain one is binding.
+*Evidence:* ADR 0011, fixture `lean/fixtures/display`. Case studies: no
+differences in 16 components and 54 mutants.
+
+### C-20 · §8.8, OS-3 — Paper passage and typeset formula · refine
+*Proposed:* A ticket shows the informal statement from the paper next to the
+Lean statement. A maintainer maps it, and reviewers can contest it (SR-24). The
+ticket also shows the Lean term itself typeset as LaTeX: mechanically, one
+rendering per construct, nothing guessed. Division and subtraction on ℕ and ℤ
+are marked, and casts show their target type. State that such typesetting of
+the *same term* is not a back-translation in the sense of SR-36. Free
+translations stay behind round 1.
+*Evidence:* ADR 0012. Without the paper side, true-but-different honeypots
+(quasi-Riemann `8/8 < s.re`, `7/7 < s.re`) cannot be detected, so they measured
+nothing.
+
+### C-21 · §8.1, §6.3 — Difficulty tiers and who may take them · new
+*Proposed:* Show coarse, absolute tiers (easy, medium, hard, excellence),
+computed from what the reviewer sees:
+- the amount of text;
+- the constants used, with library and submission constants weighing more;
+- the quantifier alternations.
+
+The b_i of §8.1 is standardised per campaign and therefore unfit as a label:
+the average ticket of every paper would read "medium".
+- Hard tickets need the PV role in the domain, excellence tickets the PVV role.
+- A self-declared group opens nothing.
+- After 14 days every ticket is open to everyone (SR-05).
+
+Thresholds are to be calibrated in the pilot (IRT).
+*Evidence:* `dpc/coord/tiers.py`. Navier–Stokes: 5 hard, 3 excellence;
+quasi-Riemann: medium; fixtures: easy.
+
+### C-22 · §10.2 Choice sets — preferences · new
+*Proposed:* Reviewers may state domains and tiers they prefer.
+- Preferences fill at most half of a choice set. The rest is drawn at random,
+  and the set is shuffled.
+- Preferences are ignored when the matching tickets come from fewer than two
+  submissions. Otherwise a domain with one paper would deliver that paper's
+  tickets on request, which is the steering SR-38 prevents.
+
+*Evidence:* `Coordinator.choice_set`,
+`test_preferences_raise_the_chance_but_cannot_steer`.
+
+### C-23 · §5, §8.5 — An "incorrect" verdict names the failing question · refine
+*Proposed:* A claim names which of the five checklist questions fails and gives
+a justification of at least 30 characters. This makes claims decidable for
+PVVs and lets them be evaluated per question.
+*Evidence:* In the first walkthrough a claim "idk" was accepted and cost a
+maintainer's time.
+
+### C-24 · §6.5, C12 — Sign-in · new
+*Proposed:*
+- Sign-in through any OpenID Connect provider: Keycloak for the pilot, a
+  university's single sign-on by configuration, SAML through brokering.
+- Only the coarse maintainer role may come from the provider, and every grant
+  and revocation is logged. PV and PVV never come from outside.
+- Accounts stay pseudonymous: a separate vault links the provider's subject to
+  the reviewer id, and the audit log never sees it.
+
+*Evidence:* ADR 0010.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -228,3 +338,58 @@ of κ convergence and decision error rate (SR-11/12); Plackett–Luce recovery
 (SR-38); equivalence filter on mutants with known equivalence (SR-07); plus
 byte-identical analysis on Windows and in the Linux sandbox. The traceability
 matrix is generated with `pixi run trace`.
+
+### S-12 · SR-48 AI use · refine
+*Proposed:* "AI use during review must be declared. Verdict and justification
+must be the reviewer's own. A submission records the provider of the model that
+generated the proof; reviews declaring a model of that provider are excluded.
+Honeypot pools are filtered against detection by current models (concept §12.6,
+C-17)." Add the model-detection filter to the measures of FMEA R20.
+*Status:* The declaration exists (`AIAssistance` in `dpc/tickets/model.py`, a
+provider is required). The provider exclusion is not enforced yet, because a
+submission does not record the proof's provider. Neither the similarity analysis
+nor the model-detection filter exists yet.
+
+### S-13 · New requirement: kernel replay · new
+*Proposed:* "Every declaration that is not loaded from the toolchain or an
+official package shall be re-checked by the kernel before the analysis. Modules
+are trusted by the location they are loaded from, not by their name. A
+rejected module is a blocking finding." See C-18.
+
+### S-14 · SR-21 Infoview · refine
+*Proposed:* "… with an infoview: types, origin and docstring of every constant,
+go-to-definition. Every statement is also rendered without the submission's
+own display rules, and differences are shown." See C-19. Go-to-definition is
+not implemented yet.
+
+### S-15 · SR-24 Paper mapping · fix (milestone)
+*Proposed:* Move SR-24 from M6 to M4. The pilot cannot review fidelity without
+the paper side. For the pilot, a maintainer maps; later, mapping tickets before
+class A. See C-20.
+
+### S-16 · SR-36 Aids after round 1 · refine
+*Proposed:* "Aids that interpret the statement (e.g. back-translation) shall
+only be shown after round 1. A mechanical typesetting of the same term is not
+such an aid." See C-20.
+
+### S-17 · SR-32, SR-38 Preferences · refine
+*Proposed:* Add to SR-38: "Preferences of the reviewer fill at most half of a
+choice set and apply only where the matching tickets come from at least two
+submissions." See C-22.
+
+### S-18 · SR-09 Justification · refine
+*Proposed:* "An 'incorrect' verdict names the failing checklist question and
+gives a justification of at least a minimum length." See C-23.
+
+### S-19 · SR-30 Expected duration · refine
+*Proposed:* "… only the expected duration, once it has been measured; before
+that, none." Showing the default lease length as the expected duration (45
+minutes for a four-line statement) misled reviewers.
+
+### S-20 · C4 Technology, OD-1, OD-2 · refine / decide
+- *C4:* SQLite with a projection rebuilt from the audit log for the pilot;
+  PostgreSQL once several instances are needed (ADR 0002, ADR 0008).
+- *OD-1, OD-2:* Who operates the system and who appoints maintainers were due
+  before M4 and are still open. Technically, maintainers are a role in the
+  identity provider (C-24). Operator under discussion: a university (pilot with
+  students).
