@@ -1202,3 +1202,33 @@ button.small {
 .hover-doc {
   color: var(--muted);
 }
+
+/* Typeset formulas: wrap at relations and arrows, long ones folded */
+.latex-panel .latex-item {
+  overflow-x: visible;
+  padding: 0.7rem 1rem 0.8rem;
+}
+.latex-item h4 {
+  margin: 0 0 0.35rem;
+}
+.latex-body {
+  line-height: 2.1;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+.latex-body .katex {
+  white-space: normal;
+}
+.latex-body.folded {
+  max-height: 9.5rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent);
+  mask-image: linear-gradient(to bottom, #000 65%, transparent);
+}
+.latex-item .link.small {
+  margin-top: 0.3rem;
+  font-size: 0.86rem;
+}
+.latex-help summary {
+  cursor: pointer;
+}
