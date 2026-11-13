@@ -1,4 +1,5 @@
 // Typed client for the coordination API (dpc/api/app.py).
+import { accessToken } from "./auth";
 
 export type GlossaryEntry = { name: string; type: string };
 export type Component = {
@@ -97,16 +98,12 @@ export type Escalated = {
   votes: { verdict: string; reason: string }[];
 };
 
-const TOKEN_KEY = "dpc.token";
-
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token: string | null): void {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
-}
+export type Session = {
+  authenticated: boolean;
+  provider?: string;
+  registered?: boolean;
+  error?: string;
+};
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -116,7 +113,7 @@ export class ApiError extends Error {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
-  const token = getToken();
+  const token = await accessToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
   if (body !== undefined) headers["Content-Type"] = "application/json";
   const res = await fetch(path, {
@@ -140,13 +137,14 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 export const api = {
+  session: () => request<Session>("GET", "/api/auth/session"),
   notice: () => request<{ version: string; text: string }>("GET", "/api/notice"),
   register: (body: {
     pseudonym: string;
     group: string;
     affiliations: string[];
     notice_acknowledged: boolean;
-  }) => request<{ reviewer_id: string; token: string }>("POST", "/api/register", body),
+  }) => request<{ reviewer_id: string; token?: string }>("POST", "/api/register", body),
   me: () => request<Me>("GET", "/api/me"),
   declareAffiliation: (lab: string) => request("POST", "/api/me/affiliations", { lab }),
   choiceSet: () => request<ChoiceSet>("POST", "/api/choice-set"),

@@ -1,36 +1,57 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, ApiError, getToken, setToken, type Me } from "./api";
+import { api, ApiError, type Me, type Session } from "./api";
+import { loadAuth, signOut, type Provider } from "./auth";
 import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
 import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
-import { Register } from "./views/Register";
+import { JoinForm, SignIn } from "./views/Register";
 import { StatsView } from "./views/StatsView";
 import { Work } from "./views/Work";
 
 export function App() {
   const route = useRoute();
+  const [providers, setProviders] = useState<Provider[] | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [me, setMe] = useState<Me | null>(null);
-  const [signedIn, setSignedIn] = useState(Boolean(getToken()));
+  const [error, setError] = useState<string | null>(null);
+
+  // Who is signed in, and does that sign-in have a reviewer account?
+  const refresh = useCallback(async () => {
+    try {
+      const s = await api.session();
+      setSession(s);
+      setMe(s.authenticated && s.registered ? await api.me() : null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAuth()
+      .then(setProviders)
+      .then(refresh)
+      .catch((e) => setError((e as Error).message));
+  }, [refresh]);
 
   const reload = useCallback(() => {
-    if (!getToken()) return;
     api
       .me()
       .then(setMe)
       .catch((e) => {
-        if (e instanceof ApiError && e.status === 401) {
-          setToken(null);
-          setSignedIn(false);
-        }
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) refresh();
       });
-  }, []);
-  useEffect(reload, [reload, signedIn]);
+  }, [refresh]);
 
+  const signedIn = Boolean(session?.authenticated && session.registered);
   const page = route[0] ?? "work";
   let body;
-  if (page === "stats") body = <StatsView />;
-  else if (!signedIn) body = <Register onDone={() => setSignedIn(true)} />;
+  if (error) body = <p className="error">{error}</p>;
+  else if (page === "stats") body = <StatsView />;
+  else if (!providers || !session) body = <p className="muted">Loading…</p>;
+  else if (!session.authenticated) body = <SignIn providers={providers} onSignedIn={refresh} />;
+  else if (!session.registered)
+    body = <JoinForm onDone={refresh} title="Choose your pseudonym" />;
   else if (!me) body = <p className="muted">Loading…</p>;
   else if (page === "lease" && route[1]) body = <LeaseView id={route[1]} reload={reload} />;
   else if (page === "history") body = <History me={me} />;
@@ -49,15 +70,15 @@ export function App() {
           <a href="#/stats">Statistics</a>
           {me?.maintainer && <a href="#/admin">Maintainers</a>}
         </nav>
-        {signedIn && (
+        {session?.authenticated && (
           <span className="who">
             {me?.pseudonym}{" "}
             <button
               className="link"
-              onClick={() => {
-                setToken(null);
+              onClick={async () => {
                 setMe(null);
-                setSignedIn(false);
+                setSession({ authenticated: false });
+                await signOut();
               }}
             >
               sign out
