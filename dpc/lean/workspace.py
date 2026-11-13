@@ -16,7 +16,9 @@ Steps and their trust level (docs/adr/0005):
                     as the Lake root, so the submission's lakefile never runs.
 3. ``build``        untrusted, no network: sources read-only, hardened packages
                     read-only, only build outputs writable.
-4. ``analyze``      untrusted, no network: everything read-only except the
+4. ``replay``       untrusted, no network: kernel replay of the submission's
+                    own modules (docs/adr/0009); read-only like ``analyze``.
+5. ``analyze``      untrusted, no network: everything read-only except the
                     output directory.
 """
 
@@ -41,36 +43,25 @@ from dpc.lean.executor import (
     RunResult,
     _analyzer_args,
     _mutate_args,
+    _replay_args,
     _run,
     compile_failure,
 )
-from dpc.lean.project import COMMIT_RE, Manifest, Package, ProjectError, lean_path
+from dpc.lean.project import (
+    COMMIT_RE,
+    OFFICIAL_PACKAGES,
+    Manifest,
+    ProjectError,
+    is_official,
+    lean_path,
+    trusted_lean_path,
+)
 
 FETCH_DOCKERFILE = REPO_ROOT / "sandbox" / "fetch.Dockerfile"
 FETCH_IMAGE = "dpc-fetch:1"
 
 URL_RE = re.compile(r"^https://[A-Za-z0-9.-]+/[A-Za-z0-9._/-]+$")
 NAME_RE = re.compile(r"^[A-Za-z0-9_.«»-]+$")
-
-#: Hardened packages and the only source they are accepted from.
-OFFICIAL_PACKAGES: Mapping[str, str] = {
-    "mathlib": "https://github.com/leanprover-community/mathlib4",
-    "batteries": "https://github.com/leanprover-community/batteries",
-    "aesop": "https://github.com/leanprover-community/aesop",
-    "Qq": "https://github.com/leanprover-community/quote4",
-    "proofwidgets": "https://github.com/leanprover-community/ProofWidgets4",
-    "importGraph": "https://github.com/leanprover-community/import-graph",
-    "LeanSearchClient": "https://github.com/leanprover-community/LeanSearchClient",
-    "plausible": "https://github.com/leanprover-community/plausible",
-}
-
-
-def normalize_url(url: str) -> str:
-    return url.rstrip("/").removesuffix(".git")
-
-
-def is_official(pkg: Package) -> bool:
-    return pkg.url is not None and OFFICIAL_PACKAGES.get(pkg.name) == normalize_url(pkg.url)
 
 
 def validate_packages(manifest: Manifest) -> None:
@@ -404,6 +395,16 @@ class VolumeWorkspace:
         """Untrusted step: loads the submission's environment extensions."""
         args = _mutate_args(imports, decls, str(self.executor.OUT / out.name), render)
         return self._tool(image, manifest, "dpc-mutate", args, out)
+
+    def replay(self, image: str, manifest: Manifest, *, roots: Sequence[str],
+               out: Path) -> RunResult:
+        """Untrusted step: kernel replay of every module that is not loaded from
+        the toolchain or an official package (docs/adr/0009). Only meaningful
+        after the hardened set has been verified against its snapshot."""
+        trusted = trusted_lean_path(self.executor.WORK, manifest)
+        args = _replay_args(roots, trusted, int(self.executor.limits.cpus),
+                            str(self.executor.OUT / out.name))
+        return self._tool(image, manifest, "dpc-replay", args, out)
 
     def check_evidence(self, image: str, manifest: Manifest, *, target: str, kind: str,
                        source: str, workdir: Path, timeout_s: float = 300.0) -> EvidenceCheck:

@@ -1,7 +1,8 @@
 """Ingest pipeline (operational scenario OS-1, concept §16 steps 1-2).
 
-    submission → fetch (trusted, network) → build (sandbox) → analyse twice
-    (sandbox: core + metadata) → cross-check → summary → audit log
+    submission → fetch (trusted, network) → build (sandbox) → kernel replay
+    (sandbox) → analyse twice (sandbox: core + metadata) → cross-check →
+    summary → audit log
 
 Every step is recorded in the audit log, so the result can later be
 re-derived from the log alone (SR-17).
@@ -18,6 +19,7 @@ from dpc.ingest.fetch import clone_at_commit, fetch_dependencies
 from dpc.ingest.submission import Submission
 from dpc.lean.executor import LeanExecutor, RunResult
 from dpc.lean.project import manifest_digest, read_manifest, read_toolchain
+from dpc.lean.replay import ReplayReport
 
 
 class IngestError(RuntimeError):
@@ -32,6 +34,13 @@ class IngestResult:
     analysis: Analysis
     summary: Summary
     artifact_key: str
+    replay: ReplayReport
+    kernel_failures: tuple[str, ...] = ()  # modules the kernel replay rejected
+    untrusted_hardened: tuple[str, ...] = ()  # "hardened" modules from untrusted places
+
+    @property
+    def blocking(self) -> bool:
+        return self.summary.blocking or bool(self.kernel_failures or self.untrusted_hardened)
 
 
 def artifact_key(toolchain: str, manifest_sha256: str, commit: str) -> str:
@@ -43,6 +52,37 @@ def artifact_key(toolchain: str, manifest_sha256: str, commit: str) -> str:
 
 def _file_sha256(path: Path) -> str:
     return sha256_hex(path.read_bytes())
+
+
+def record_replay(log: AuditLog, key: str, path: Path) -> ReplayReport:
+    """Log the kernel replay (docs/adr/0009). Every module the kernel rejects is
+    a blocking finding: its `.olean` contains declarations that were never checked."""
+    report = ReplayReport.load(path)
+    log.append("kernel.replayed", {"artifact_key": key, "report_sha256": _file_sha256(path),
+                                   **report.summary()})
+    for failure in report.failures:
+        log.append("finding.kernel", {"artifact_key": key, "module": failure.module,
+                                      "error": (failure.error or "")[:500], "blocking": True})
+    return report
+
+
+def check_replay_against(log: AuditLog, key: str, report: ReplayReport,
+                         analysis: Analysis) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Cross-check replay and analysis: every analysed module must have been
+    seen by the replay, and no module the analysis counts as hardened may come
+    from an untrusted location. Returns (kernel failures, untrusted hardened)."""
+    uncovered = report.uncovered(analysis)
+    for module in uncovered:
+        log.append("finding.kernel", {"artifact_key": key, "module": module,
+                                      "error": "not covered by the kernel replay",
+                                      "blocking": True})
+    untrusted = report.untrusted_hardened(analysis)
+    if untrusted:
+        log.append("finding.hardening", {"artifact_key": key, "modules": untrusted,
+                                         "reason": "loaded from an untrusted location",
+                                         "blocking": True})
+    failures = sorted({m.module for m in report.failures} | set(uncovered))
+    return tuple(failures), tuple(untrusted)
 
 
 def _check(result: RunResult, step: str, log: AuditLog, executor: LeanExecutor) -> None:
@@ -85,6 +125,11 @@ def ingest(
     _check(executor.build(project, [submission.root_module]), "build", log, executor)
 
     out_dir = workdir / "analysis"
+    replay_path = out_dir / "replay.jsonl"
+    _check(executor.replay(project, roots=[submission.root_module], out=replay_path),
+           "replay", log, executor)
+    replay = record_replay(log, key, replay_path)
+
     paths = {mode: out_dir / f"{mode}.jsonl" for mode in ("core", "metadata")}
     for mode, path in paths.items():
         result = executor.analyze(
@@ -117,4 +162,6 @@ def ingest(
             {"artifact_key": key, "axiom": finding.axiom, "kind": finding.kind,
              "blocking": finding.blocking},
         )
-    return IngestResult(project, paths["core"], paths["metadata"], analysis, summary, key)
+    failures, untrusted = check_replay_against(log, key, replay, analysis)
+    return IngestResult(project, paths["core"], paths["metadata"], analysis, summary, key,
+                        replay, failures, untrusted)

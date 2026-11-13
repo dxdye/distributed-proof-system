@@ -62,10 +62,14 @@ def _ingest(tmp_path: Path, executor: LeanExecutor) -> None:
         kinds = [e.kind for e in log.entries()]
         assert kinds == [
             "submission.received", "repo.fetched", "build.completed",
+            "replay.completed", "kernel.replayed",
             "analysis_core.completed", "analysis_metadata.completed", "analysis.completed",
         ]
         assert log.verify().ok
         completed = list(log.entries())[-1].payload
+        replayed = next(e.payload for e in log.entries() if e.kind == "kernel.replayed")
+    assert replayed["replayed"] == 1 and replayed["failures"] == []
+    assert not result.blocking
     assert len(result.summary.tcb_new_units) == 10
     assert completed["summary"]["tcb_new_units"] == 10
     assert completed["artifact_key"] == result.artifact_key

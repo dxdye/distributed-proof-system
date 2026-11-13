@@ -26,7 +26,14 @@ from pathlib import Path, PurePosixPath
 from typing import Literal, Protocol
 
 from dpc.lean.evidence import EVIDENCE_FILE, EVIDENCE_MODULE, EvidenceCheck
-from dpc.lean.project import lean_path, read_manifest, read_toolchain, runtime_env, toolchain_slug
+from dpc.lean.project import (
+    lean_path,
+    read_manifest,
+    read_toolchain,
+    runtime_env,
+    toolchain_slug,
+    trusted_lean_path,
+)
 
 Mode = Literal["core", "metadata"]
 
@@ -66,6 +73,8 @@ class LeanExecutor(Protocol):
         self, project: Path, *, root: str, imports: Sequence[str], mode: Mode, out: Path
     ) -> RunResult: ...
 
+    def replay(self, project: Path, *, roots: Sequence[str], out: Path) -> RunResult: ...
+
 
 def analyzer_source_hash() -> str:
     """Content hash of the analyzer sources; part of every cache key."""
@@ -103,6 +112,16 @@ def _mutate_args(imports: Sequence[str], decls: Sequence[str], out: str,
     for decl in decls:
         args += ["--decl", decl]
     return [*args, *(["--render"] if render else []), "--out", out]
+
+
+def _replay_args(roots: Sequence[str], trusted: Sequence[str], jobs: int,
+                 out: str) -> list[str]:
+    args: list[str] = []
+    for module in roots:
+        args += ["--root", module]
+    for entry in trusted:
+        args += ["--trusted", entry]
+    return [*args, "--jobs", str(max(1, jobs)), "--out", out]
 
 
 def compile_failure(compiled: RunResult) -> EvidenceCheck | None:
@@ -190,6 +209,13 @@ class HostExecutor:
         ``render``, the ticket views of the declarations instead (M4)."""
         return self._tool(project, "dpc-mutate",
                           _mutate_args(imports, decls, str(out), render), out)
+
+    def replay(self, project: Path, *, roots: Sequence[str], out: Path,
+               jobs: int = 2) -> RunResult:
+        """Kernel replay of every module not loaded from a trusted location
+        (docs/adr/0009)."""
+        trusted = trusted_lean_path(project, read_manifest(project))
+        return self._tool(project, "dpc-replay", _replay_args(roots, trusted, jobs, str(out)), out)
 
     def check_evidence(self, project: Path, *, target: str, kind: str, source: str,
                        workdir: Path, timeout_s: float = 300.0) -> EvidenceCheck:
@@ -360,3 +386,8 @@ class DockerExecutor:
     ) -> RunResult:
         return self._tool(project, "dpc-mutate",
                           _mutate_args(imports, decls, str(self.OUT / out.name), render), out)
+
+    def replay(self, project: Path, *, roots: Sequence[str], out: Path) -> RunResult:
+        trusted = trusted_lean_path(self.WORK, read_manifest(project))
+        args = _replay_args(roots, trusted, int(self.limits.cpus), str(self.OUT / out.name))
+        return self._tool(project, "dpc-replay", args, out)

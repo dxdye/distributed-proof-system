@@ -90,6 +90,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
             _print(_report(vol.analysis) | {
                 "artifact_key": vol.artifact_key, "volume": vol.volume,
                 "unverified_hardened_modules": list(vol.unverified_hardened),
+                "kernel_replay": vol.replay.summary(), "blocking": vol.blocking,
             })
             return 0
         executor: LeanExecutor
@@ -98,7 +99,11 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         else:
             executor = HostExecutor(trusted=True, cache_dir=Path(args.cache).resolve())
         result = ingest(submission, workdir=workdir, executor=executor, log=log)
-        _print(_report(result.analysis) | {"artifact_key": result.artifact_key})
+        _print(_report(result.analysis) | {
+            "artifact_key": result.artifact_key,
+            "unverified_hardened_modules": list(result.untrusted_hardened),
+            "kernel_replay": result.replay.summary(), "blocking": result.blocking,
+        })
     return 0
 
 

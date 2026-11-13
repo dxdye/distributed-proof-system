@@ -12,9 +12,10 @@ from pathlib import Path
 from dpc.analysis import Analysis, AnalysisMismatch, Summary, merge, summarize
 from dpc.analysis.hardening import unverified_hardened_modules
 from dpc.audit import AuditLog, canonical_json, sha256_hex
-from dpc.ingest.pipeline import IngestError, artifact_key
+from dpc.ingest.pipeline import IngestError, artifact_key, check_replay_against, record_replay
 from dpc.ingest.submission import Submission
 from dpc.lean.executor import DockerExecutor, RunResult
+from dpc.lean.replay import ReplayReport
 from dpc.lean.workspace import VolumeWorkspace, compare_digests
 
 
@@ -27,6 +28,12 @@ class VolumeIngestResult:
     summary: Summary
     artifact_key: str
     unverified_hardened: tuple[str, ...]
+    replay: ReplayReport
+    kernel_failures: tuple[str, ...] = ()
+
+    @property
+    def blocking(self) -> bool:
+        return self.summary.blocking or bool(self.kernel_failures or self.unverified_hardened)
 
 
 CACHE_ATTEMPTS = 3
@@ -147,6 +154,12 @@ def ingest_in_volume(
     _step(build, "build", log, logs)
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    # Kernel replay of everything not loaded from the verified hardened set (ADR 0009).
+    replay_path = out_dir / "replay.jsonl"
+    _step(ws.replay(image, manifest, roots=[submission.root_module], out=replay_path),
+          "replay", log, logs)
+    replay = record_replay(log, key, replay_path)
+
     paths = {mode: out_dir / f"{mode}.jsonl" for mode in ("core", "metadata")}
     for mode, path in paths.items():
         result = ws.analyze(image, manifest, root=submission.root,
@@ -160,7 +173,7 @@ def ingest_in_volume(
         log.append("analysis.mismatch", {"artifact_key": key, "reason": str(exc)})
         raise IngestError(f"core and metadata analysis disagree: {exc}") from exc
 
-    unverified = unverified_hardened_modules(analysis, ws.official_modules(image, manifest))
+    by_name = unverified_hardened_modules(analysis, ws.official_modules(image, manifest))
     summary = summarize(analysis)
     log.append(
         "analysis.completed",
@@ -169,14 +182,17 @@ def ingest_in_volume(
             "core_sha256": sha256_hex(paths["core"].read_bytes()),
             "metadata_sha256": sha256_hex(paths["metadata"].read_bytes()),
             "summary": summary.as_dict(),
-            "unverified_hardened_modules": unverified,
+            "unverified_hardened_modules": by_name,
         },
     )
     for finding in summary.findings:
         log.append("finding.axiom", {"artifact_key": key, "axiom": finding.axiom,
                                      "kind": finding.kind, "blocking": finding.blocking})
-    if unverified:
-        log.append("finding.hardening", {"artifact_key": key, "modules": unverified,
+    if by_name:
+        log.append("finding.hardening", {"artifact_key": key, "modules": by_name,
+                                         "reason": "not shipped by an official source",
                                          "blocking": True})
+    failures, by_location = check_replay_against(log, key, replay, analysis)
+    unverified = tuple(sorted(set(by_name) | set(by_location)))
     return VolumeIngestResult(ws.volume, paths["core"], paths["metadata"], analysis, summary,
-                              key, tuple(unverified))
+                              key, unverified, replay, failures)
