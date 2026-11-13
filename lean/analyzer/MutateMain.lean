@@ -1,5 +1,7 @@
 import DpcAnalyzer
 import DpcAnalyzer.Mutate
+import DpcAnalyzer.Render
+import DpcAnalyzer.ExprJson
 
 /-!
 `dpc-mutate`: generates type-correct mutants of declarations and runs the local
@@ -14,10 +16,12 @@ uses (SR-21). Ticket views and honeypots are built from these records, so the
 two cannot be told apart by their formatting (SR-06).
 
 Loads environment extensions (simp sets, notation, delaborators), i.e. runs the
-imported modules' initializers: sandbox only (SR-20).
+imported modules' initializers: sandbox only (SR-20). Usable mutants carry
+their expression (`expr`, see `DpcAnalyzer.ExprJson`), so that `dpc-render` can
+show them without the submission's display rules as well (docs/adr/0011).
 -/
 
-open Lean Meta Elab DpcAnalyzer DpcAnalyzer.Mutate
+open Lean Meta Elab DpcAnalyzer DpcAnalyzer.Mutate DpcAnalyzer.Render
 
 def usage : String :=
   "usage: dpc-mutate --import MODULE [...] --decl NAME [...] [--tactic SCRIPT ...] " ++
@@ -56,48 +60,34 @@ def parseArgs : List String → Args → Except String Args
 @[implemented_by enableInitializersExecution]
 opaque allowInitializers : BaseIO Unit
 
-/-- Rendering for tickets and honeypots alike: binder types are always shown,
-otherwise a change hidden in a type (ℝ³ → ℝ⁴) would be invisible. -/
-def pp (e : Expr) : MetaM String :=
-  withOptions (fun o => o.setBool `pp.funBinderTypes true |>.setBool `pp.piBinderTypes true) do
-    return toString (← ppExpr e)
-
-/-- The constants a component mentions, with their types: the static part of an
-infoview (SR-21). The declaration itself, internal names and instances are left
-out; sorted by name, so the output is deterministic. -/
-def glossary (e : Expr) (self : Name) : MetaM Json := do
-  let env ← getEnv
-  let names := e.getUsedConstants.qsort (fun a b => a.toString < b.toString)
-  let mut out := #[]
-  for c in names do
-    if c == self || c.isInternal then continue
-    if ← isInstance c then continue
-    let some ci := env.find? c | continue
-    out := out.push <| Json.mkObj [("name", toJson (toString c)), ("type", toJson (← pp ci.type))]
-  return Json.arr out
-
-/-- What is mutated in a declaration: `(target, label, original, expected type)`. -/
+/-- What is mutated in a declaration: `(target, label, original, expected type)`,
+the components of `DpcAnalyzer.Render.components`. -/
 def mutationTargets (env : Environment) (ci : ConstantInfo) :
     MetaM (Array (Target × String × Expr × Expr)) := do
-  let mut out := #[(Target.type, "", ci.type, ← inferType ci.type)]
-  match ci with
-  | .defnInfo v => out := out.push (.value, "", v.value, ci.type)
-  | .inductInfo v =>
-    for c in v.ctors do
-      if let some cinfo := env.find? c then
-        out := out.push (.ctor, toString c, cinfo.type, ← inferType cinfo.type)
-  | _ => pure ()
+  let mut out := #[]
+  for (target, label, e) in components env.find? ci do
+    let expected ← match target with
+      | .value => pure ci.type
+      | _ => inferType e
+    out := out.push (target, label, e, expected)
   return out
+
+/-- Largest encoded mutant expression handed to `dpc-render`. -/
+def maxExprBytes : Nat := 1000000
+
+/-- The mutant's expression for `dpc-render`, if it survives the round trip. -/
+def encodedExpr (e : Expr) : Json :=
+  match ExprJson.encodeChecked e with
+  | .ok j => if j.compress.length ≤ maxExprBytes then j else Json.null
+  | .error _ => Json.null
 
 /-- The view of one declaration: every component a mutant could replace. -/
 def viewOf (name : Name) : MetaM Json := do
   let env ← getEnv
   let some ci := env.find? name | throwError "unknown declaration {name}"
   let mut comps := #[]
-  for (target, label, e, _) in ← mutationTargets env ci do
-    comps := comps.push <| Json.mkObj [
-      ("target", toJson target.toString), ("label", toJson label),
-      ("text", toJson (← pp e)), ("glossary", ← glossary e name)]
+  for (target, label, e) in components env.find? ci do
+    comps := comps.push (← componentJson target label e name)
   return Json.mkObj [
     ("kind", toJson "view"), ("decl", toJson (toString name)),
     ("decl_kind", toJson (DpcAnalyzer.declKind ci)), ("components", Json.arr comps)]
@@ -154,7 +144,8 @@ def mutantsOf (name : Name) (args : Args) : TermElabM (Array Json) := do
         ("original", toJson originalText),
         ("mutant", toJson mutantText),
         ("mutant_hash", toJson (toString m.result.hash)),
-        ("glossary", gloss)]
+        ("glossary", gloss),
+        ("expr", if usable then encodedExpr m.result else Json.null)]
   return out
 
 def main (argv : List String) : IO UInt32 := do

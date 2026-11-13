@@ -1,6 +1,7 @@
 import Lean.Replay
 import Lean.Data.Json
 import Lean.Util.Path
+import DpcAnalyzer.Trust
 
 /-!
 `dpc-replay`: sends every declaration of the submission's own modules through
@@ -42,7 +43,7 @@ Output: JSON Lines, schema `dpc.replay/1`: a header, then one record per module
 of the closure, in import order.
 -/
 
-open Lean
+open Lean DpcAnalyzer.Trust
 
 def schema : String := "dpc.replay/1"
 
@@ -76,16 +77,8 @@ def truncate (s : String) (n : Nat := 2000) : String :=
 
 /-- Replay the constants of `mod` into the environment of its imports. -/
 def checkModule (mod : Name) : IO Json := do
-  let mFile ← findOLean mod
   -- Modules of the module system come in parts; the last one holds all constants.
-  let mut fnames := #[mFile]
-  let sFile := OLeanLevel.server.adjustFileName mFile
-  if ← sFile.pathExists then
-    fnames := fnames.push sFile
-    let pFile := OLeanLevel.private.adjustFileName mFile
-    if ← pFile.pathExists then
-      fnames := fnames.push pFile
-  let parts ← readModuleDataParts fnames
+  let parts ← readParts mod
   let some (header, _) := parts[0]? | throw <| IO.userError "no module data"
   let some (data, _) := parts.back? | throw <| IO.userError "no module data"
   unless data.constNames.size == data.constants.size do
@@ -111,12 +104,6 @@ def failure (msg : String) : Json :=
 
 /-! ## Coordinator: closure, classification, workers -/
 
-/-- The search path entry `findOLean` resolves `mod` to (same rule as
-`Lean.SearchPath.findWithExt`: the first entry containing the root name). -/
-def resolveEntry (sp : SearchPath) (mod : Name) : IO (Option System.FilePath) := do
-  let pkg := mod.getRoot.toString (escape := false)
-  sp.findM? fun p => (p / pkg).isDir <||> ((p / pkg).addExtension "olean").pathExists
-
 def runWorker (self : System.FilePath) (mod : Name) : IO Json := do
   let out ← IO.Process.output
     { cmd := self.toString, args := #["--check", mod.toString (escape := false)] }
@@ -135,20 +122,16 @@ def replayAll (args : Args) (out : System.FilePath) : IO UInt32 := do
   if args.roots.isEmpty then
     IO.eprintln usage
     return 2
-  let sp ← searchPathRef.get
-  let core := (← getLibDir (← findSysroot)).normalize
-  let trusted := args.trusted.map (·.normalize)
+  let classifier ← Classifier.mk' args.trusted
+  let core := classifier.core
   let env ← importModules (args.roots.map ({ module := · })) {}
   let names := env.header.moduleNames
   let data := env.header.moduleData
   let mut origin : Std.HashMap Name String := {}
   let mut entry : Std.HashMap Name String := {}
   for name in names do
-    let some e ← resolveEntry sp name
-      | throw <| IO.userError s!"module {name} is not on the search path"
-    let n := e.normalize
-    let o := if n == core then "core" else if trusted.contains n then "trusted" else "replayed"
-    origin := origin.insert name o
+    let (o, e) ← classifier.classify name
+    origin := origin.insert name o.toString
     entry := entry.insert name e.toString
   let todo := names.filter (origin[·]? == some "replayed")
   let mut chunks : Array (Array Name) := Array.replicate args.jobs #[]

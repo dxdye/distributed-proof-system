@@ -1,6 +1,6 @@
 name = "dpc-analyzer"
 version = "0.1.0"
-defaultTargets = ["dpc-analyze", "dpc-mutate", "dpc-evidence", "dpc-replay"]
+defaultTargets = ["dpc-analyze", "dpc-mutate", "dpc-evidence", "dpc-replay", "dpc-render"]
 
 # Deliberately no dependencies (no Mathlib): the analyzer is rebuilt for the
 # exact toolchain of every analysed repository (see docs/adr/0004), which only
@@ -27,3 +27,9 @@ root = "EvidenceMain"
 [[lean_exe]]
 name = "dpc-replay"
 root = "ReplayMain"
+
+[[lean_exe]]
+name = "dpc-render"
+root = "RenderMain"
+# The trusted modules' `initialize` blocks are interpreted when extensions load.
+supportInterpreter = true
