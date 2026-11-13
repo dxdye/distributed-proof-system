@@ -132,11 +132,13 @@ dpc/                  Python package
 lean/analyzer/        Lean 4 metaprograms: `dpc-analyze` (TCB extraction), `dpc-mutate`
                       (mutants, equivalence filter, ticket views), `dpc-evidence`
                       (kernel replay and check of evidence files, SR-10), `dpc-replay`
-                      (kernel replay of all untrusted modules, ADR 0009)
+                      (kernel replay of all untrusted modules, ADR 0009), `dpc-render`
+                      (views without the submission's display rules, ADR 0011)
 lean/fixtures/        test projects: `basic` (hand-checked TCB), `mutation` (known
                       equivalent / non-equivalent mutants), `redteam` (sandbox escape
                       attempts), `evidence` (vacuous and honest claims), `replay`
-                      (a proof the kernel never saw)
+                      (a proof the kernel never saw), `display` (a misleading
+                      display rule)
 web/                  React/TypeScript client (Vite)
 deploy/keycloak/      development Keycloak (Docker Compose, realm with test users)
 docs/case-studies/    measurements on real formalizations
@@ -158,6 +160,7 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 - [0008](docs/adr/0008-coordination-service.md) Coordination service
 - [0009](docs/adr/0009-kernel-replay.md) Kernel replay and trust by location
 - [0010](docs/adr/0010-authentication.md) Authentication: pluggable identity providers, Keycloak first
+- [0011](docs/adr/0011-plain-rendering.md) Two renderings: with and without the submission's display rules
 
 ## Conventions
 

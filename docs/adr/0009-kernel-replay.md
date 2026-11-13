@@ -113,9 +113,8 @@ been verified, before the analysis. It logs:
   (e.g. lean4lean or nanoda) would also guard against kernel bugs.
 - **Meaning.** The replay shows that the proofs check, not that the statements
   say what the paper says. That is the class-A review.
-- **Rendering (open point).** The ticket views are rendered by `dpc-mutate
-  --render` with the submission's environment extensions loaded. Those include
-  its pretty-printer extensions (delaborators, unexpanders), so a submission
-  could change how its statement is *displayed* to reviewers. Countermeasure
-  to decide on: render with the extensions of the toolchain and the official
-  packages only. Alternatively, render both ways and flag every difference.
+- **Rendering.** The ticket views are rendered with the submission's
+  environment extensions loaded, so a submission could change how its
+  statement is *displayed*. Resolved by [ADR 0011](0011-plain-rendering.md):
+  every component is also rendered without the submission's display rules,
+  and differences are shown.
