@@ -51,6 +51,8 @@ class CoordParams:
     reveal_batch: int = 5
     # --- evidence (SR-09, SR-10) ---
     max_evidence_bytes: int = 64_000
+    #: Shortest justification of an "incorrect" verdict, in characters (SR-09).
+    min_reason_chars: int = 30
 
     @property
     def parallel(self) -> int:

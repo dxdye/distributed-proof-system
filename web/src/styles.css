@@ -914,3 +914,24 @@ dl.kv dd {
     padding-bottom: 0.75rem;
   }
 }
+
+/* Structured "incorrect" verdicts */
+fieldset.failed {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem 0.2rem;
+  margin: 0 0 1rem;
+}
+fieldset.failed legend {
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0 0.3rem;
+}
+fieldset.failed label.inline {
+  margin-bottom: 0.6rem;
+}
+.badge.warn {
+  color: var(--warn);
+  background: var(--warn-soft);
+  margin-right: 0.4rem;
+}

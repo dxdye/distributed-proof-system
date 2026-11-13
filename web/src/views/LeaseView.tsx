@@ -3,6 +3,15 @@ import { api, type Lease, type ReviewInput } from "../api";
 import { Infoview } from "../components/Infoview";
 import { navigate } from "../router";
 
+/** Short labels of the checklist questions (the full text is in the ticket). */
+export const QUESTION_LABELS: Record<string, string> = {
+  fidelity: "Not what the paper claims",
+  junk_values: "Junk values",
+  edge_cases: "Edge cases",
+  vacuity: "Hypotheses cannot hold together",
+  quantifiers: "Quantifiers or types",
+};
+
 const EVIDENCE_KINDS = [
   ["vacuity", "Vacuity: the hypotheses cannot hold together"],
   ["trivialization", "Trivialisation: the statement holds for a trivial reason"],
@@ -12,6 +21,7 @@ const EVIDENCE_KINDS = [
 function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
   const [verdict, setVerdict] = useState<"correct" | "incorrect" | null>(null);
   const [reason, setReason] = useState("");
+  const [failed, setFailed] = useState<string[]>([]);
   const [withEvidence, setWithEvidence] = useState(false);
   const [evidence, setEvidence] = useState("");
   const [kind, setKind] = useState<string>("vacuity");
@@ -24,6 +34,7 @@ function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
     const body: ReviewInput = {
       verdict,
       reason,
+      failed: verdict === "incorrect" ? failed : [],
       evidence: withEvidence && verdict === "incorrect" ? evidence : null,
       evidence_kind: withEvidence && verdict === "incorrect" ? kind : null,
       ai_used: aiUsed,
@@ -50,7 +61,11 @@ function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
       </ul>
       <div className="verdicts">
         <label className="inline">
-          <input type="radio" checked={verdict === "correct"} onChange={() => setVerdict("correct")} />
+          <input
+            type="radio"
+            checked={verdict === "correct"}
+            onChange={() => setVerdict("correct")}
+          />
           The formalisation is faithful
         </label>
         <label className="inline">
@@ -62,9 +77,34 @@ function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
           I found a problem
         </label>
       </div>
+      {verdict === "incorrect" && (
+        <fieldset className="failed">
+          <legend>Which question fails? (at least one)</legend>
+          {lease.ticket.questions.map((q) => (
+            <label key={q.id} className="inline" title={q.text}>
+              <input
+                type="checkbox"
+                checked={failed.includes(q.id)}
+                onChange={(e) =>
+                  setFailed(e.target.checked ? [...failed, q.id] : failed.filter((f) => f !== q.id))
+                }
+              />
+              {QUESTION_LABELS[q.id] ?? q.id}
+            </label>
+          ))}
+        </fieldset>
+      )}
       <label>
-        Justification {verdict === "incorrect" ? "(required)" : "(optional)"}
+        Justification{" "}
+        {verdict === "incorrect"
+          ? `(required: what exactly is wrong, at least ${lease.min_reason_chars} characters)`
+          : "(optional)"}
         <textarea rows={4} value={reason} onChange={(e) => setReason(e.target.value)} />
+        {verdict === "incorrect" && (
+          <span className="muted small">
+            {reason.trim().length} / {lease.min_reason_chars}
+          </span>
+        )}
       </label>
       {verdict === "incorrect" && (
         <div className="evidence">
@@ -97,14 +137,25 @@ function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
         </div>
       )}
       <label className="inline">
-        <input type="checkbox" checked={aiUsed} onChange={(e) => setAiUsed(e.target.checked)} />
-        I used an AI assistant for this review
+        <input type="checkbox" checked={aiUsed} onChange={(e) => setAiUsed(e.target.checked)} />I
+        used an AI assistant for this review
       </label>
       {aiUsed && (
-        <input placeholder="Which one?" value={provider} onChange={(e) => setProvider(e.target.value)} />
+        <input
+          placeholder="Which one?"
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+        />
       )}
       {error && <p className="error">{error}</p>}
-      <button disabled={!verdict || (verdict === "incorrect" && !reason.trim())} onClick={submit}>
+      <button
+        disabled={
+          !verdict ||
+          (verdict === "incorrect" &&
+            (failed.length === 0 || reason.trim().length < lease.min_reason_chars))
+        }
+        onClick={submit}
+      >
         Submit review
       </button>
     </section>
@@ -118,7 +169,11 @@ function ClaimForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
   const claim = lease.claim!;
 
   useEffect(() => {
-    if (claim.evidence) api.blob(claim.evidence.file_sha256).then(setEvidence).catch(() => {});
+    if (claim.evidence)
+      api
+        .blob(claim.evidence.file_sha256)
+        .then(setEvidence)
+        .catch(() => {});
   }, [claim.evidence]);
 
   async function decide(confirmed: boolean) {
@@ -137,11 +192,21 @@ function ClaimForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
         A reviewer reported this problem. Decide whether it is real — the concrete finding, not a
         vote (concept §8.5).
       </p>
+      {claim.failed && claim.failed.length > 0 && (
+        <p>
+          {claim.failed.map((f) => (
+            <span key={f} className="badge warn">
+              {QUESTION_LABELS[f] ?? f}
+            </span>
+          ))}
+        </p>
+      )}
       <blockquote>{claim.reason}</blockquote>
       {claim.evidence && (
         <>
           <p className="small">
-            Evidence ({claim.evidence.kind}), <code>{claim.evidence.file_sha256.slice(0, 12)}…</code>
+            Evidence ({claim.evidence.kind}),{" "}
+            <code>{claim.evidence.file_sha256.slice(0, 12)}…</code>
           </p>
           <pre className="term">{evidence ?? "loading…"}</pre>
         </>
@@ -168,7 +233,10 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.lease(id).then(setLease).catch((e) => setError((e as Error).message));
+    api
+      .lease(id)
+      .then(setLease)
+      .catch((e) => setError((e as Error).message));
   }, [id]);
 
   function done() {
@@ -188,7 +256,8 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
           <div>
             <h2>{t.paper}</h2>
             <p className="muted small">
-              {t.domain} · <a href={t.repo_url}>{t.repo_url}</a> @ <code>{t.commit.slice(0, 12)}</code>
+              {t.domain} · <a href={t.repo_url}>{t.repo_url}</a> @{" "}
+              <code>{t.commit.slice(0, 12)}</code>
             </p>
           </div>
           {active && (
@@ -196,7 +265,9 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
               {lease.extendable && (
                 <button
                   className="secondary"
-                  onClick={() => api.extend(lease.lease_id).then(setLease, (e) => setError(e.message))}
+                  onClick={() =>
+                    api.extend(lease.lease_id).then(setLease, (e) => setError(e.message))
+                  }
                 >
                   Need more time
                 </button>

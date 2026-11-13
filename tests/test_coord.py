@@ -274,9 +274,15 @@ def test_incorrect_needs_a_reason_and_opens_a_claim_that_blocks_acceptance(env: 
     leases = [env.take(rid, tid) for rid in people]
     with pytest.raises(CoordError, match="SR-09"):
         env.coord.submit_review(people[0], leases[0], verdict="incorrect")
+    with pytest.raises(CoordError, match="question that fails"):
+        env.coord.submit_review(people[0], leases[0], verdict="incorrect",
+                                reason="n = 0 makes the hypothesis vacuous")
+    with pytest.raises(CoordError, match="at least 30 characters"):
+        env.coord.submit_review(people[0], leases[0], verdict="incorrect", reason="idk",
+                                failed=["vacuity"])
     env.clock.advance(seconds=30)  # faster than t_min: down-weighted, not refused (SR-29)
     env.coord.submit_review(people[0], leases[0], verdict="incorrect",
-                            reason="n = 0 makes the hypothesis vacuous",
+                            reason="n = 0 makes the hypothesis vacuous", failed=["vacuity"],
                             evidence=b"example : False := by sorry", evidence_kind="vacuity")
     review = env.events("review.submitted")[0]
     assert float(review["t_factor"]) == pytest.approx(0.5)  # type: ignore[arg-type]
@@ -300,7 +306,8 @@ def test_confirmed_claim_decides_error_and_anchors_every_verdict(env: Env) -> No
     people = env.people(4)
     leases = [env.take(rid, tid) for rid in people]
     env.clock.advance(hours=1)
-    env.coord.submit_review(people[0], leases[0], verdict="incorrect", reason="off by one")
+    env.coord.submit_review(people[0], leases[0], verdict="incorrect", failed=["fidelity"],
+                            reason="off by one: the paper sums up to n, not n - 1")
     for rid, lease_id in zip(people[1:], leases[1:], strict=True):
         env.coord.submit_review(rid, lease_id, verdict="correct")
     assert env.coord.next_duty(people[0]) is None  # no PVV, and never on one's own claim
@@ -389,7 +396,9 @@ def _work_through(env: Env, people: list[str], admin: str) -> None:
             env.clock.advance(minutes=20)
             tid = env.coord.state.leases[lease_id].ticket_id
             if env.vault.is_honeypot(tid):
-                env.coord.submit_review(rid, lease_id, verdict="incorrect", reason="≤ vs <")
+                env.coord.submit_review(rid, lease_id, verdict="incorrect",
+                                        reason="≤ where the paper has a strict <",
+                                        failed=["fidelity"])
             else:
                 env.coord.submit_review(rid, lease_id, verdict="correct")
             progressed = True

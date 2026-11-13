@@ -70,6 +70,8 @@ class LeaseReq(_Req):
 class ReviewReq(_Req):
     verdict: Literal["correct", "incorrect"]
     reason: str = ""
+    failed: list[Literal["fidelity", "junk_values", "edge_cases", "vacuity",
+                         "quantifiers"]] = []
     evidence: str | None = Field(default=None, description="Lean file backing 'incorrect'")
     evidence_kind: Literal["vacuity", "trivialization", "definition_test_counterexample"] | \
         None = None
@@ -159,6 +161,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         out: dict[str, Any] = {
             "lease_id": lease.lease_id, "duty": lease.duty, "status": lease.status,
             "extendable": lease.status == "active" and not lease.extended,
+            "min_reason_chars": coord.params.min_reason_chars,
             # SR-30: the expected duration, never a countdown or expiry time.
             "expected_minutes": max(1, round(lease.expected_s / 60)),
             "ticket": {
@@ -172,6 +175,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             claim = st.claims[lease.claim_id]
             review = st.reviews[claim.review_seq]
             out["claim"] = {"claim_id": claim.claim_id, "reason": review.reason,
+                            "failed": list(review.failed),
                             "evidence": review.evidence.model_dump() if review.evidence
                             else None}
         return out
@@ -319,7 +323,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         if evidence is not None and req.evidence_kind is None:
             raise HTTPException(400, "evidence needs a kind")
         call(coord.submit_review, rid, lease_id, verdict=req.verdict, reason=req.reason,
-             evidence=evidence, evidence_kind=req.evidence_kind, ai=ai)
+             failed=req.failed, evidence=evidence, evidence_kind=req.evidence_kind, ai=ai)
         return {"ok": True}
 
     @app.post("/api/leases/{lease_id}/claim")

@@ -131,6 +131,8 @@ class ReviewSubmitted(_P):
     round: int
     verdict: Literal["correct", "incorrect"]
     reason: str
+    #: Checklist questions an "incorrect" verdict says fail (empty in older logs).
+    failed: tuple[str, ...] = ()
     evidence: Evidence | None = None
     ai: AIAssistance = AIAssistance()
     time_spent_s: int

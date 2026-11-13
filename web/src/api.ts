@@ -24,6 +24,7 @@ export type Lease = {
   status: string;
   extendable: boolean;
   expected_minutes: number;
+  min_reason_chars: number;
   ticket: {
     ticket_id: string;
     paper: string;
@@ -36,6 +37,7 @@ export type Lease = {
   claim?: {
     claim_id: string;
     reason: string;
+    failed?: string[];
     evidence: { kind: string; file_sha256: string } | null;
   };
 };
@@ -81,6 +83,7 @@ export type Stats = {
 export type ReviewInput = {
   verdict: "correct" | "incorrect";
   reason: string;
+  failed: string[];
   evidence?: string | null;
   evidence_kind?: string | null;
   ai_used: boolean;
@@ -109,7 +112,10 @@ export type Session = {
 };
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
   }
 }

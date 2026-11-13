@@ -65,11 +65,16 @@ class AIAssistance(_Model):
     provider: str | None = None
 
 
+QuestionId = Literal["fidelity", "junk_values", "edge_cases", "vacuity", "quantifiers"]
+
+
 class Review(_Model):
     ticket_id: str
     reviewer: str  # pseudonym (SR-23)
     verdict: Literal["correct", "incorrect"]
     reason: str = ""
+    #: The checklist questions an "incorrect" verdict says fail (SR-09).
+    failed: tuple[QuestionId, ...] = ()
     evidence: Evidence | None = None
     time_spent_s: int = Field(ge=0)
     ai: AIAssistance = AIAssistance()
@@ -79,6 +84,10 @@ class Review(_Model):
         """SR-09: an "incorrect" verdict without justification is rejected."""
         if self.verdict == "incorrect" and not self.reason.strip():
             raise ValueError("an 'incorrect' verdict needs a justification (SR-09)")
+        if self.verdict == "incorrect" and not self.failed:
+            raise ValueError("an 'incorrect' verdict must name the question that fails (SR-09)")
+        if self.verdict == "correct" and self.failed:
+            raise ValueError("a 'correct' verdict names no failing question")
         if self.evidence is not None and self.verdict != "incorrect":
             raise ValueError("evidence only backs an 'incorrect' verdict")
         if self.ai.used and not self.ai.provider:

@@ -418,8 +418,8 @@ class Coordinator:
     # ------------------------------------------------------------- reviews
     def submit_review(
         self, rid: str, lease_id: str, *, verdict: str, reason: str = "",
-        evidence: bytes | None = None, evidence_kind: str | None = None,
-        ai: AIAssistance | None = None,
+        failed: Sequence[str] = (), evidence: bytes | None = None,
+        evidence_kind: str | None = None, ai: AIAssistance | None = None,
     ) -> Entry:
         with self.lock:
             lease = self._own_lease(rid, lease_id)
@@ -431,18 +431,23 @@ class Coordinator:
             stored = self._store_evidence(evidence, evidence_kind)
             try:  # SR-09: the review record validates verdict and justification
                 review = Review(ticket_id=ticket.ticket_id, reviewer=rid,
-                                verdict=verdict,
-                                reason=reason, evidence=stored, time_spent_s=spent,
-                                ai=ai or AIAssistance())
+                                verdict=verdict, reason=reason,
+                                failed=tuple(dict.fromkeys(failed)),
+                                evidence=stored, time_spent_s=spent, ai=ai or AIAssistance())
             except ValidationError as exc:
                 raise CoordError(exc.errors()[0]["msg"]) from exc
+            if review.verdict == "incorrect" and \
+                    len(review.reason.strip()) < self.params.min_reason_chars:
+                raise CoordError(f"the justification needs at least "
+                                 f"{self.params.min_reason_chars} characters (SR-09)")
             factor = time_factor(spent, self.params.t_min(ticket.difficulty))
             roles = tuple(sorted(self.state.roles(rid, ticket.domain, now)))
             entry = self._emit("review.submitted", ev.ReviewSubmitted(
                 lease_id=lease_id, ticket_id=ticket.ticket_id, reviewer=rid,
                 duty=lease.duty,
                 round=ticket.round, verdict=review.verdict, reason=review.reason,
-                evidence=review.evidence, ai=review.ai, time_spent_s=spent,
+                failed=review.failed, evidence=review.evidence, ai=review.ai,
+                time_spent_s=spent,
                 t_factor=ev.dec(factor), roles=roles))
             if review.verdict == "incorrect" and ticket.ticket_class == "A":
                 # SR-35: a justified finding becomes a claim ticket for a PVV (SR-13).

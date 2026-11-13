@@ -65,6 +65,7 @@ class ReviewRec:
     t_factor: float
     roles: tuple[str, ...]
     evidence: Evidence | None = None
+    failed: tuple[str, ...] = ()
 
 
 @dataclass
@@ -315,7 +316,7 @@ class State:
         ticket = self.tickets[p.ticket_id]
         rec = ReviewRec(entry.seq, at, p.lease_id, p.ticket_id, p.reviewer, p.duty, p.round,
                         p.verdict == "incorrect", p.reason, p.time_spent_s, float(p.t_factor),
-                        p.roles, p.evidence)
+                        p.roles, p.evidence, p.failed)
         for other in {r.reviewer for r in ticket.reviews}:
             self._pair(p.reviewer, other, at)
         ticket.reviews.append(rec)

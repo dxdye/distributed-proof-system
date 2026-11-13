@@ -69,7 +69,10 @@ def test_static_difficulty_orders_by_size_and_dependencies() -> None:
 def test_incorrect_without_justification_is_rejected() -> None:
     with pytest.raises(ValidationError, match="SR-09"):
         Review(ticket_id="A-1", reviewer="p1", verdict="incorrect", reason=" ", time_spent_s=60)
-    ok = Review(ticket_id="A-1", reviewer="p1", verdict="incorrect",
+    with pytest.raises(ValidationError, match="question that fails"):
+        Review(ticket_id="A-1", reviewer="p1", verdict="incorrect",
+               reason="force only smooth on [0, T*)", time_spent_s=1140)
+    ok = Review(ticket_id="A-1", reviewer="p1", verdict="incorrect", failed=("fidelity",),
                 reason="force only smooth on [0, T*)", time_spent_s=1140)
     assert ok.justified
     assert not Review(ticket_id="A-1", reviewer="p1", verdict="correct", time_spent_s=5).justified

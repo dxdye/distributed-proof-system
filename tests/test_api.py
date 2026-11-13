@@ -64,7 +64,8 @@ def test_review_round_trip_without_countdown_or_honeypot_fields(env: Env,
     assert r.status_code == 400 and "SR-09" in r.json()["detail"]
     env.clock.advance(minutes=20)
     r = client.post(f"/api/leases/{lid}/review", headers=auth, json={
-        "verdict": "incorrect", "reason": "vacuous", "evidence": "example : False := sorry",
+        "verdict": "incorrect", "reason": "the hypotheses are vacuous for every n",
+        "failed": ["vacuity"], "evidence": "example : False := sorry",
         "evidence_kind": "vacuity", "ai_used": True, "ai_provider": "some-assistant"})
     assert r.status_code == 200, r.text
     assert len(env.events("claim.opened")) == 1
@@ -101,9 +102,12 @@ def test_claim_duty_shows_the_finding_to_the_pvv(env: Env, client: TestClient) -
     lid = client.post("/api/leases", headers=finder, json={
         "set_id": cs["set_id"], "ticket_id": cs["tickets"][0]["ticket_id"]}).json()["lease_id"]
     client.post(f"/api/leases/{lid}/review", headers=finder,
-                json={"verdict": "incorrect", "reason": "the bound should be strict"})
+                json={"verdict": "incorrect", "reason": "the bound should be strict, not ≤",
+                      "failed": ["fidelity", "edge_cases"]})
     duty = client.post("/api/duties/next", headers=admin).json()
-    assert duty["duty"] == "claim" and duty["claim"]["reason"] == "the bound should be strict"
+    assert duty["duty"] == "claim"
+    assert duty["claim"]["reason"] == "the bound should be strict, not ≤"
+    assert duty["claim"]["failed"] == ["fidelity", "edge_cases"]
     r = client.post(f"/api/leases/{duty['lease_id']}/claim", headers=admin,
                     json={"confirmed": True, "reason": "agreed"})
     assert r.status_code == 200
