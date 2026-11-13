@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
+import tomllib
 from pathlib import Path
 
 import pytest
 
-from dpc.lean.executor import DockerExecutor, Limits, Mount
+from dpc.lean.executor import REPO_ROOT, DockerExecutor, Limits, Mount
 
 from conftest import DATA, copy_fixture
 
@@ -19,6 +21,17 @@ def _argv(executor: DockerExecutor, mounts: list[Mount]) -> list[str]:
 
 def _flag(argv: list[str], name: str) -> str:
     return argv[argv.index(name) + 1]
+
+
+def test_every_analyzer_tool_can_run_in_the_sandbox() -> None:
+    """Each executable of lean/analyzer is listed in the sandbox's tool runner
+    (a missing entry let `dpc-render` fail only inside Docker)."""
+    lake = tomllib.loads((REPO_ROOT / "lean" / "analyzer" / "lakefile.toml").read_text("utf-8"))
+    tools = {exe["name"] for exe in lake["lean_exe"]}
+    script = (REPO_ROOT / "sandbox" / "run-tool.sh").read_text("utf-8")
+    listed = re.search(r"^\s*(dpc-[a-z|-]+)\)", script, re.MULTILINE)
+    assert listed is not None
+    assert set(listed.group(1).split("|")) == tools
 
 
 def test_isolation_flags() -> None:
