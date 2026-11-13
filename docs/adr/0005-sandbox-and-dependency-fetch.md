@@ -88,12 +88,12 @@ explicitly told the input is trusted (own fixtures, development).
 
 ## Open points
 
-- **Forged `.olean` files of the submission itself.** Steps 3/5 protect the
-  hardened packages. The submission's own `.olean` files are produced by the
-  untrusted build and could contain theorems without valid proofs (Lean does not
-  re-check `.olean` files on import). Countermeasure: replay the environment
-  through the kernel in a fresh process (lean4checker, or Comparator where the
-  project provides challenges). This is where saboteurs are caught at L3.
+- ~~**Forged `.olean` files of the submission itself.**~~ Resolved by
+  [ADR 0009](0009-kernel-replay.md): every module that is not loaded from the
+  toolchain or an official package is replayed through the kernel. ADR 0009 also
+  closes a gap in steps 3/5. Modules used to be resolved through a search path
+  that began with the submission's own build directory, so a forged copy of
+  `Mathlib` placed there would have been loaded instead of the verified one.
 - **Other prebuilt caches.** Only Mathlib's cache is fetched. Projects with
   further large dependencies build them in the sandbox, which is slow but safe.
 - **Artifact store.** Volumes are named after commit and origin and reused by

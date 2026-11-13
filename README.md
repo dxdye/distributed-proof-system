@@ -24,7 +24,7 @@ makes the reliability of that judgement measurable:
 | Milestone | Content | State |
 |---|---|---|
 | M0 | Scaffold, audit log, requirement traceability | ✅ |
-| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build | ✅ measured on [Navier–Stokes](docs/case-studies/navier-stokes.md) (8 class-A units) and [ζ(s) ≠ 0 for Re s > 7/8](docs/case-studies/quasi-riemann.md) (1 class-A unit) |
+| M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build, kernel replay of the submission's own modules | ✅ measured on [Navier–Stokes](docs/case-studies/navier-stokes.md) (8 class-A units) and [ζ(s) ≠ 0 for Re s > 7/8](docs/case-studies/quasi-riemann.md) (1 class-A unit) |
 | M2 | Mutation generator, local and component equivalence filter, auto-detection filter, honeypot source registry and mixing | ✅ 47 + 7 honeypot candidates; maintainer review of pools open |
 | M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ study incl. lenses, IRT, Delphi, Sybil, collusion ([findings](docs/simulation/README.md)) |
 | M4 | Coordination service (choice sets, leases, exclusion rules, claims, PVV, decisions, delayed honeypot reveal), HTTP API, web client with static infoview, evidence checker with kernel replay | ✅ MVP ([ADR 0008](docs/adr/0008-coordination-service.md)); evidence checks not yet wired to claims, pilot open |
@@ -117,10 +117,12 @@ dpc/                  Python package
   tools/              pytest traceability plugin
 lean/analyzer/        Lean 4 metaprograms: `dpc-analyze` (TCB extraction), `dpc-mutate`
                       (mutants, equivalence filter, ticket views), `dpc-evidence`
-                      (kernel replay and check of evidence files, SR-10)
+                      (kernel replay and check of evidence files, SR-10), `dpc-replay`
+                      (kernel replay of all untrusted modules, ADR 0009)
 lean/fixtures/        test projects: `basic` (hand-checked TCB), `mutation` (known
                       equivalent / non-equivalent mutants), `redteam` (sandbox escape
-                      attempts), `evidence` (vacuous and honest claims)
+                      attempts), `evidence` (vacuous and honest claims), `replay`
+                      (a proof the kernel never saw)
 web/                  React/TypeScript client (Vite)
 docs/case-studies/    measurements on real formalizations
 sandbox/              Dockerfile and entry script of the sandbox image
@@ -139,6 +141,7 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 - [0006](docs/adr/0006-honeypot-sources.md) Honeypot sources
 - [0007](docs/adr/0007-local-equivalence-filter.md) Local equivalence filter for mutants
 - [0008](docs/adr/0008-coordination-service.md) Coordination service
+- [0009](docs/adr/0009-kernel-replay.md) Kernel replay and trust by location
 
 ## Conventions
 

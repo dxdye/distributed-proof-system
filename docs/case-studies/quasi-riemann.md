@@ -115,6 +115,10 @@ them. This is exactly what honeypots are meant to measure.
    review of class B. The evidence checker of SR-10 already replays the
    evidence module this way (`dpc-evidence`). Extending it to the submission's
    own modules is the same mechanism at a larger scale.
+   *Implemented since:* [ADR 0009](../adr/0009-kernel-replay.md) replays every
+   module not loaded from the toolchain or an official package, here the
+   repository and its 30 non-official dependencies. Its measurement on this
+   volume is still open.
 4. **Class B as defined by the concept matters less here.** Sampling proof
    internals finds errors that do not change the meaning of the statement.
    For a reuse-oriented library (Mathlib-style) class B is relevant; for a
