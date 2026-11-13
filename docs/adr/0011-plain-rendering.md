@@ -75,10 +75,15 @@ demo does the same.
   `∀ (n : Nat), 0 < n → n < n + 1` versus `∀ (n : Nat), 0 ≤ n → n ≤ n + 1`.
   Honest declarations of the same file, including field notation on its own
   structure, look the same both ways.
-- Some differences can be harmless, for example structure-instance notation
-  for the submission's own structures, whose structure information lives in an
-  extension. They are shown like any other difference. The reviewer sees both
-  versions, so nothing is hidden.
+- Measured on the case studies (2026-11-13):
+  - quasi-Riemann: 1 component, Navier–Stokes: 15 components. **No
+    differences.**
+  - All usable mutants (7 and 47) got their second rendering.
+  - Run time: each run (`dpc render`, `dpc mutate`) took under a minute.
+- Some differences could still be harmless, for example structure-instance
+  notation for the submission's own structures, whose structure information
+  lives in an extension. They are shown like any other difference. The reviewer
+  sees both versions, so nothing is hidden.
 - One more import of the trusted base per render run. No foreign code runs in
   it.
 
