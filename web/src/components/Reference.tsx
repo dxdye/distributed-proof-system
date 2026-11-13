@@ -61,8 +61,12 @@ export function Reference({
             </div>
           ))}
           <p className="small muted">
-            The same Lean term, typeset. Types and coercions are kept; the Lean text below is the
-            binding version.
+            The same Lean term, typeset; the Lean text below is the binding version. Types stay
+            visible: division, subtraction and remainder on <MathText text="$\mathbb{N}$" /> and{" "}
+            <MathText text="$\mathbb{Z}$" /> carry a subscript (
+            <MathText text="$a \mathbin{/_{\mathbb{N}}} b$" /> rounds down,{" "}
+            <MathText text="$a \mathbin{-_{\mathbb{N}}} b$" /> stops at 0), a fraction is division
+            in a field, and casts show their target type.
           </p>
         </div>
       )}
