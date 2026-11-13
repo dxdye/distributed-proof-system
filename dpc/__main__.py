@@ -181,6 +181,17 @@ def _coordinator(args: argparse.Namespace) -> Coordinator:
                        blobs=BlobStore(data / "blobs"))
 
 
+def cmd_export_demo(args: argparse.Namespace) -> int:
+    """Snapshot for the click dummy (web client with a simulated backend)."""
+    from dpc.demo_export import default_sources, export
+
+    root = Path(__file__).resolve().parents[1]
+    counts = export(default_sources(root, Path(args.demo_work), Path(args.case_studies)),
+                    Path(args.out))
+    _print(counts | {"file": args.out})
+    return 0
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     """Seed a local demo: the mutation fixture as a submission, one maintainer."""
     from dpc.coord.demo import DISPLAY, MUTATION, seed_demo
@@ -393,6 +404,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("pseudonym")
     coord_args(p)
     p.set_defaults(func=cmd_appoint)
+
+    p = sub.add_parser("export-demo", help="snapshot for the click dummy (web/demo)")
+    p.add_argument("--demo-work", default="data/walkthrough/demo-work",
+                   help="fixture renderings of an earlier `dpc demo`")
+    p.add_argument("--case-studies", default="work/case-studies")
+    p.add_argument("--out", default="web/demo/snapshot.json")
+    p.set_defaults(func=cmd_export_demo)
 
     p = sub.add_parser("demo", help="seed a local demo from own fixtures (M4)")
     p.add_argument("--share", type=float, default=0.2, help="honeypot share h")

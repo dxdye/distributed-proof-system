@@ -90,6 +90,19 @@ pixi run keycloak-up          # http://localhost:8080, admin console: admin / ad
 pixi run serve --data data/demo --params config/demo-params.json --auth config/auth-keycloak.json
 ```
 
+A click dummy of the web client (simulated backend in the browser, four roles,
+no server needed) is built from a snapshot of the current implementation:
+
+```bash
+pixi run dpc export-demo          # writes web/demo/snapshot.json (needs `dpc demo` and the case studies)
+cd web && npm run build:demo      # static site in web/dist-demo; `npm run dev:demo` to try it
+```
+
+The workflow "Click dummy" builds it on GitHub when started by hand; publishing
+is off unless the repository variable `PUBLISH_CLICK_DUMMY` is `true`. Planted
+errors in the dummy come only from own fixtures: whatever is public is burnt
+for a real review.
+
 Before hosting the web service, fill in `web/public/legal.json` (operator data
 for the imprint and the privacy policy; read at runtime, the pages show a draft
 banner while placeholders remain) and have the texts reviewed.

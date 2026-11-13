@@ -1,0 +1,4125 @@
+{
+ "schema": "dpc.click-dummy/1",
+ "notice": {
+  "version": "2026-11-registration-v1",
+  "text": "Reviews you submit (verdicts, justifications, evidence files) are published under an open licence together with the reports, and may be used to train and evaluate AI systems. Your account is pseudonymous: the published audit log identifies you only by a random id. Do not use your real name as pseudonym if you do not want to be identifiable. Declare any employment by or commission from a lab whose submissions you might review."
+ },
+ "questions": [
+  {
+   "id": "fidelity",
+   "text": "Does the formal statement say what the paper claims — no more, no less?"
+  },
+  {
+   "id": "junk_values",
+   "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended?"
+  },
+  {
+   "id": "edge_cases",
+   "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+  },
+  {
+   "id": "vacuity",
+   "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+  },
+  {
+   "id": "quantifiers",
+   "text": "Are quantifiers, their order and the types of bound variables right?"
+  }
+ ],
+ "min_reason_chars": 30,
+ "choice_set_size": 4,
+ "submissions": [
+  {
+   "submission_id": "S-mutation",
+   "title": "Mutation fixture (demo)",
+   "repo_url": "https://example.org/mutation",
+   "commit": "0000000000000000000000000000000000000000",
+   "paper_ref": null,
+   "tickets": [
+    {
+     "ticket_id": "A-1000",
+     "declaration": "Mut.pos_le",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.pos_le",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 0 < n → 1 ≤ n",
+        "glossary": [
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 0 < n → 1 ≤ n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 0 < n \\implies 1 \\le n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 1",
+      "statement": "For every natural number $n$ with $0 < n$ we have $1 \\le n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1001",
+     "declaration": "Mut.total",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.total",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (a b : Nat), a ≤ b ∨ b < a",
+        "glossary": [
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Or",
+          "type": "Prop → Prop → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (a b : Nat), a ≤ b ∨ b < a",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall a \\in \\mathbb{N},\\ \\forall b \\in \\mathbb{N},\\ a \\le b \\lor b < a"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 2",
+      "statement": "For all natural numbers $a, b$: $a \\le b$ or $b < a$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1002",
+     "declaration": "Mut.redundant",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.redundant",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 1 < n → 0 < n → 2 ≤ n",
+        "glossary": [
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 1 < n → 0 < n → 2 ≤ n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 1 < n \\implies 0 < n \\implies 2 \\le n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 3",
+      "statement": "If $1 < n$ (and hence $0 < n$), then $2 \\le n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1003",
+     "declaration": "Mut.exists_gt",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.exists_gt",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), ∃ (m : Nat), n < m",
+        "glossary": [
+         {
+          "name": "Exists",
+          "type": "{α : Sort u} → (α → Prop) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), ∃ (m : Nat), n < m",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\exists m \\in \\mathbb{N},\\ n < m"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 4",
+      "statement": "For every natural number $n$ there is an $m$ with $n < m$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1004",
+     "declaration": "Mut.succ_pos'",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.succ_pos'",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 0 < n + 1",
+        "glossary": [
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 0 < n + 1",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 0 < n + 1"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 5",
+      "statement": "$0 < n + 1$ for every natural number $n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1005",
+     "declaration": "Mut.double",
+     "decl_kind": "def",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.double",
+      "decl_kind": "def",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "Nat → Nat",
+        "glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "Nat → Nat",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\mathbb{N} \\to \\mathbb{N}"
+       },
+       {
+        "target": "value",
+        "label": "",
+        "text": "fun (n : Nat) => 2 * n",
+        "glossary": [
+         {
+          "name": "HMul.hMul",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HMul α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "fun (n : Nat) => 2 * n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\mapsto 2 \\cdot n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 1",
+      "statement": "$\\operatorname{double}(n) = 2n$ for natural numbers $n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1006",
+     "declaration": "Mut.plusZero",
+     "decl_kind": "def",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.plusZero",
+      "decl_kind": "def",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "Nat → Nat",
+        "glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "Nat → Nat",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\mathbb{N} \\to \\mathbb{N}"
+       },
+       {
+        "target": "value",
+        "label": "",
+        "text": "fun (n : Nat) => n + 0",
+        "glossary": [
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "fun (n : Nat) => n + 0",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\mapsto n + 0"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 2",
+      "statement": "$\\operatorname{plusZero}(n) = n + 0$, that is, $n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1007",
+     "declaration": "Mut.Bounded",
+     "decl_kind": "inductive",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.Bounded",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "(Nat → Nat) → Prop",
+        "glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "(Nat → Nat) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\left(\\mathbb{N} \\to \\mathbb{N}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "Mut.Bounded.mk",
+        "text": "∀ {f : Nat → Nat}, (∀ (n : Nat), f n ≤ 10) → Mut.Bounded f",
+        "glossary": [
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {f : Nat → Nat}, (∀ (n : Nat), f n ≤ 10) → Mut.Bounded f",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall f : \\mathbb{N} \\to \\mathbb{N},\\ \\left(\\forall n \\in \\mathbb{N},\\ f\\left(n\\right) \\le 10\\right) \\implies \\operatorname{Mut.Bounded}\\left(f\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 3",
+      "statement": "A function $f : \\mathbb{N} \\to \\mathbb{N}$ is bounded if $f(n) \\le 10$ for all $n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1008",
+     "declaration": "Mut.window",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.window",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 2 ≤ n → n < 3 → n = 2",
+        "glossary": [
+         {
+          "name": "Eq",
+          "type": "{α : Sort u_1} → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 2 ≤ n → n < 3 → n = 2",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 2 \\le n \\implies n < 3 \\implies n = 2"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 6",
+      "statement": "If $2 \\le n < 3$, then $n = 2$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1009",
+     "declaration": "Mut.positive",
+     "decl_kind": "def",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.positive",
+      "decl_kind": "def",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "Nat → Prop",
+        "glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "Nat → Prop",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\mathbb{N} \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "value",
+        "label": "",
+        "text": "fun (n : Nat) => 0 < n ∧ 1 ≤ n",
+        "glossary": [
+         {
+          "name": "And",
+          "type": "Prop → Prop → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "fun (n : Nat) => 0 < n ∧ 1 ≤ n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\mapsto 0 < n \\land 1 \\le n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 4",
+      "statement": "$n$ is positive if $0 < n$ and $1 \\le n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-1010",
+     "declaration": "Mut.pos_le",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.pos_le",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 1 < n → 1 ≤ n",
+        "glossary": [
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 1 < n → 1 ≤ n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 1 < n \\implies 1 \\le n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 1",
+      "statement": "For every natural number $n$ with $0 < n$ we have $1 \\le n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": {
+      "operator": "constant",
+      "original": "∀ (n : Nat), 0 < n → 1 ≤ n",
+      "mutant": "∀ (n : Nat), 1 < n → 1 ≤ n"
+     }
+    },
+    {
+     "ticket_id": "A-1011",
+     "declaration": "Mut.total",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.total",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (a b : Nat), a < b ∨ b < a",
+        "glossary": [
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Or",
+          "type": "Prop → Prop → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (a b : Nat), a < b ∨ b < a",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall a \\in \\mathbb{N},\\ \\forall b \\in \\mathbb{N},\\ a < b \\lor b < a"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 2",
+      "statement": "For all natural numbers $a, b$: $a \\le b$ or $b < a$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": {
+      "operator": "relation",
+      "original": "∀ (a b : Nat), a ≤ b ∨ b < a",
+      "mutant": "∀ (a b : Nat), a < b ∨ b < a"
+     }
+    },
+    {
+     "ticket_id": "A-1012",
+     "declaration": "Mut.redundant",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Mut.redundant",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 2 < n → 0 < n → 2 ≤ n",
+        "glossary": [
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 2 < n → 0 < n → 2 ≤ n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 2 < n \\implies 0 < n \\implies 2 \\le n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Mutation fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 3",
+      "statement": "If $1 < n$ (and hence $0 < n$), then $2 \\le n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": {
+      "operator": "constant",
+      "original": "∀ (n : Nat), 1 < n → 0 < n → 2 ≤ n",
+      "mutant": "∀ (n : Nat), 2 < n → 0 < n → 2 ≤ n"
+     }
+    }
+   ]
+  },
+  {
+   "submission_id": "S-display",
+   "title": "Display rules fixture (demo)",
+   "repo_url": "https://example.org/display",
+   "commit": "0000000000000000000000000000000000000000",
+   "paper_ref": null,
+   "tickets": [
+    {
+     "ticket_id": "A-2000",
+     "declaration": "Display.claim",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Display.claim",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 0 < n → n < n + 1",
+        "glossary": [
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 0 ≤ n → n ≤ n + 1",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 0 \\le n \\implies n \\le n + 1"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Display rules fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Proposition 1",
+      "statement": "For every natural number $n$ with $0 \\le n$ we have $n \\le n + 1$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-2001",
+     "declaration": "Display.Point",
+     "decl_kind": "inductive",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Display.Point",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "Type",
+        "glossary": [],
+        "trusted_text": "Type",
+        "trusted_glossary": [],
+        "latex": "\\mathrm{Type}"
+       },
+       {
+        "target": "ctor",
+        "label": "Display.Point.mk",
+        "text": "Nat → Nat → Display.Point",
+        "glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "Nat → Nat → Display.Point",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\mathbb{N} \\to \\mathbb{N} \\to \\operatorname{Display.Point}"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Display rules fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 1",
+      "statement": "A point consists of two natural numbers $x$ and $y$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-2002",
+     "declaration": "Display.Point.sum",
+     "decl_kind": "def",
+     "domain": "arithmetic",
+     "tier": "medium",
+     "view": {
+      "declaration": "Display.Point.sum",
+      "decl_kind": "def",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "Display.Point → Nat",
+        "glossary": [
+         {
+          "name": "Display.Point",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "Display.Point → Nat",
+        "trusted_glossary": [
+         {
+          "name": "Display.Point",
+          "type": "Type",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\operatorname{Display.Point} \\to \\mathbb{N}"
+       },
+       {
+        "target": "value",
+        "label": "",
+        "text": "fun (p : Display.Point) => p.x + p.y",
+        "glossary": [
+         {
+          "name": "Display.Point",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.x",
+          "type": "Display.Point → Nat",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.y",
+          "type": "Display.Point → Nat",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "fun (p : Display.Point) => p.x + p.y",
+        "trusted_glossary": [
+         {
+          "name": "Display.Point",
+          "type": "Type",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.x",
+          "type": "Display.Point → Nat",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.y",
+          "type": "Display.Point → Nat",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\left(p : \\operatorname{Display.Point}\\right) \\mapsto \\operatorname{Point.x}\\left(p\\right) + \\operatorname{Point.y}\\left(p\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Display rules fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 2",
+      "statement": "The sum of a point $p = (x, y)$ is $x + y$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-2003",
+     "declaration": "Display.double",
+     "decl_kind": "def",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Display.double",
+      "decl_kind": "def",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "Nat → Nat",
+        "glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "Nat → Nat",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\mathbb{N} \\to \\mathbb{N}"
+       },
+       {
+        "target": "value",
+        "label": "",
+        "text": "fun (n : Nat) => 2 * n",
+        "glossary": [
+         {
+          "name": "HMul.hMul",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HMul α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "fun (n : Nat) => 2 * n",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\mapsto 2 \\cdot n"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Display rules fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Definition 3",
+      "statement": "$\\operatorname{double}(n) = 2n$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-2004",
+     "declaration": "Display.sum_comm",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "medium",
+     "view": {
+      "declaration": "Display.sum_comm",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (p : Display.Point), p.sum = p.y + p.x",
+        "glossary": [
+         {
+          "name": "Display.Point",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.sum",
+          "type": "Display.Point → Nat",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.x",
+          "type": "Display.Point → Nat",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.y",
+          "type": "Display.Point → Nat",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Eq",
+          "type": "{α : Sort u_1} → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (p : Display.Point), p.sum = p.y + p.x",
+        "trusted_glossary": [
+         {
+          "name": "Display.Point",
+          "type": "Type",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.sum",
+          "type": "Display.Point → Nat",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.x",
+          "type": "Display.Point → Nat",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Display.Point.y",
+          "type": "Display.Point → Nat",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall p : \\operatorname{Display.Point},\\ \\operatorname{Point.sum}\\left(p\\right) = \\operatorname{Point.y}\\left(p\\right) + \\operatorname{Point.x}\\left(p\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Display rules fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Lemma 1",
+      "statement": "For every point $p = (x, y)$, $\\operatorname{sum}(p) = y + x$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-2005",
+     "declaration": "Display.claim",
+     "decl_kind": "theorem",
+     "domain": "arithmetic",
+     "tier": "easy",
+     "view": {
+      "declaration": "Display.claim",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ (n : Nat), 1 < n → n < n + 1",
+        "glossary": [
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : Nat) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ (n : Nat), 1 ≤ n → n ≤ n + 1",
+        "trusted_glossary": [
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ 1 \\le n \\implies n \\le n + 1"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "Display rules fixture (demo paper)",
+       "arxiv": null,
+       "version": null,
+       "url": null
+      },
+      "locator": "Proposition 1",
+      "statement": "For every natural number $n$ with $0 \\le n$ we have $n \\le n + 1$.",
+      "mapped_by": "demo maintainer",
+      "note": ""
+     },
+     "honeypot": {
+      "operator": "constant",
+      "original": "∀ (n : Nat), 0 < n → n < n + 1",
+      "mutant": "∀ (n : Nat), 1 < n → n < n + 1"
+     }
+    }
+   ]
+  },
+  {
+   "submission_id": "S-ns",
+   "title": "Navier–Stokes existence and smoothness (Comparator)",
+   "repo_url": "https://github.com/openai/NavierStokesAndEuler",
+   "commit": "f9e8bc5b38b6e212696e8a30e3e91517af887bbd",
+   "paper_ref": "https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf",
+   "tickets": [
+    {
+     "ticket_id": "A-3000",
+     "declaration": "NavierStokes.Comparator.ForceCondition",
+     "decl_kind": "inductive",
+     "domain": "analysis",
+     "tier": "hard",
+     "view": {
+      "declaration": "NavierStokes.Comparator.ForceCondition",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "NavierStokes.Comparator.ForceCondition.mk",
+        "text": "∀ {n : ℕ} {f : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)},\n  ContDiffOn ℝ (↑⊤) (↿f) (Set.univ ×ˢ Set.Ici 0) → NavierStokes.Comparator.ForceCondition f",
+        "glossary": [
+         {
+          "name": "ContDiffOn",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Function.HasUncurry.uncurry",
+          "type": "{α : Type u_5} → {β : outParam (Type u_6)} → {γ : outParam (Type u_7)} → [self : Function.HasUncurry α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Prod",
+          "type": "Type u → Type v → Type (max u v)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "SProd.sprod",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : SProd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set",
+          "type": "Type u → Type u",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set.Ici",
+          "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set.univ",
+          "type": "{α : Type u} → Set α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Top.top",
+          "type": "{α : Type u_1} → [self : Top α] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "WithTop.some",
+          "type": "{α : Type u_1} → α → WithTop α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {n : ℕ} {f : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)},\n  ContDiffOn ℝ (↑⊤) (↿f) (Set.univ ×ˢ Set.Ici 0) → NavierStokes.Comparator.ForceCondition f",
+        "trusted_glossary": [
+         {
+          "name": "ContDiffOn",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
+          "origin": "library",
+          "doc": "A function is continuously differentiable up to `n` on `s` if, for any point `x` in `s`, it admits continuous derivatives up to order `n` on a neighborhood of `x` in `s`. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "ENat",
+          "type": "Type",
+          "origin": "library",
+          "doc": "Extended natural numbers `ℕ∞ = WithTop ℕ`. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Function.HasUncurry.uncurry",
+          "type": "{α : Type u_5} → {β : outParam (Type u_6)} → {γ : outParam (Type u_7)} → [self : Function.HasUncurry α β γ] → α → β → γ",
+          "origin": "library",
+          "doc": "Uncurrying operator. The most generic use is to recursively uncurry. For instance `f : α → β → γ → δ` will be turned into `↿f : α × β × γ → δ`. One can also add instances for bundled maps. ",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Prod",
+          "type": "Type u → Type v → Type (max u v)",
+          "origin": "core",
+          "doc": "The product type, usually written `α × β`. Product types are also called pair or tuple types. Elements of this type are pairs in which the first element is an `α` and the second element is a `β`.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "SProd.sprod",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : SProd α β γ] → α → β → γ",
+          "origin": "library",
+          "doc": "The Cartesian product `s ×ˢ t` is the set of `(a, b)` such that `a ∈ s` and `b ∈ t`. ",
+          "note": null
+         },
+         {
+          "name": "Set",
+          "type": "Type u → Type u",
+          "origin": "library",
+          "doc": "A set is a collection of elements of some type `α`.",
+          "note": null
+         },
+         {
+          "name": "Set.Ici",
+          "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+          "origin": "library",
+          "doc": "`Ici a` is the left-closed right-infinite interval $[a, ∞)$. ",
+          "note": null
+         },
+         {
+          "name": "Set.univ",
+          "type": "{α : Type u} → Set α",
+          "origin": "library",
+          "doc": "The universal set on a type `α` is the set containing all elements of `α`.",
+          "note": null
+         },
+         {
+          "name": "Top.top",
+          "type": "{α : Type u_1} → [self : Top α] → α",
+          "origin": "library",
+          "doc": "The top (`⊤`, `\\top`) element ",
+          "note": null
+         },
+         {
+          "name": "WithTop.some",
+          "type": "{α : Type u_1} → α → WithTop α",
+          "origin": "library",
+          "doc": "The canonical map from `α` into `WithTop α` ",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(f\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{Comparator.ForceCondition}\\left(f\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3001",
+     "declaration": "NavierStokes.Comparator.ForceConditionDecay",
+     "decl_kind": "inductive",
+     "domain": "analysis",
+     "tier": "excellence",
+     "view": {
+      "declaration": "NavierStokes.Comparator.ForceConditionDecay",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "NavierStokes.Comparator.ForceConditionDecay.mk",
+        "text": "∀ {n : ℕ} {f : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)},\n  NavierStokes.Comparator.ForceCondition f →\n    (∀ (m : ℕ) (K : ℝ),\n        ∃ (C : ℝ),\n          ∀ (x : EuclideanSpace ℝ (Fin n)),\n            ∀ t ≥ 0, ‖iteratedFDerivWithin ℝ m (↿f) (Set.univ ×ˢ Set.Ici 0) (x, t)‖ ≤ C / (1 + ‖x‖ + t) ^ K) →\n      NavierStokes.Comparator.ForceConditionDecay f",
+        "glossary": [
+         {
+          "name": "ContinuousMultilinearMap",
+          "type": "(R : Type u) →\n  {ι : Type v} →\n    (M₁ : ι → Type w₁) →\n      (M₂ : Type w₂) →\n        [inst : Semiring R] →\n          [inst_1 : (i : ι) → AddCommMonoid (M₁ i)] →\n            [inst_2 : AddCommMonoid M₂] →\n              [(i : ι) → Module R (M₁ i)] →\n                [Module R M₂] → [(i : ι) → TopologicalSpace (M₁ i)] → [TopologicalSpace M₂] → Type (max (max v w₁) w₂)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Exists",
+          "type": "{α : Sort u} → (α → Prop) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Function.HasUncurry.uncurry",
+          "type": "{α : Type u_5} → {β : outParam (Type u_6)} → {γ : outParam (Type u_7)} → [self : Function.HasUncurry α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "GE.ge",
+          "type": "{α : Type u} → [LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HDiv.hDiv",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HDiv α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HPow.hPow",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HPow α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.ForceCondition",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Norm.norm",
+          "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Prod",
+          "type": "Type u → Type v → Type (max u v)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Prod.mk",
+          "type": "{α : Type u} → {β : Type v} → α → β → α × β",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "SProd.sprod",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : SProd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set",
+          "type": "Type u → Type u",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set.Ici",
+          "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set.univ",
+          "type": "{α : Type u} → Set α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "iteratedFDerivWithin",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [inst_2 : NormedSpace 𝕜 E] →\n          {F : Type uF} →\n            [inst_3 : NormedAddCommGroup F] → [inst_4 : NormedSpace 𝕜 F] → (n : ℕ) → (E → F) → Set E → E → E [×n]→L[𝕜] F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {n : ℕ} {f : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)},\n  NavierStokes.Comparator.ForceCondition f →\n    (∀ (m : ℕ) (K : ℝ),\n        ∃ (C : ℝ),\n          ∀ (x : EuclideanSpace ℝ (Fin n)),\n            ∀ t ≥ 0, ‖iteratedFDerivWithin ℝ m (↿f) (Set.univ ×ˢ Set.Ici 0) (x, t)‖ ≤ C / (1 + ‖x‖ + t) ^ K) →\n      NavierStokes.Comparator.ForceConditionDecay f",
+        "trusted_glossary": [
+         {
+          "name": "ContinuousMultilinearMap",
+          "type": "(R : Type u) →\n  {ι : Type v} →\n    (M₁ : ι → Type w₁) →\n      (M₂ : Type w₂) →\n        [inst : Semiring R] →\n          [inst_1 : (i : ι) → AddCommMonoid (M₁ i)] →\n            [inst_2 : AddCommMonoid M₂] →\n              [(i : ι) → Module R (M₁ i)] →\n                [Module R M₂] → [(i : ι) → TopologicalSpace (M₁ i)] → [TopologicalSpace M₂] → Type (max (max v w₁) w₂)",
+          "origin": "library",
+          "doc": "Continuous multilinear maps over the ring `R`, from `∀ i, M₁ i` to `M₂` where `M₁ i` and `M₂` are modules over `R` with a topological structure. In applications, there will be compatibility conditions between the algebraic and the topological structures, but this is not needed for the definition. ",
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Function.HasUncurry.uncurry",
+          "type": "{α : Type u_5} → {β : outParam (Type u_6)} → {γ : outParam (Type u_7)} → [self : Function.HasUncurry α β γ] → α → β → γ",
+          "origin": "library",
+          "doc": "Uncurrying operator. The most generic use is to recursively uncurry. For instance `f : α → β → γ → δ` will be turned into `↿f : α × β × γ → δ`. One can also add instances for bundled maps. ",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.ForceCondition",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Norm.norm",
+          "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+          "origin": "library",
+          "doc": "the `ℝ`-valued norm function. ",
+          "note": null
+         },
+         {
+          "name": "Prod",
+          "type": "Type u → Type v → Type (max u v)",
+          "origin": "core",
+          "doc": "The product type, usually written `α × β`. Product types are also called pair or tuple types. Elements of this type are pairs in which the first element is an `α` and the second element is a `β`.",
+          "note": null
+         },
+         {
+          "name": "Prod.mk",
+          "type": "{α : Type u} → {β : Type v} → α → β → α × β",
+          "origin": "core",
+          "doc": "Constructs a pair. This is usually written `(x, y)` instead of `Prod.mk x y`.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "SProd.sprod",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : SProd α β γ] → α → β → γ",
+          "origin": "library",
+          "doc": "The Cartesian product `s ×ˢ t` is the set of `(a, b)` such that `a ∈ s` and `b ∈ t`. ",
+          "note": null
+         },
+         {
+          "name": "Set",
+          "type": "Type u → Type u",
+          "origin": "library",
+          "doc": "A set is a collection of elements of some type `α`.",
+          "note": null
+         },
+         {
+          "name": "Set.Ici",
+          "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+          "origin": "library",
+          "doc": "`Ici a` is the left-closed right-infinite interval $[a, ∞)$. ",
+          "note": null
+         },
+         {
+          "name": "Set.univ",
+          "type": "{α : Type u} → Set α",
+          "origin": "library",
+          "doc": "The universal set on a type `α` is the set containing all elements of `α`.",
+          "note": null
+         },
+         {
+          "name": "iteratedFDerivWithin",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [inst_2 : NormedSpace 𝕜 E] →\n          {F : Type uF} →\n            [inst_3 : NormedAddCommGroup F] → [inst_4 : NormedSpace 𝕜 F] → (n : ℕ) → (E → F) → Set E → E → E [×n]→L[𝕜] F",
+          "origin": "library",
+          "doc": "The `n`-th derivative of a function along a set, defined inductively by saying that the `n+1`-th derivative of `f` is the derivative of the `n`-th derivative of `f` along this set, together with an uncurrying step to see it as a multilinear map in `n+1` variables.. ",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\operatorname{Comparator.ForceCondition}\\left(f\\right) \\implies \\left(\\forall m \\in \\mathbb{N},\\ \\forall K \\in \\mathbb{R},\\ \\exists C \\in \\mathbb{R},\\ \\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\left\\lVert \\operatorname{iteratedFDerivWithin}\\left(\\mathbb{R}, m, \\operatorname{HasUncurry.uncurry}\\left(f\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right), \\operatorname{Prod.mk}\\left(x, t\\right)\\right)\\right\\rVert \\le \\frac{C}{\\left(\\left(1 + \\left\\lVert x\\right\\rVert\\right) + t\\right)^{K}}\\right) \\implies \\operatorname{Comparator.ForceConditionDecay}\\left(f\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3002",
+     "declaration": "NavierStokes.Comparator.InitialVelocityCondition",
+     "decl_kind": "inductive",
+     "domain": "analysis",
+     "tier": "hard",
+     "view": {
+      "declaration": "NavierStokes.Comparator.InitialVelocityCondition",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "NavierStokes.Comparator.InitialVelocityCondition.mk",
+        "text": "∀ {n : ℕ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)},\n  (∀ (x : EuclideanSpace ℝ (Fin n)), NavierStokes.Comparator.divergence u₀ x = 0) →\n    ContDiff ℝ (↑⊤) u₀ → NavierStokes.Comparator.InitialVelocityCondition u₀",
+        "glossary": [
+         {
+          "name": "ContDiff",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Eq",
+          "type": "{α : Sort u_1} → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.divergence",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → EuclideanSpace ℝ (Fin n) → ℝ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Top.top",
+          "type": "{α : Type u_1} → [self : Top α] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "WithTop.some",
+          "type": "{α : Type u_1} → α → WithTop α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {n : ℕ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)},\n  (∀ (x : EuclideanSpace ℝ (Fin n)), NavierStokes.Comparator.divergence u₀ x = 0) →\n    ContDiff ℝ (↑⊤) u₀ → NavierStokes.Comparator.InitialVelocityCondition u₀",
+        "trusted_glossary": [
+         {
+          "name": "ContDiff",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Prop",
+          "origin": "library",
+          "doc": "A function is continuously differentiable up to `n` if it admits derivatives up to order `n`, which are continuous. Contrary to the case of definitions in domains (where derivatives might not be unique) we do not need to localize the definition in space or time. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "ENat",
+          "type": "Type",
+          "origin": "library",
+          "doc": "Extended natural numbers `ℕ∞ = WithTop ℕ`. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.divergence",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → EuclideanSpace ℝ (Fin n) → ℝ",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "Top.top",
+          "type": "{α : Type u_1} → [self : Top α] → α",
+          "origin": "library",
+          "doc": "The top (`⊤`, `\\top`) element ",
+          "note": null
+         },
+         {
+          "name": "WithTop.some",
+          "type": "{α : Type u_1} → α → WithTop α",
+          "origin": "library",
+          "doc": "The canonical map from `α` into `WithTop α` ",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\left(\\forall x : \\mathbb{R}^{n},\\ \\operatorname{Comparator.divergence}\\left(u_{0}, x\\right) = 0\\right) \\implies \\operatorname{ContDiff}\\left(\\mathbb{R}, {\\uparrow}\\top, u_{0}\\right) \\implies \\operatorname{Comparator.InitialVelocityCondition}\\left(u_{0}\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3003",
+     "declaration": "NavierStokes.Comparator.InitialVelocityConditionDecay",
+     "decl_kind": "inductive",
+     "domain": "analysis",
+     "tier": "hard",
+     "view": {
+      "declaration": "NavierStokes.Comparator.InitialVelocityConditionDecay",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "NavierStokes.Comparator.InitialVelocityConditionDecay.mk",
+        "text": "∀ {n : ℕ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)},\n  NavierStokes.Comparator.InitialVelocityCondition u₀ →\n    (∀ (m : ℕ) (K : ℝ), ∃ (C : ℝ), ∀ (x : EuclideanSpace ℝ (Fin n)), ‖iteratedFDeriv ℝ m u₀ x‖ ≤ C / (1 + ‖x‖) ^ K) →\n      NavierStokes.Comparator.InitialVelocityConditionDecay u₀",
+        "glossary": [
+         {
+          "name": "ContinuousMultilinearMap",
+          "type": "(R : Type u) →\n  {ι : Type v} →\n    (M₁ : ι → Type w₁) →\n      (M₂ : Type w₂) →\n        [inst : Semiring R] →\n          [inst_1 : (i : ι) → AddCommMonoid (M₁ i)] →\n            [inst_2 : AddCommMonoid M₂] →\n              [(i : ι) → Module R (M₁ i)] →\n                [Module R M₂] → [(i : ι) → TopologicalSpace (M₁ i)] → [TopologicalSpace M₂] → Type (max (max v w₁) w₂)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Exists",
+          "type": "{α : Sort u} → (α → Prop) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HDiv.hDiv",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HDiv α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HPow.hPow",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HPow α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LE.le",
+          "type": "{α : Type u} → [self : LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.InitialVelocityCondition",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Norm.norm",
+          "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "iteratedFDeriv",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [inst_2 : NormedSpace 𝕜 E] →\n          {F : Type uF} →\n            [inst_3 : NormedAddCommGroup F] → [inst_4 : NormedSpace 𝕜 F] → (n : ℕ) → (E → F) → E → E [×n]→L[𝕜] F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {n : ℕ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)},\n  NavierStokes.Comparator.InitialVelocityCondition u₀ →\n    (∀ (m : ℕ) (K : ℝ), ∃ (C : ℝ), ∀ (x : EuclideanSpace ℝ (Fin n)), ‖iteratedFDeriv ℝ m u₀ x‖ ≤ C / (1 + ‖x‖) ^ K) →\n      NavierStokes.Comparator.InitialVelocityConditionDecay u₀",
+        "trusted_glossary": [
+         {
+          "name": "ContinuousMultilinearMap",
+          "type": "(R : Type u) →\n  {ι : Type v} →\n    (M₁ : ι → Type w₁) →\n      (M₂ : Type w₂) →\n        [inst : Semiring R] →\n          [inst_1 : (i : ι) → AddCommMonoid (M₁ i)] →\n            [inst_2 : AddCommMonoid M₂] →\n              [(i : ι) → Module R (M₁ i)] →\n                [Module R M₂] → [(i : ι) → TopologicalSpace (M₁ i)] → [TopologicalSpace M₂] → Type (max (max v w₁) w₂)",
+          "origin": "library",
+          "doc": "Continuous multilinear maps over the ring `R`, from `∀ i, M₁ i` to `M₂` where `M₁ i` and `M₂` are modules over `R` with a topological structure. In applications, there will be compatibility conditions between the algebraic and the topological structures, but this is not needed for the definition. ",
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.InitialVelocityCondition",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Norm.norm",
+          "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+          "origin": "library",
+          "doc": "the `ℝ`-valued norm function. ",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "iteratedFDeriv",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [inst_2 : NormedSpace 𝕜 E] →\n          {F : Type uF} →\n            [inst_3 : NormedAddCommGroup F] → [inst_4 : NormedSpace 𝕜 F] → (n : ℕ) → (E → F) → E → E [×n]→L[𝕜] F",
+          "origin": "library",
+          "doc": "The `n`-th derivative of a function, as a multilinear map, defined inductively. ",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\operatorname{Comparator.InitialVelocityCondition}\\left(u_{0}\\right) \\implies \\left(\\forall m \\in \\mathbb{N},\\ \\forall K \\in \\mathbb{R},\\ \\exists C \\in \\mathbb{R},\\ \\forall x : \\mathbb{R}^{n},\\ \\left\\lVert \\operatorname{iteratedFDeriv}\\left(\\mathbb{R}, m, u_{0}, x\\right)\\right\\rVert \\le \\frac{C}{\\left(1 + \\left\\lVert x\\right\\rVert\\right)^{K}}\\right) \\implies \\operatorname{Comparator.InitialVelocityConditionDecay}\\left(u_{0}\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3004",
+     "declaration": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothness",
+     "decl_kind": "inductive",
+     "domain": "analysis",
+     "tier": "excellence",
+     "view": {
+      "declaration": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothness",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\mathbb{R} \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothness.mk",
+        "text": "∀ {n : ℕ} {nu : ℝ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)}\n  {f v : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)} {p : EuclideanSpace ℝ (Fin n) → ℝ → ℝ},\n  (∀ (x : EuclideanSpace ℝ (Fin n)),\n      ∀ t ≥ 0,\n        derivWithin (fun (x_1 : ℝ) => v x x_1) (Set.Ici 0) t +\n            (fderiv ℝ (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x) (v x t) =\n          nu • Laplacian.laplacian (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x -\n              gradient (fun (x : EuclideanSpace ℝ (Fin n)) => p x t) x +\n            f x t) →\n    (∀ (x : EuclideanSpace ℝ (Fin n)),\n        ∀ t ≥ 0, NavierStokes.Comparator.divergence (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x = 0) →\n      (∀ (x : EuclideanSpace ℝ (Fin n)), v x 0 = u₀ x) →\n        ContDiffOn ℝ (↑⊤) (↿v) (Set.univ ×ˢ Set.Ici 0) →\n          ContDiffOn ℝ (↑⊤) (↿p) (Set.univ ×ˢ Set.Ici 0) →\n            NavierStokes.Comparator.NavierStokesExistenceAndSmoothness nu u₀ f v p",
+        "glossary": [
+         {
+          "name": "ContDiffOn",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ContinuousLinearMap",
+          "type": "{R : Type u_1} →\n  {S : Type u_2} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        (R →+* S) →\n          (M : Type u_3) →\n            [TopologicalSpace M] →\n              [inst_3 : AddCommMonoid M] →\n                (M₂ : Type u_4) →\n                  [TopologicalSpace M₂] →\n                    [inst_5 : AddCommMonoid M₂] → [Module R M] → [Module S M₂] → Type (max u_3 u_4)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "DFunLike.coe",
+          "type": "{F : Sort u_1} → {α : outParam (Sort u_2)} → {β : outParam (α → Sort u_3)} → [self : DFunLike F α β] → F → (a : α) → β a",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Eq",
+          "type": "{α : Sort u_1} → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Function.HasUncurry.uncurry",
+          "type": "{α : Type u_5} → {β : outParam (Type u_6)} → {γ : outParam (Type u_7)} → [self : Function.HasUncurry α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "GE.ge",
+          "type": "{α : Type u} → [LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HAdd.hAdd",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HAdd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HSMul.hSMul",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HSMul α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HSub.hSub",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HSub α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Laplacian.laplacian",
+          "type": "{E : Type v} → {F : outParam (Type w)} → [self : Laplacian E F] → E → F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.divergence",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → EuclideanSpace ℝ (Fin n) → ℝ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Prod",
+          "type": "Type u → Type v → Type (max u v)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "RingHom.id",
+          "type": "(α : Type u_5) → [inst : NonAssocSemiring α] → α →+* α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "SProd.sprod",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : SProd α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set",
+          "type": "Type u → Type u",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set.Ici",
+          "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Set.univ",
+          "type": "{α : Type u} → Set α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Top.top",
+          "type": "{α : Type u_1} → [self : Top α] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "WithTop.some",
+          "type": "{α : Type u_1} → α → WithTop α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "derivWithin",
+          "type": "{𝕜 : Type u} →\n  [inst : NontriviallyNormedField 𝕜] →\n    {F : Type v} → [inst_1 : AddCommGroup F] → [Module 𝕜 F] → [TopologicalSpace F] → (𝕜 → F) → Set 𝕜 → 𝕜 → F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "fderiv",
+          "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "gradient",
+          "type": "{𝕜 : Type u_1} →\n  {F : Type u_2} →\n    [inst : RCLike 𝕜] → [inst_1 : NormedAddCommGroup F] → [InnerProductSpace 𝕜 F] → [CompleteSpace F] → (F → 𝕜) → F → F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {n : ℕ} {nu : ℝ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)}\n  {f v : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)} {p : EuclideanSpace ℝ (Fin n) → ℝ → ℝ},\n  (∀ (x : EuclideanSpace ℝ (Fin n)),\n      ∀ t ≥ 0,\n        derivWithin (fun (x_1 : ℝ) => v x x_1) (Set.Ici 0) t +\n            (fderiv ℝ (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x) (v x t) =\n          nu • Laplacian.laplacian (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x -\n              gradient (fun (x : EuclideanSpace ℝ (Fin n)) => p x t) x +\n            f x t) →\n    (∀ (x : EuclideanSpace ℝ (Fin n)),\n        ∀ t ≥ 0, NavierStokes.Comparator.divergence (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x = 0) →\n      (∀ (x : EuclideanSpace ℝ (Fin n)), v x 0 = u₀ x) →\n        ContDiffOn ℝ (↑⊤) (↿v) (Set.univ ×ˢ Set.Ici 0) →\n          ContDiffOn ℝ (↑⊤) (↿p) (Set.univ ×ˢ Set.Ici 0) →\n            NavierStokes.Comparator.NavierStokesExistenceAndSmoothness nu u₀ f v p",
+        "trusted_glossary": [
+         {
+          "name": "ContDiffOn",
+          "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
+          "origin": "library",
+          "doc": "A function is continuously differentiable up to `n` on `s` if, for any point `x` in `s`, it admits continuous derivatives up to order `n` on a neighborhood of `x` in `s`. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
+          "note": null
+         },
+         {
+          "name": "ContinuousLinearMap",
+          "type": "{R : Type u_1} →\n  {S : Type u_2} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        (R →+* S) →\n          (M : Type u_3) →\n            [TopologicalSpace M] →\n              [inst_3 : AddCommMonoid M] →\n                (M₂ : Type u_4) →\n                  [TopologicalSpace M₂] →\n                    [inst_5 : AddCommMonoid M₂] → [Module R M] → [Module S M₂] → Type (max u_3 u_4)",
+          "origin": "library",
+          "doc": "Continuous linear maps between modules. We only put the type classes that are necessary for the definition, although in applications `M` and `M₂` will be topological modules over the topological ring `R`. ",
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "ENat",
+          "type": "Type",
+          "origin": "library",
+          "doc": "Extended natural numbers `ℕ∞ = WithTop ℕ`. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Function.HasUncurry.uncurry",
+          "type": "{α : Type u_5} → {β : outParam (Type u_6)} → {γ : outParam (Type u_7)} → [self : Function.HasUncurry α β γ] → α → β → γ",
+          "origin": "library",
+          "doc": "Uncurrying operator. The most generic use is to recursively uncurry. For instance `f : α → β → γ → δ` will be turned into `↿f : α × β × γ → δ`. One can also add instances for bundled maps. ",
+          "note": null
+         },
+         {
+          "name": "Laplacian.laplacian",
+          "type": "{E : Type v} → {F : outParam (Type w)} → [self : Laplacian E F] → E → F",
+          "origin": "library",
+          "doc": "`Δ f` is the Laplacian of `f`. The meaning of this notation is type-dependent. ",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.divergence",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → EuclideanSpace ℝ (Fin n) → ℝ",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Prod",
+          "type": "Type u → Type v → Type (max u v)",
+          "origin": "core",
+          "doc": "The product type, usually written `α × β`. Product types are also called pair or tuple types. Elements of this type are pairs in which the first element is an `α` and the second element is a `β`.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "RingHom.id",
+          "type": "(α : Type u_5) → [inst : NonAssocSemiring α] → α →+* α",
+          "origin": "library",
+          "doc": "The identity ring homomorphism from a semiring to itself. ",
+          "note": null
+         },
+         {
+          "name": "SProd.sprod",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : SProd α β γ] → α → β → γ",
+          "origin": "library",
+          "doc": "The Cartesian product `s ×ˢ t` is the set of `(a, b)` such that `a ∈ s` and `b ∈ t`. ",
+          "note": null
+         },
+         {
+          "name": "Set",
+          "type": "Type u → Type u",
+          "origin": "library",
+          "doc": "A set is a collection of elements of some type `α`.",
+          "note": null
+         },
+         {
+          "name": "Set.Ici",
+          "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+          "origin": "library",
+          "doc": "`Ici a` is the left-closed right-infinite interval $[a, ∞)$. ",
+          "note": null
+         },
+         {
+          "name": "Set.univ",
+          "type": "{α : Type u} → Set α",
+          "origin": "library",
+          "doc": "The universal set on a type `α` is the set containing all elements of `α`.",
+          "note": null
+         },
+         {
+          "name": "Top.top",
+          "type": "{α : Type u_1} → [self : Top α] → α",
+          "origin": "library",
+          "doc": "The top (`⊤`, `\\top`) element ",
+          "note": null
+         },
+         {
+          "name": "WithTop.some",
+          "type": "{α : Type u_1} → α → WithTop α",
+          "origin": "library",
+          "doc": "The canonical map from `α` into `WithTop α` ",
+          "note": null
+         },
+         {
+          "name": "derivWithin",
+          "type": "{𝕜 : Type u} →\n  [inst : NontriviallyNormedField 𝕜] →\n    {F : Type v} → [inst_1 : AddCommGroup F] → [Module 𝕜 F] → [TopologicalSpace F] → (𝕜 → F) → Set 𝕜 → 𝕜 → F",
+          "origin": "library",
+          "doc": "Derivative of `f` at the point `x` within the set `s`, if it exists.  Zero otherwise.",
+          "note": null
+         },
+         {
+          "name": "fderiv",
+          "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
+          "origin": "library",
+          "doc": "If `f` has a derivative at `x`, then `fderiv 𝕜 f x` is such a derivative. Otherwise, it is set to `0`. ",
+          "note": null
+         },
+         {
+          "name": "gradient",
+          "type": "{𝕜 : Type u_1} →\n  {F : Type u_2} →\n    [inst : RCLike 𝕜] → [inst_1 : NormedAddCommGroup F] → [InnerProductSpace 𝕜 F] → [CompleteSpace F] → (F → 𝕜) → F → F",
+          "origin": "library",
+          "doc": "Gradient of `f` at the point `x`, if it exists.  Zero otherwise. Denoted as `∇` within the Gradient namespace.",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\forall \\mathit{nu} \\in \\mathbb{R},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall v : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall p : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\left(\\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{derivWithin}\\left(\\left(\\mathit{x'} : \\mathbb{R}\\right) \\mapsto v\\left(x, \\mathit{x'}\\right), \\left[0, \\infty\\right), t\\right) + \\operatorname{fderiv}\\left(\\mathbb{R}, \\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right)\\left(v\\left(x, t\\right)\\right) = \\left(\\mathit{nu} \\cdot \\operatorname{Laplacian.laplacian}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right) \\mathbin{-} \\operatorname{gradient}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto p\\left(\\mathit{x'}, t\\right), x\\right)\\right) + f\\left(x, t\\right)\\right) \\implies \\left(\\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{Comparator.divergence}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right) = 0\\right) \\implies \\left(\\forall x : \\mathbb{R}^{n},\\ v\\left(x, 0\\right) = u_{0}\\left(x\\right)\\right) \\implies \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(v\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(p\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{Comparator.NavierStokesExistenceAndSmoothness}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3005",
+     "declaration": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn",
+     "decl_kind": "inductive",
+     "domain": "analysis",
+     "tier": "excellence",
+     "view": {
+      "declaration": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn",
+      "decl_kind": "inductive",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\mathbb{R} \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}\\right) \\to \\mathrm{Prop}"
+       },
+       {
+        "target": "ctor",
+        "label": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn.mk",
+        "text": "∀ {n : ℕ} {nu : ℝ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)}\n  {f v : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)} {p : EuclideanSpace ℝ (Fin n) → ℝ → ℝ},\n  NavierStokes.Comparator.NavierStokesExistenceAndSmoothness nu u₀ f v p →\n    (∀ t ≥ 0, MeasureTheory.MemLp (fun (x : EuclideanSpace ℝ (Fin n)) => ‖v x t‖) 2 MeasureTheory.volume) →\n      (∃ (E : ℝ), ∀ t ≥ 0, ∫ (x : EuclideanSpace ℝ (Fin n)), ‖v x t‖ ^ 2 < E) →\n        NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn nu u₀ f v p",
+        "glossary": [
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Exists",
+          "type": "{α : Sort u} → (α → Prop) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "GE.ge",
+          "type": "{α : Type u} → [LE α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HPow.hPow",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HPow α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "MeasureTheory.MeasureSpace.volume",
+          "type": "{α : Type u_5} → [self : MeasureTheory.MeasureSpace α] → MeasureTheory.Measure α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "MeasureTheory.MemLp",
+          "type": "{α : Type u_1} →\n  {ε : Type u_2} →\n    {m0 : MeasurableSpace α} →\n      [ENorm ε] →\n        [TopologicalSpace ε] →\n          (α → ε) → ENNReal → autoParam (MeasureTheory.Measure α) MeasureTheory.MemLp._auto_1 → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "MeasureTheory.integral",
+          "type": "{α : Type u_6} →\n  {G : Type u_7} →\n    [inst : NormedAddCommGroup G] → [NormedSpace ℝ G] → {x : MeasurableSpace α} → MeasureTheory.Measure α → (α → G) → G",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothness",
+          "type": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Norm.norm",
+          "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {n : ℕ} {nu : ℝ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)}\n  {f v : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)} {p : EuclideanSpace ℝ (Fin n) → ℝ → ℝ},\n  NavierStokes.Comparator.NavierStokesExistenceAndSmoothness nu u₀ f v p →\n    (∀ t ≥ 0, MeasureTheory.MemLp (fun (x : EuclideanSpace ℝ (Fin n)) => ‖v x t‖) 2 MeasureTheory.volume) →\n      (∃ (E : ℝ), ∀ t ≥ 0, ∫ (x : EuclideanSpace ℝ (Fin n)), ‖v x t‖ ^ 2 < E) →\n        NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn nu u₀ f v p",
+        "trusted_glossary": [
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "MeasureTheory.MeasureSpace.volume",
+          "type": "{α : Type u_5} → [self : MeasureTheory.MeasureSpace α] → MeasureTheory.Measure α",
+          "origin": "library",
+          "doc": "`volume` is the canonical measure on `α`. ",
+          "note": null
+         },
+         {
+          "name": "MeasureTheory.MemLp",
+          "type": "{α : Type u_1} →\n  {ε : Type u_2} →\n    {m0 : MeasurableSpace α} →\n      [ENorm ε] →\n        [TopologicalSpace ε] →\n          (α → ε) → ENNReal → autoParam (MeasureTheory.Measure α) MeasureTheory.MemLp._auto_1 → Prop",
+          "origin": "library",
+          "doc": "The property that `f : α → E` is a.e. strongly measurable and `(∫ ‖f a‖ ^ p ∂μ) ^ (1/p)` is finite if `p < ∞`, or `essSup ‖f‖ < ∞` if `p = ∞`. ",
+          "note": null
+         },
+         {
+          "name": "MeasureTheory.integral",
+          "type": "{α : Type u_6} →\n  {G : Type u_7} →\n    [inst : NormedAddCommGroup G] → [NormedSpace ℝ G] → {x : MeasurableSpace α} → MeasureTheory.Measure α → (α → G) → G",
+          "origin": "library",
+          "doc": "The Bochner integral ",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothness",
+          "type": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Norm.norm",
+          "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+          "origin": "library",
+          "doc": "the `ℝ`-valued norm function. ",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\forall n \\in \\mathbb{N},\\ \\forall \\mathit{nu} \\in \\mathbb{R},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall v : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall p : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\operatorname{Comparator.NavierStokesExistenceAndSmoothness}\\left(\\mathit{nu}, u_{0}, f, v, p\\right) \\implies \\left(\\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{MeasureTheory.MemLp}\\left(\\left(x : \\mathbb{R}^{n}\\right) \\mapsto \\left\\lVert v\\left(x, t\\right)\\right\\rVert, 2, \\operatorname{MeasureSpace.volume}\\right)\\right) \\implies \\left(\\exists E \\in \\mathbb{R},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{MeasureTheory.integral}\\left(\\operatorname{MeasureSpace.volume}, \\left(x : \\mathbb{R}^{n}\\right) \\mapsto \\left\\lVert v\\left(x, t\\right)\\right\\rVert^{2}\\right) < E\\right) \\implies \\operatorname{Comparator.NavierStokesExistenceAndSmoothnessRn}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3006",
+     "declaration": "NavierStokes.Comparator.divergence",
+     "decl_kind": "def",
+     "domain": "analysis",
+     "tier": "hard",
+     "view": {
+      "declaration": "NavierStokes.Comparator.divergence",
+      "decl_kind": "def",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → EuclideanSpace ℝ (Fin n) → ℝ",
+        "glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → EuclideanSpace ℝ (Fin n) → ℝ",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\to \\left(\\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\to \\mathbb{R}^{n} \\to \\mathbb{R}"
+       },
+       {
+        "target": "value",
+        "label": "",
+        "text": "fun {n : ℕ} (v : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) (x : EuclideanSpace ℝ (Fin n)) =>\n  (LinearMap.trace ℝ (EuclideanSpace ℝ (Fin n))) ↑(fderiv ℝ v x)",
+        "glossary": [
+         {
+          "name": "ContinuousLinearMap.toLinearMap",
+          "type": "{R : Type u_1} →\n  {S : Type u_2} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        {σ : R →+* S} →\n          {M : Type u_3} →\n            [inst_2 : TopologicalSpace M] →\n              [inst_3 : AddCommMonoid M] →\n                {M₂ : Type u_4} →\n                  [inst_4 : TopologicalSpace M₂] →\n                    [inst_5 : AddCommMonoid M₂] →\n                      [inst_6 : Module R M] → [inst_7 : Module S M₂] → (M →SL[σ] M₂) → M →ₛₗ[σ] M₂",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "DFunLike.coe",
+          "type": "{F : Sort u_1} → {α : outParam (Sort u_2)} → {β : outParam (α → Sort u_3)} → [self : DFunLike F α β] → F → (a : α) → β a",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LinearMap",
+          "type": "{R : Type u_14} →\n  {S : Type u_15} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        (R →+* S) →\n          (M : Type u_16) →\n            (M₂ : Type u_17) →\n              [inst_2 : AddCommMonoid M] →\n                [inst_3 : AddCommMonoid M₂] → [Module R M] → [Module S M₂] → Type (max u_16 u_17)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LinearMap.trace",
+          "type": "(R : Type u) →\n  [inst : CommSemiring R] → (M : Type v) → [inst_1 : AddCommMonoid M] → [inst_2 : Module R M] → (M →ₗ[R] M) →ₗ[R] R",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "RingHom.id",
+          "type": "(α : Type u_5) → [inst : NonAssocSemiring α] → α →+* α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "fderiv",
+          "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "fun {n : ℕ} (v : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) (x : EuclideanSpace ℝ (Fin n)) =>\n  (LinearMap.trace ℝ (EuclideanSpace ℝ (Fin n))) ↑(fderiv ℝ v x)",
+        "trusted_glossary": [
+         {
+          "name": "ContinuousLinearMap.toLinearMap",
+          "type": "{R : Type u_1} →\n  {S : Type u_2} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        {σ : R →+* S} →\n          {M : Type u_3} →\n            [inst_2 : TopologicalSpace M] →\n              [inst_3 : AddCommMonoid M] →\n                {M₂ : Type u_4} →\n                  [inst_4 : TopologicalSpace M₂] →\n                    [inst_5 : AddCommMonoid M₂] →\n                      [inst_6 : Module R M] → [inst_7 : Module S M₂] → (M →SL[σ] M₂) → M →ₛₗ[σ] M₂",
+          "origin": "library",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "ENNReal",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "LinearMap",
+          "type": "{R : Type u_14} →\n  {S : Type u_15} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        (R →+* S) →\n          (M : Type u_16) →\n            (M₂ : Type u_17) →\n              [inst_2 : AddCommMonoid M] →\n                [inst_3 : AddCommMonoid M₂] → [Module R M] → [Module S M₂] → Type (max u_16 u_17)",
+          "origin": "library",
+          "doc": "A map `f` between an `R`-module and an `S`-module over a ring homomorphism `σ : R →+* S` is semilinear if it satisfies the two properties `f (x + y) = f x + f y` and `f (c • x) = (σ c) • f x`. Elements of `LinearMap σ M M₂` (available under the notation `M →ₛₗ[σ] M₂`) are bundled versions of such maps. For plain linear maps (i.e. for which `σ = RingHom.id R`), the notation `M →ₗ[R] M₂` is availabl …",
+          "note": null
+         },
+         {
+          "name": "LinearMap.trace",
+          "type": "(R : Type u) →\n  [inst : CommSemiring R] → (M : Type v) → [inst_1 : AddCommMonoid M] → [inst_2 : Module R M] → (M →ₗ[R] M) →ₗ[R] R",
+          "origin": "library",
+          "doc": "Trace of an endomorphism independent of basis. ",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "RingHom.id",
+          "type": "(α : Type u_5) → [inst : NonAssocSemiring α] → α →+* α",
+          "origin": "library",
+          "doc": "The identity ring homomorphism from a semiring to itself. ",
+          "note": null
+         },
+         {
+          "name": "fderiv",
+          "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
+          "origin": "library",
+          "doc": "If `f` has a derivative at `x`, then `fderiv 𝕜 f x` is such a derivative. Otherwise, it is set to `0`. ",
+          "note": null
+         }
+        ],
+        "latex": "\\left(n : \\mathbb{N}\\right) \\mapsto \\left(v : \\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\mapsto \\left(x : \\mathbb{R}^{n}\\right) \\mapsto \\operatorname{LinearMap.trace}\\left(\\mathbb{R}, \\mathbb{R}^{n}\\right)\\left(\\operatorname{ContinuousLinearMap.toLinearMap}\\left(\\operatorname{fderiv}\\left(\\mathbb{R}, v, x\\right)\\right)\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    },
+    {
+     "ticket_id": "A-3007",
+     "declaration": "NavierStokes.Comparator.navier_stokes_breakdown_R3",
+     "decl_kind": "theorem",
+     "domain": "analysis",
+     "tier": "hard",
+     "view": {
+      "declaration": "NavierStokes.Comparator.navier_stokes_breakdown_R3",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ nu > 0,\n  ∃ (u₀ : EuclideanSpace ℝ (Fin 3) → EuclideanSpace ℝ (Fin 3)) (f :\n    EuclideanSpace ℝ (Fin 3) → ℝ → EuclideanSpace ℝ (Fin 3)),\n    NavierStokes.Comparator.InitialVelocityConditionDecay u₀ ∧\n      NavierStokes.Comparator.ForceConditionDecay f ∧\n        ¬∃ (v : EuclideanSpace ℝ (Fin 3) → ℝ → EuclideanSpace ℝ (Fin 3)) (p : EuclideanSpace ℝ (Fin 3) → ℝ → ℝ),\n            NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn nu u₀ f v p",
+        "glossary": [
+         {
+          "name": "And",
+          "type": "Prop → Prop → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Exists",
+          "type": "{α : Sort u} → (α → Prop) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "GT.gt",
+          "type": "{α : Type u} → [LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.ForceConditionDecay",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.InitialVelocityConditionDecay",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn",
+          "type": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Not",
+          "type": "Prop → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ nu > 0,\n  ∃ (u₀ : EuclideanSpace ℝ (Fin 3) → EuclideanSpace ℝ (Fin 3)) (f :\n    EuclideanSpace ℝ (Fin 3) → ℝ → EuclideanSpace ℝ (Fin 3)),\n    NavierStokes.Comparator.InitialVelocityConditionDecay u₀ ∧\n      NavierStokes.Comparator.ForceConditionDecay f ∧\n        ¬∃ (v : EuclideanSpace ℝ (Fin 3) → ℝ → EuclideanSpace ℝ (Fin 3)) (p : EuclideanSpace ℝ (Fin 3) → ℝ → ℝ),\n            NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn nu u₀ f v p",
+        "trusted_glossary": [
+         {
+          "name": "EuclideanSpace",
+          "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+          "origin": "library",
+          "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+          "note": null
+         },
+         {
+          "name": "Fin",
+          "type": "ℕ → Type",
+          "origin": "core",
+          "doc": "Natural numbers less than some upper bound.",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.ForceConditionDecay",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.InitialVelocityConditionDecay",
+          "type": "{n : ℕ} → (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) → Prop",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn",
+          "type": "{n : ℕ} →\n  ℝ →\n    (EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) →\n      (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) →\n        (EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)) → (EuclideanSpace ℝ (Fin n) → ℝ → ℝ) → Prop",
+          "origin": "submission",
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         }
+        ],
+        "latex": "\\forall \\mathit{nu} \\in \\mathbb{R},\\ \\mathit{nu} > 0 \\implies \\left(\\exists u_{0} : \\mathbb{R}^{3} \\to \\mathbb{R}^{3},\\ \\exists f : \\mathbb{R}^{3} \\to \\mathbb{R} \\to \\mathbb{R}^{3},\\ \\operatorname{Comparator.InitialVelocityConditionDecay}\\left(u_{0}\\right) \\land \\operatorname{Comparator.ForceConditionDecay}\\left(f\\right) \\land \\neg \\left(\\exists v : \\mathbb{R}^{3} \\to \\mathbb{R} \\to \\mathbb{R}^{3},\\ \\exists p : \\mathbb{R}^{3} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\operatorname{Comparator.NavierStokesExistenceAndSmoothnessRn}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)\\right)\\right)"
+       }
+      ],
+      "context": []
+     },
+     "paper": null,
+     "honeypot": null
+    }
+   ]
+  },
+  {
+   "submission_id": "S-qrh",
+   "title": "ζ(s) ≠ 0 for Re s > 7/8 (openai/math)",
+   "repo_url": "https://github.com/openai/math",
+   "commit": "4eaee87548250b2682affda7d05d947c05554bae",
+   "paper_ref": null,
+   "tickets": [
+    {
+     "ticket_id": "A-4000",
+     "declaration": "OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re",
+     "decl_kind": "theorem",
+     "domain": "number theory",
+     "tier": "medium",
+     "view": {
+      "declaration": "OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re",
+      "decl_kind": "theorem",
+      "components": [
+       {
+        "target": "type",
+        "label": "",
+        "text": "∀ {s : ℂ}, 7 / 8 < s.re → riemannZeta s ≠ 0",
+        "glossary": [
+         {
+          "name": "Complex",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Complex.re",
+          "type": "ℂ → ℝ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "HDiv.hDiv",
+          "type": "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HDiv α β γ] → α → β → γ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "LT.lt",
+          "type": "{α : Type u} → [self : LT α] → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Ne",
+          "type": "{α : Sort u} → α → α → Prop",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "OfNat.ofNat",
+          "type": "{α : Type u} → (x : ℕ) → [self : OfNat α x] → α",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": null,
+          "doc": null,
+          "note": null
+         },
+         {
+          "name": "riemannZeta",
+          "type": "ℂ → ℂ",
+          "origin": null,
+          "doc": null,
+          "note": null
+         }
+        ],
+        "trusted_text": "∀ {s : ℂ}, 7 / 8 < s.re → riemannZeta s ≠ 0",
+        "trusted_glossary": [
+         {
+          "name": "Complex",
+          "type": "Type",
+          "origin": "library",
+          "doc": "Complex numbers consist of two `Real`s: a real part `re` and an imaginary part `im`. ",
+          "note": null
+         },
+         {
+          "name": "Complex.re",
+          "type": "ℂ → ℝ",
+          "origin": "library",
+          "doc": "The real part of a complex number. ",
+          "note": null
+         },
+         {
+          "name": "Nat",
+          "type": "Type",
+          "origin": "core",
+          "doc": "The natural numbers, starting at zero.",
+          "note": null
+         },
+         {
+          "name": "Real",
+          "type": "Type",
+          "origin": "library",
+          "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+          "note": null
+         },
+         {
+          "name": "riemannZeta",
+          "type": "ℂ → ℂ",
+          "origin": "library",
+          "doc": "The Riemann zeta function `ζ(s)`. ",
+          "note": "Mathlib gives ζ a value at the pole s = 1: riemannZeta 1 = (γ − log(4π)) / 2 (lemma riemannZeta_one)."
+         }
+        ],
+        "latex": "\\forall s \\in \\mathbb{C},\\ \\frac{7}{8} < \\operatorname{Re}\\left(s\\right) \\implies \\zeta\\left(s\\right) \\neq 0"
+       }
+      ],
+      "context": []
+     },
+     "paper": {
+      "source": {
+       "title": "openai/math: quasi-Riemann hypothesis with exponent 7/8 (preprint in the repository)",
+       "arxiv": null,
+       "version": null,
+       "url": "https://github.com/openai/math"
+      },
+      "locator": "main result (paraphrase)",
+      "statement": "The Riemann zeta function has no zeros in the half-plane $\\operatorname{Re} s > 7/8$: for every $s \\in \\mathbb{C}$ with $\\operatorname{Re} s > 7/8$ we have $\\zeta(s) \\neq 0$.",
+      "mapped_by": "walkthrough (paraphrase, to be replaced by a maintainer)",
+      "note": "Paraphrase for the walkthrough, not a quote from the paper."
+     },
+     "honeypot": null
+    }
+   ]
+  }
+ ]
+}

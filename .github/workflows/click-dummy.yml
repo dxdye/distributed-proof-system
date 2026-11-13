@@ -1,0 +1,70 @@
+# Click dummy: the web client on a simulated backend (web/src/demo), as a
+# static site. Kept cheap on purpose:
+# - runs only when started by hand (Actions → "Click dummy" → Run workflow);
+# - builds only the web client (no Lean, no Docker, no tests), with npm cache;
+#   about a minute per run;
+# - a newer run cancels an older one; hard limit of 10 minutes per job.
+# The snapshot (web/demo/snapshot.json) is generated locally with
+# `pixi run dpc export-demo` and committed; the workflow does not regenerate it.
+#
+# Publishing is off by default. To publish on GitHub Pages, set the repository
+# variable PUBLISH_CLICK_DUMMY to "true" and choose "GitHub Actions" as the
+# Pages source. Note: Pages of a private repository needs a paid plan, and the
+# site is visible to anyone with the link. Without publishing, the built site
+# is attached to the run as an artifact (kept 7 days).
+name: Click dummy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: click-dummy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+      - name: Build the click dummy
+        working-directory: web
+        run: npm run build:demo
+      - name: Upload the site
+        if: vars.PUBLISH_CLICK_DUMMY != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: click-dummy
+          path: web/dist-demo
+          retention-days: 7
+      - name: Upload for GitHub Pages
+        if: vars.PUBLISH_CLICK_DUMMY == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist-demo
+
+  publish:
+    if: vars.PUBLISH_CLICK_DUMMY == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

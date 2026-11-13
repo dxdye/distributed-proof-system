@@ -73,6 +73,25 @@ export function App() {
       <div className="service-bar">
         <div className="container">
           <span>Research prototype · Review of Lean 4 formalizations</span>
+          {session?.authenticated && (
+            <span className="who">
+              {me && (
+                <span>
+                  Signed in as <strong>{me.pseudonym}</strong>
+                </span>
+              )}
+              <button
+                className="link"
+                onClick={async () => {
+                  setMe(null);
+                  setSession({ authenticated: false });
+                  await signOut();
+                }}
+              >
+                Sign out
+              </button>
+            </span>
+          )}
         </div>
       </div>
       <header className="site-header">
@@ -107,25 +126,6 @@ export function App() {
               </a>
             )}
           </nav>
-          {session?.authenticated && (
-            <span className="who">
-              {me && (
-                <span>
-                  Signed in as <strong>{me.pseudonym}</strong>
-                </span>
-              )}
-              <button
-                className="secondary small"
-                onClick={async () => {
-                  setMe(null);
-                  setSession({ authenticated: false });
-                  await signOut();
-                }}
-              >
-                Sign out
-              </button>
-            </span>
-          )}
         </div>
       </header>
       <main id="main" className="container" tabIndex={-1}>

@@ -26,7 +26,7 @@ type Lang = "de" | "en";
 
 let loading: Promise<LegalData> | null = null;
 function loadLegal(): Promise<LegalData> {
-  loading ??= fetch("/legal.json").then((r) => {
+  loading ??= fetch(`${import.meta.env.BASE_URL}legal.json`).then((r) => {
     if (!r.ok) throw new Error(`legal.json unavailable (${r.status})`);
     return r.json() as Promise<LegalData>;
   });
