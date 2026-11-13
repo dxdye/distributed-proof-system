@@ -161,6 +161,36 @@ def _days(a: datetime, b: datetime) -> float:
     return max(0.0, (b - a).total_seconds() / DAY)
 
 
+@dataclass
+class PostSt:
+    post_id: str
+    thread: tuple[str, str]  # (submission id, declaration)
+    author: str
+    kind: str  # "review" or "comment"
+    text: str
+    review_seq: int | None
+    at: datetime
+    ai_used: bool = False
+    votes: dict[str, int] = field(default_factory=dict)
+    reports: list[tuple[str, str]] = field(default_factory=list)
+    hidden: str | None = None  # reason, if a maintainer hid it
+
+    @property
+    def score(self) -> int:
+        return sum(self.votes.values())
+
+
+@dataclass
+class ReopenSt:
+    request_id: str
+    ticket_id: str
+    post_id: str | None
+    requester: str
+    reason: str
+    at: datetime
+    status: str = "open"  # open, reopened, dismissed
+
+
 class State:
     def __init__(self, params: CoordParams) -> None:
         self.params = params
@@ -178,6 +208,11 @@ class State:
         self.pairs: dict[frozenset[str], datetime] = {}
         self.durations: dict[tuple[str, int], list[int]] = defaultdict(list)
         self.configured: list[dict[str, object]] = []
+        # discussion after the decision (C-25)
+        self.posts: dict[str, PostSt] = {}
+        self.threads: dict[tuple[str, str], list[str]] = defaultdict(list)
+        self.named: dict[tuple[str, str], set[str]] = defaultdict(set)  # pseudonym shown
+        self.reopens: dict[str, ReopenSt] = {}
         self.seq = -1
 
     # ------------------------------------------------------------- queries
@@ -279,6 +314,36 @@ class State:
             float(p.difficulty), p.commitment, at, p.slots, paper=p.paper,
             tier=p.tier or tier_of(float(p.difficulty)))
         self.submissions[p.submission_id].tickets.append(p.ticket_id)
+
+    def _on_discussion_posted(self, p: ev.DiscussionPosted, at: datetime, _: Entry) -> None:
+        thread = (p.submission_id, p.declaration)
+        self.posts[p.post_id] = PostSt(p.post_id, thread, p.author, p.kind, p.text,
+                                       p.review_seq, at, ai_used=p.ai.used)
+        self.threads[thread].append(p.post_id)
+        if p.show_pseudonym:
+            self.named[thread].add(p.author)
+
+    def _on_discussion_voted(self, p: ev.DiscussionVoted, at: datetime, _: Entry) -> None:
+        votes = self.posts[p.post_id].votes
+        if p.value:
+            votes[p.voter] = p.value
+        else:
+            votes.pop(p.voter, None)
+
+    def _on_discussion_reported(self, p: ev.DiscussionReported, at: datetime,
+                                _: Entry) -> None:
+        self.posts[p.post_id].reports.append((p.reporter, p.reason))
+
+    def _on_discussion_hidden(self, p: ev.DiscussionHidden, at: datetime, _: Entry) -> None:
+        self.posts[p.post_id].hidden = p.reason
+
+    def _on_ticket_reopen_requested(self, p: ev.ReopenRequested, at: datetime,
+                                    _: Entry) -> None:
+        self.reopens[p.request_id] = ReopenSt(p.request_id, p.ticket_id, p.post_id,
+                                              p.requester, p.reason, at)
+
+    def _on_ticket_reopen_resolved(self, p: ev.ReopenResolved, at: datetime, _: Entry) -> None:
+        self.reopens[p.request_id].status = "reopened" if p.reopened else "dismissed"
 
     def _on_ticket_mapping_contested(self, p: ev.MappingContested, at: datetime,
                                      _: Entry) -> None:

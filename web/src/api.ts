@@ -120,6 +120,51 @@ export type SubmissionRow = {
   closed: boolean;
   tickets: Record<string, number>;
 };
+export type ThreadSummary = {
+  submission_id: string;
+  declaration: string;
+  decl_kind: string;
+  paper: string;
+  domain: string;
+  outcome: string;
+  posts: number;
+  last_activity: string;
+  can_share: boolean;
+};
+export type Post = {
+  post_id: string;
+  kind: "review" | "comment";
+  author: string;
+  is_me: boolean;
+  maintainer: boolean;
+  member_since: string;
+  reviewed_here: boolean;
+  at: string;
+  score: number;
+  my_vote: number;
+  ai_used: boolean;
+  hidden: string | null;
+  text: string;
+  verdict?: "correct" | "incorrect";
+  reason?: string;
+  failed?: string[];
+};
+export type Thread = {
+  submission_id: string;
+  declaration: string;
+  decl_kind: string;
+  paper: string;
+  repo_url: string;
+  commit: string;
+  domain: string;
+  outcome: string;
+  decided_at: string | null;
+  view: UnitView;
+  paper_passage: PaperPassage | null;
+  me: { label: string | null; named: boolean; can_share: boolean; reviewed_here: boolean };
+  reopen_pending: boolean;
+  posts: Post[];
+};
 export type Escalated = {
   ticket_id: string;
   declaration: string;
@@ -195,6 +240,38 @@ export const api = {
     request("POST", `/api/leases/${id}/claim`, { confirmed, reason }),
   nextDuty: () => request<Lease | null>("POST", "/api/duties/next"),
   blob: (sha: string) => request<string>("GET", `/api/blobs/${sha}`),
+  discussions: () => request<ThreadSummary[]>("GET", "/api/discussions"),
+  thread: (sid: string, decl: string) =>
+    request<Thread>(
+      "GET",
+      `/api/thread?submission_id=${encodeURIComponent(sid)}&declaration=${encodeURIComponent(decl)}`,
+    ),
+  post: (
+    sid: string,
+    decl: string,
+    text: string,
+    showPseudonym: boolean,
+    aiProvider: string | null,
+  ) =>
+    request("POST", "/api/thread/posts", {
+      submission_id: sid,
+      declaration: decl,
+      text,
+      show_pseudonym: showPseudonym,
+      ai_used: aiProvider !== null,
+      ai_provider: aiProvider,
+    }),
+  share: (sid: string, decl: string, showPseudonym: boolean) =>
+    request("POST", "/api/thread/share", {
+      submission_id: sid,
+      declaration: decl,
+      show_pseudonym: showPseudonym,
+    }),
+  requestReopen: (sid: string, decl: string, reason: string) =>
+    request("POST", "/api/thread/reopen", { submission_id: sid, declaration: decl, reason }),
+  vote: (postId: string, value: number) => request("POST", `/api/posts/${postId}/vote`, { value }),
+  report: (postId: string, reason: string) =>
+    request("POST", `/api/posts/${postId}/report`, { reason }),
   stats: () => request<Stats>("GET", "/api/stats"),
   attention: () => request<Record<string, number>>("GET", "/api/attention"),
   admin: {
@@ -214,5 +291,32 @@ export const api = {
     decide: (ticket: string, error: boolean, reason: string) =>
       request("POST", `/api/admin/tickets/${ticket}/decide`, { error, reason }),
     close: (submission: string) => request("POST", `/api/admin/submissions/${submission}/close`),
+    reports: () =>
+      request<
+        {
+          post_id: string;
+          submission_id: string;
+          declaration: string;
+          text: string;
+          kind: string;
+          reasons: string[];
+        }[]
+      >("GET", "/api/admin/reports"),
+    hide: (postId: string, reason: string) =>
+      request("POST", `/api/admin/posts/${postId}/hide`, { reason }),
+    reopens: () =>
+      request<
+        {
+          request_id: string;
+          ticket_id: string;
+          declaration: string;
+          paper: string;
+          submission_id: string;
+          outcome: string;
+          reason: string;
+        }[]
+      >("GET", "/api/admin/reopens"),
+    resolveReopen: (id: string, reopen: boolean, reason: string) =>
+      request("POST", `/api/admin/reopens/${id}`, { reopen, reason }),
   },
 };

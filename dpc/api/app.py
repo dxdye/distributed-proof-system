@@ -81,6 +81,40 @@ class ContestReq(_Req):
     reason: str
 
 
+class ThreadReq(_Req):
+    submission_id: str
+    declaration: str
+
+
+class PostReq(ThreadReq):
+    text: str
+    show_pseudonym: bool = False
+    ai_used: bool = False
+    ai_provider: str | None = None
+
+
+class ShareReq(ThreadReq):
+    show_pseudonym: bool = False
+
+
+class ReopenReq(ThreadReq):
+    reason: str
+    post_id: str | None = None
+
+
+class VoteReq(_Req):
+    value: Literal[-1, 0, 1]
+
+
+class ReasonReq(_Req):
+    reason: str
+
+
+class ResolveReq(_Req):
+    reopen: bool
+    reason: str
+
+
 class ClaimReq(_Req):
     confirmed: bool
     reason: str
@@ -353,6 +387,120 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
              failed=req.failed, evidence=evidence, evidence_kind=req.evidence_kind, ai=ai)
         return {"ok": True}
 
+    # ------------------------------------------- discussion (C-25, S-21, S-22)
+    def letter(i: int) -> str:
+        return chr(ord("A") + i) if i < 26 else f"#{i + 1}"
+
+    def thread_json(rid: str, sid: str, decl: str) -> dict[str, Any]:
+        st = coord.state
+        sub = st.submissions[sid]
+        real = coord.real_ticket(sid, decl)
+        assert real is not None
+        thread = (sid, decl)
+        order: list[str] = []
+        for pid in st.threads[thread]:
+            author = st.posts[pid].author
+            if author not in order:
+                order.append(author)
+        reviewed = {r.reviewer for r in real.reviews}
+
+        def label(author: str) -> str:
+            if author in st.named[thread]:
+                return coord.vault.pseudonym(author) or "?"
+            return f"Reviewer {letter(order.index(author))}"
+
+        posts = []
+        for pid in st.threads[thread]:
+            p = st.posts[pid]
+            person = st.reviewers[p.author]
+            item: dict[str, Any] = {
+                "post_id": pid, "kind": p.kind, "author": label(p.author),
+                "is_me": p.author == rid, "maintainer": person.maintainer,
+                "member_since": person.registered.strftime("%Y-%m"),
+                "reviewed_here": p.author in reviewed, "at": p.at.isoformat(),
+                "score": p.score, "my_vote": p.votes.get(rid, 0), "ai_used": p.ai_used,
+                "hidden": p.hidden,
+                "text": "" if p.hidden else p.text,
+            }
+            if p.kind == "review" and p.review_seq is not None and not p.hidden:
+                r = st.reviews[p.review_seq]
+                item.update(verdict="incorrect" if r.incorrect else "correct",
+                            reason=r.reason, failed=list(r.failed))
+            posts.append(item)
+        posts.sort(key=lambda x: (-x["score"], x["at"]))
+        return {
+            "submission_id": sid, "declaration": decl, "decl_kind": real.view.decl_kind,
+            "paper": sub.title, "repo_url": sub.repo_url, "commit": sub.commit,
+            "domain": real.domain, "outcome": real.status,
+            "decided_at": real.decided_at.isoformat() if real.decided_at else None,
+            "view": real.view.model_dump(mode="json"),
+            "paper_passage": real.paper.model_dump(mode="json") if real.paper else None,
+            "me": {"label": label(rid) if rid in order else None,
+                   "named": rid in st.named[thread],
+                   "can_share": coord.shareable_review(rid, sid, decl) is not None,
+                   "reviewed_here": rid in reviewed},
+            "reopen_pending": any(q.ticket_id == real.ticket_id and q.status == "open"
+                                  for q in st.reopens.values()),
+            "posts": posts,
+        }
+
+    @app.get("/api/discussions")
+    def discussions(rid: Rid) -> list[dict[str, Any]]:
+        with coord.lock:
+            st = coord.state
+            out: list[dict[str, Any]] = []
+            for sid, decl in coord.open_threads():
+                real = coord.real_ticket(sid, decl)
+                assert real is not None
+                ids = st.threads[(sid, decl)]
+                visible = [st.posts[p] for p in ids if not st.posts[p].hidden]
+                out.append({
+                    "submission_id": sid, "declaration": decl,
+                    "decl_kind": real.view.decl_kind, "paper": st.submissions[sid].title,
+                    "domain": real.domain, "outcome": real.status, "posts": len(visible),
+                    "last_activity": max((p.at for p in visible), default=real.decided_at
+                                         or real.created).isoformat(),
+                    "can_share": coord.shareable_review(rid, sid, decl) is not None})
+            out.sort(key=lambda x: str(x["last_activity"]), reverse=True)
+            return out
+
+    @app.get("/api/thread")
+    def thread(submission_id: str, declaration: str, rid: Rid) -> dict[str, Any]:
+        with coord.lock:
+            if not coord.thread_open(submission_id, declaration):
+                raise HTTPException(403, "the discussion of this declaration is not open yet")
+            return thread_json(rid, submission_id, declaration)
+
+    @app.post("/api/thread/posts")
+    def post(req: PostReq, rid: Rid) -> dict[str, str]:
+        ai = AIAssistance(used=req.ai_used, provider=req.ai_provider) if req.ai_used \
+            else AIAssistance()
+        pid = call(coord.post, rid, req.submission_id, req.declaration, req.text,
+                   show_pseudonym=req.show_pseudonym, ai=ai)
+        return {"post_id": pid}
+
+    @app.post("/api/thread/share")
+    def share(req: ShareReq, rid: Rid) -> dict[str, str]:
+        pid = call(coord.share_review, rid, req.submission_id, req.declaration,
+                   show_pseudonym=req.show_pseudonym)
+        return {"post_id": pid}
+
+    @app.post("/api/thread/reopen")
+    def reopen(req: ReopenReq, rid: Rid) -> dict[str, str]:
+        qid = call(coord.request_reopen, rid, req.submission_id, req.declaration, req.reason,
+                   post_id=req.post_id)
+        return {"request_id": qid}
+
+    @app.post("/api/posts/{post_id}/vote")
+    def vote(post_id: str, req: VoteReq, rid: Rid) -> dict[str, bool]:
+        call(coord.vote, rid, post_id, req.value)
+        return {"ok": True}
+
+    @app.post("/api/posts/{post_id}/report")
+    def report(post_id: str, req: ReasonReq, rid: Rid) -> dict[str, bool]:
+        call(coord.report_post, rid, post_id, req.reason)
+        return {"ok": True}
+
     @app.post("/api/leases/{lease_id}/contest-mapping")
     def contest(lease_id: str, req: ContestReq, rid: Rid) -> dict[str, bool]:
         call(coord.contest_mapping, rid, lease_id, req.reason)
@@ -394,6 +542,41 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
     @app.post("/api/admin/submissions/{submission_id}/close")
     def close(submission_id: str, rid: Admin) -> dict[str, bool]:
         call(coord.close_submission, rid, submission_id)
+        return {"ok": True}
+
+    @app.get("/api/admin/reports")
+    def reports(_: Admin) -> list[dict[str, Any]]:
+        """Reported posts that are not hidden yet."""
+        with coord.lock:
+            return [{"post_id": p.post_id, "submission_id": p.thread[0],
+                     "declaration": p.thread[1], "text": p.text, "kind": p.kind,
+                     "reasons": [r for _, r in p.reports]}
+                    for p in coord.state.posts.values() if p.reports and not p.hidden]
+
+    @app.post("/api/admin/posts/{post_id}/hide")
+    def hide(post_id: str, req: ReasonReq, rid: Admin) -> dict[str, bool]:
+        call(coord.hide_post, rid, post_id, req.reason)
+        return {"ok": True}
+
+    @app.get("/api/admin/reopens")
+    def reopens(_: Admin) -> list[dict[str, Any]]:
+        with coord.lock:
+            st = coord.state
+            out = []
+            for q in st.reopens.values():
+                if q.status != "open":
+                    continue
+                t = st.tickets[q.ticket_id]
+                out.append({"request_id": q.request_id, "ticket_id": q.ticket_id,
+                            "declaration": t.view.declaration,
+                            "paper": st.submissions[t.submission_id].title,
+                            "submission_id": t.submission_id, "outcome": t.status,
+                            "reason": q.reason})
+            return out
+
+    @app.post("/api/admin/reopens/{request_id}")
+    def resolve(request_id: str, req: ResolveReq, rid: Admin) -> dict[str, bool]:
+        call(coord.resolve_reopen, rid, request_id, reopen=req.reopen, reason=req.reason)
         return {"ok": True}
 
     @app.get("/api/admin/contested")

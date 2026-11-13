@@ -155,6 +155,26 @@ export function How() {
         </section>
       </div>
 
+      <section className="card">
+        <h2>Discussion after the decision</h2>
+        <p>
+          Once every ticket of a declaration is decided and the planted errors of its submission are
+          revealed, a discussion opens. You can share your own verdict and justification, and anyone
+          can comment. Before that there is no discussion, so that every verdict stays independent.
+        </p>
+        <ul>
+          <li>
+            Posts are anonymous ("Reviewer A, B, …") unless you show your pseudonym. Maintainers are
+            marked, and every post says since when its author takes part.
+          </li>
+          <li>Votes sort the posts. They never count towards trust or any decision.</li>
+          <li>
+            If a decided declaration looks wrong after all, ask the maintainers to reopen it: they
+            can turn it into an escalation. The discussion itself never changes a decision.
+          </li>
+        </ul>
+      </section>
+
       <div className="columns">
         <section className="card">
           <h2>Taking tickets</h2>

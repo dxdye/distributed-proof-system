@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Escalated, type SubmissionRow } from "../api";
+import { threadHref } from "./Discussions";
 
 export function Admin() {
   const [subs, setSubs] = useState<SubmissionRow[]>([]);
@@ -9,11 +10,34 @@ export function Admin() {
   >([]);
   const [message, setMessage] = useState<string | null>(null);
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [reports, setReports] = useState<
+    {
+      post_id: string;
+      submission_id: string;
+      declaration: string;
+      text: string;
+      kind: string;
+      reasons: string[];
+    }[]
+  >([]);
+  const [reopens, setReopens] = useState<
+    {
+      request_id: string;
+      declaration: string;
+      paper: string;
+      submission_id: string;
+      outcome: string;
+      reason: string;
+    }[]
+  >([]);
+  const [notes, setNotes] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     api.admin.submissions().then(setSubs);
     api.admin.escalated().then(setEscalated);
     api.admin.contested().then(setContested);
+    api.admin.reports().then(setReports);
+    api.admin.reopens().then(setReopens);
   }, []);
   useEffect(load, [load]);
 
@@ -134,6 +158,98 @@ export function Admin() {
             </div>
           </div>
         ))}
+      </section>
+      <section className="card">
+        <h2>Reopen requests</h2>
+        <p className="muted small">
+          Someone in a discussion says a decided declaration is wrong after all. Reopening turns it
+          into an escalation, decided like any other; discussion never decides by itself.
+        </p>
+        {reopens.length === 0 ? (
+          <p className="muted">No open request.</p>
+        ) : (
+          reopens.map((q) => (
+            <div key={q.request_id} className="escalated">
+              <p>
+                <a href={threadHref(q.submission_id, q.declaration)}>
+                  <code>{q.declaration}</code>
+                </a>{" "}
+                <span className="muted small">
+                  {q.paper} · decided: {q.outcome}
+                </span>
+              </p>
+              <blockquote>{q.reason}</blockquote>
+              <textarea
+                rows={2}
+                placeholder="Your reason"
+                value={notes[q.request_id] ?? ""}
+                onChange={(e) => setNotes({ ...notes, [q.request_id]: e.target.value })}
+              />
+              <div className="toolbar">
+                <button
+                  disabled={!(notes[q.request_id] ?? "").trim()}
+                  onClick={() =>
+                    run(
+                      () => api.admin.resolveReopen(q.request_id, true, notes[q.request_id]),
+                      () => "Reopened: the ticket is now escalated.",
+                    )
+                  }
+                >
+                  Reopen as escalation
+                </button>
+                <button
+                  className="secondary"
+                  disabled={!(notes[q.request_id] ?? "").trim()}
+                  onClick={() =>
+                    run(
+                      () => api.admin.resolveReopen(q.request_id, false, notes[q.request_id]),
+                      () => "Request dismissed.",
+                    )
+                  }
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+      <section className="card">
+        <h2>Reported posts</h2>
+        {reports.length === 0 ? (
+          <p className="muted">No reported post.</p>
+        ) : (
+          reports.map((r) => (
+            <div key={r.post_id} className="escalated">
+              <p>
+                <a href={threadHref(r.submission_id, r.declaration)}>
+                  <code>{r.declaration}</code>
+                </a>
+              </p>
+              <blockquote>{r.text || `(${r.kind})`}</blockquote>
+              <p className="small muted">Reported because: {r.reasons.join(" · ")}</p>
+              <div className="toolbar">
+                <input
+                  placeholder="Reason for hiding"
+                  value={notes[r.post_id] ?? ""}
+                  onChange={(e) => setNotes({ ...notes, [r.post_id]: e.target.value })}
+                />
+                <button
+                  className="secondary"
+                  disabled={!(notes[r.post_id] ?? "").trim()}
+                  onClick={() =>
+                    run(
+                      () => api.admin.hide(r.post_id, notes[r.post_id]),
+                      () => "Post hidden.",
+                    )
+                  }
+                >
+                  Hide post
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </section>
       <section className="card">
         <h2>Contested paper mappings</h2>

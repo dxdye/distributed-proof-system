@@ -39,6 +39,7 @@ from dpc.coord.state import (
     ClaimSt,
     LeaseSt,
     ReviewerSt,
+    ReviewRec,
     State,
     TicketSt,
     difficulty_bucket,
@@ -548,6 +549,158 @@ class Coordinator:
                 raise Conflict("you have already contested this mapping")
             self._emit("ticket.mapping_contested", ev.MappingContested(
                 ticket_id=ticket.ticket_id, reviewer=rid, reason=reason.strip()))
+
+    # ---------------------------------------------- discussion (C-25, S-21, S-22)
+    def unit_tickets(self, submission_id: str, declaration: str) -> list[TicketSt]:
+        sub = self.state.submissions.get(submission_id)
+        if sub is None:
+            return []
+        return [self.state.tickets[t] for t in sub.tickets
+                if self.state.tickets[t].view.declaration == declaration]
+
+    def thread_open(self, submission_id: str, declaration: str) -> bool:
+        """Open once every ticket of the declaration is decided and no planted
+        error of the submission is unrevealed. Per declaration alone, the timing
+        would show which declaration still has an open planted copy."""
+        tickets = self.unit_tickets(submission_id, declaration)
+        if not tickets or any(t.status not in ("accepted", "error") for t in tickets):
+            return False
+        return not self.vault.unrevealed(honeypots_only=True, submission_id=submission_id)
+
+    def real_ticket(self, submission_id: str, declaration: str) -> TicketSt | None:
+        """The declaration's ticket that is not a planted error (in an open
+        thread, every planted copy is revealed)."""
+        return next((t for t in self.unit_tickets(submission_id, declaration)
+                     if t.honeypot is not True), None)
+
+    def open_threads(self) -> list[tuple[str, str]]:
+        with self.lock:
+            units = {(t.submission_id, t.view.declaration) for t in self.state.tickets.values()
+                     if t.ticket_class == "A"}
+            return sorted(u for u in units if self.thread_open(*u))
+
+    def _thread(self, submission_id: str, declaration: str) -> TicketSt:
+        if not self.thread_open(submission_id, declaration):
+            raise Forbidden("the discussion opens once the declaration is decided and the "
+                            "planted errors of its submission are revealed")
+        real = self.real_ticket(submission_id, declaration)
+        if real is None:
+            raise NotFound("no such declaration")
+        return real
+
+    def post(self, rid: str, submission_id: str, declaration: str, text: str, *,
+             show_pseudonym: bool = False, ai: AIAssistance | None = None) -> str:
+        text = text.strip()
+        if not 1 <= len(text) <= 5000:
+            raise CoordError("a post has 1 to 5000 characters")
+        ai = ai or AIAssistance()
+        if ai.used and not ai.provider:
+            raise CoordError("declared AI use must name the provider (SR-48)")
+        with self.lock:
+            self._reviewer(rid)
+            self._thread(submission_id, declaration)
+            post_id = self.new_id("P")
+            self._emit("discussion.posted", ev.DiscussionPosted(
+                post_id=post_id, submission_id=submission_id, declaration=declaration,
+                author=rid, kind="comment", text=text, show_pseudonym=show_pseudonym, ai=ai))
+            return post_id
+
+    def shareable_review(self, rid: str, submission_id: str, declaration: str
+                         ) -> ReviewRec | None:
+        """The author's own review of the real ticket, if not shared yet.
+        Reviews of planted errors are never shared (concept §8.9)."""
+        real = self.real_ticket(submission_id, declaration)
+        if real is None:
+            return None
+        shared = {self.state.posts[p].review_seq
+                  for p in self.state.threads[(submission_id, declaration)]}
+        return next((r for r in real.reviews
+                     if r.reviewer == rid and r.duty == "review" and r.seq not in shared), None)
+
+    def share_review(self, rid: str, submission_id: str, declaration: str, *,
+                     show_pseudonym: bool = False) -> str:
+        with self.lock:
+            self._reviewer(rid)
+            self._thread(submission_id, declaration)
+            review = self.shareable_review(rid, submission_id, declaration)
+            if review is None:
+                raise NotFound("you have no review of this declaration to share")
+            post_id = self.new_id("P")
+            self._emit("discussion.posted", ev.DiscussionPosted(
+                post_id=post_id, submission_id=submission_id, declaration=declaration,
+                author=rid, kind="review", review_seq=review.seq,
+                show_pseudonym=show_pseudonym))
+            return post_id
+
+    def vote(self, rid: str, post_id: str, value: int) -> None:
+        if value not in (-1, 0, 1):
+            raise CoordError("a vote is -1, 0 or 1")
+        with self.lock:
+            self._reviewer(rid)
+            post = self.state.posts.get(post_id)
+            if post is None:
+                raise NotFound("no such post")
+            if post.author == rid:
+                raise CoordError("you cannot vote on your own post")
+            self._emit("discussion.voted", ev.DiscussionVoted(
+                post_id=post_id, voter=rid, value=value))
+
+    def report_post(self, rid: str, post_id: str, reason: str) -> None:
+        with self.lock:
+            self._reviewer(rid)
+            if post_id not in self.state.posts:
+                raise NotFound("no such post")
+            if not reason.strip():
+                raise CoordError("say why you report the post")
+            self._emit("discussion.reported", ev.DiscussionReported(
+                post_id=post_id, reporter=rid, reason=reason.strip()))
+
+    def hide_post(self, rid: str, post_id: str, reason: str) -> None:
+        with self.lock:
+            self._maintainer(rid)
+            if post_id not in self.state.posts:
+                raise NotFound("no such post")
+            if not reason.strip():
+                raise CoordError("hiding a post needs a reason")
+            self._emit("discussion.hidden", ev.DiscussionHidden(
+                post_id=post_id, by=rid, reason=reason.strip()))
+
+    def request_reopen(self, rid: str, submission_id: str, declaration: str, reason: str,
+                       post_id: str | None = None) -> str:
+        """A decided declaration may be wrong after all: maintainers decide
+        whether it becomes an escalation (C-25). Discussion never decides."""
+        with self.lock:
+            self._reviewer(rid)
+            real = self._thread(submission_id, declaration)
+            if len(reason.strip()) < self.params.min_reason_chars:
+                raise CoordError(f"say what is wrong, in at least "
+                                 f"{self.params.min_reason_chars} characters")
+            if any(r.ticket_id == real.ticket_id and r.status == "open"
+                   for r in self.state.reopens.values()):
+                raise Conflict("a reopen request for this declaration is already open")
+            request_id = self.new_id("RQ")
+            self._emit("ticket.reopen_requested", ev.ReopenRequested(
+                request_id=request_id, ticket_id=real.ticket_id, post_id=post_id,
+                requester=rid, reason=reason.strip()))
+            return request_id
+
+    def resolve_reopen(self, rid: str, request_id: str, *, reopen: bool, reason: str) -> None:
+        with self.lock:
+            self._maintainer(rid)
+            req = self.state.reopens.get(request_id)
+            if req is None or req.status != "open":
+                raise Conflict("no open reopen request with this id")
+            if not reason.strip():
+                raise CoordError("a decision needs a reason")
+            self._emit("ticket.reopen_resolved", ev.ReopenResolved(
+                request_id=request_id, by=rid, reopened=reopen, reason=reason.strip()))
+            if reopen:  # the ticket becomes an escalation, decided like any other
+                ticket = self.state.tickets[req.ticket_id]
+                self._emit("ticket.decided", ev.TicketDecided(
+                    ticket_id=ticket.ticket_id, outcome="escalate",
+                    p_error=ev.dec(ticket.p_error or 0.0),
+                    independent_votes=len(ticket.reviews), by="maintainer", maintainer=rid,
+                    reason=f"reopened: {reason.strip()}"))
 
     def _store_evidence(self, data: bytes | None, kind: str | None) -> Evidence | None:
         if data is None:

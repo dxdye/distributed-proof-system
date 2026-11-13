@@ -6,6 +6,7 @@ import { StorageNotice } from "./components/StorageNotice";
 import { UserMenu } from "./components/UserMenu";
 import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
+import { Discussions, ThreadView } from "./views/Discussions";
 import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
 import { How } from "./views/How";
@@ -62,6 +63,15 @@ export function App() {
   else if (!me) body = <p className="muted">Loading…</p>;
   else if (page === "lease" && route[1]) body = <LeaseView id={route[1]} reload={reload} />;
   else if (page === "history") body = <History me={me} />;
+  else if (page === "discussions") body = <Discussions />;
+  else if (page === "thread" && route[1] && route[2])
+    body = (
+      <ThreadView
+        key={`${route[1]}/${route[2]}`}
+        sid={decodeURIComponent(route[1])}
+        decl={decodeURIComponent(route[2])}
+      />
+    );
   else if (page === "admin" && me.maintainer) body = <Admin />;
   else body = <Work me={me} reload={reload} />;
 
@@ -102,8 +112,8 @@ export function App() {
               </a>
             )}
             {signedIn && (
-              <a href="#/history" aria-current={current("history")}>
-                My reviews
+              <a href="#/discussions" aria-current={current("discussions") ?? current("thread")}>
+                Discussions
               </a>
             )}
             <a href="#/how" aria-current={current("how")}>

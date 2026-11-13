@@ -109,6 +109,58 @@ class TicketCreated(_P):
     tier: Literal["easy", "medium", "hard", "excellence"] | None = None
 
 
+class DiscussionPosted(_P):
+    """A post in the thread of a declaration (C-25): a shared review of the
+    author's own or a comment. Only after the declaration is decided."""
+
+    post_id: str
+    submission_id: str
+    declaration: str
+    author: str
+    kind: Literal["review", "comment"]
+    text: str = ""
+    review_seq: int | None = None  # kind "review": the shared review
+    show_pseudonym: bool = False  # per thread: the author's pseudonym instead of a letter
+    ai: AIAssistance = AIAssistance()
+
+
+class DiscussionVoted(_P):
+    """Sorts posts only; never enters trust, roles or decisions (S-22)."""
+
+    post_id: str
+    voter: str
+    value: Literal[-1, 0, 1]
+
+
+class DiscussionReported(_P):
+    post_id: str
+    reporter: str
+    reason: str
+
+
+class DiscussionHidden(_P):
+    post_id: str
+    by: str  # maintainer
+    reason: str
+
+
+class ReopenRequested(_P):
+    """A post says a decided declaration is wrong after all (C-25)."""
+
+    request_id: str
+    ticket_id: str
+    post_id: str | None = None
+    requester: str
+    reason: str
+
+
+class ReopenResolved(_P):
+    request_id: str
+    by: str  # maintainer
+    reopened: bool
+    reason: str
+
+
 class MappingContested(_P):
     """A reviewer says the paper passage does not belong to the declaration
     (SR-24). Maintainers see every contest."""
@@ -231,6 +283,12 @@ PAYLOADS: dict[str, type[_P]] = {
     "reviewer.maintainer_revoked": MaintainerRevoked,
     "reviewer.preferences_set": PreferencesSet,
     "ticket.mapping_contested": MappingContested,
+    "discussion.posted": DiscussionPosted,
+    "discussion.voted": DiscussionVoted,
+    "discussion.reported": DiscussionReported,
+    "discussion.hidden": DiscussionHidden,
+    "ticket.reopen_requested": ReopenRequested,
+    "ticket.reopen_resolved": ReopenResolved,
     "submission.opened": SubmissionOpened,
     "submission.closed": SubmissionClosed,
     "ticket.created": TicketCreated,
