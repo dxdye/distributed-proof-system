@@ -51,7 +51,7 @@ def test_review_round_trip_without_countdown_or_honeypot_fields(env: Env,
     auth = register(client, "carol")
     cs = client.post("/api/choice-set", headers=auth).json()
     assert len(cs["tickets"]) == 3
-    assert set(cs["tickets"][0]) == {"ticket_id", "declaration", "decl_kind", "domain",
+    assert set(cs["tickets"][0]) == {"ticket_id", "declaration", "decl_kind", "domain", "tier",
                                      "paper", "expected_minutes"}  # no popularity (SR-38)
     lease = client.post("/api/leases", headers=auth, json={
         "set_id": cs["set_id"], "ticket_id": cs["tickets"][1]["ticket_id"]}).json()

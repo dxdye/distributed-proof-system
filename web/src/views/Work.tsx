@@ -1,6 +1,90 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type ChoiceSet, type Me } from "../api";
+import { TIER_HINTS, TIER_LABELS, TierBadge } from "../components/Tier";
 import { navigate } from "../router";
+
+const ALL_TIERS = ["easy", "medium", "hard", "excellence"];
+
+/** What the reviewer wants to work on. Preferences raise the chance that such
+ * tickets are offered; they never hide the rest completely (SR-32). */
+function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
+  const [domains, setDomains] = useState<string[]>(me.preferences.domains);
+  const [tiers, setTiers] = useState<string[]>(me.preferences.tiers);
+  const [known, setKnown] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const changed =
+    domains.join() !== me.preferences.domains.join() ||
+    tiers.join() !== me.preferences.tiers.join();
+
+  useEffect(() => {
+    api
+      .domains()
+      .then(setKnown)
+      .catch(() => {});
+  }, []);
+
+  const toggle = (list: string[], set: (v: string[]) => void, v: string) =>
+    set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+  async function save() {
+    setError(null);
+    try {
+      await api.setPreferences(domains, tiers);
+      onSaved();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  return (
+    <details
+      className="prefs"
+      open={me.preferences.domains.length + me.preferences.tiers.length > 0}
+    >
+      <summary>What would you like to work on?</summary>
+      <p className="muted small">
+        Tickets matching your choice are offered first; others fill up the rest. Nothing selected
+        means: anything.
+      </p>
+      <div className="chip-row">
+        <span className="chip-label">Domain</span>
+        {[...new Set([...known, ...domains])].map((d) => (
+          <button
+            key={d}
+            className="chip"
+            aria-pressed={domains.includes(d)}
+            onClick={() => toggle(domains, setDomains, d)}
+          >
+            {d}
+          </button>
+        ))}
+      </div>
+      <div className="chip-row">
+        <span className="chip-label">Difficulty</span>
+        {ALL_TIERS.map((t) => {
+          const open = me.tiers_open.includes(t);
+          return (
+            <button
+              key={t}
+              className={`chip tier-chip tier-${t}`}
+              aria-pressed={tiers.includes(t)}
+              disabled={!open}
+              title={open ? TIER_HINTS[t] : `Locked. ${TIER_HINTS[t]}`}
+              onClick={() => toggle(tiers, setTiers, t)}
+            >
+              {open ? "" : "🔒 "}
+              {TIER_LABELS[t]}
+            </button>
+          );
+        })}
+      </div>
+      {error && <p className="error">{error}</p>}
+      <button className="secondary" disabled={!changed} onClick={save}>
+        Save and draw new tickets
+      </button>
+    </details>
+  );
+}
 
 function duration(minutes: number): string {
   if (minutes < 90) return `about ${minutes} min`;
@@ -91,6 +175,13 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
             </button>
           )}
         </div>
+        <Preferences
+          me={me}
+          onSaved={() => {
+            reload();
+            void draw();
+          }}
+        />
         {me.leases.length >= me.wip_limit ? (
           <p className="muted">Finish or return a ticket first.</p>
         ) : busy ? (
@@ -104,7 +195,10 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
             <div className="cards">
               {set.tickets.map((t) => (
                 <button key={t.ticket_id} className="choice" onClick={() => take(t.ticket_id)}>
-                  <span className="badge">{t.decl_kind}</span>
+                  <span className="card-badges">
+                    <span className="badge">{t.decl_kind}</span>
+                    <TierBadge tier={t.tier} />
+                  </span>
                   <code className="choice-name">{t.declaration}</code>
                   <span className="muted small">{t.paper}</span>
                   <span className="muted small">

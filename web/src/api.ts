@@ -31,6 +31,7 @@ export type Lease = {
     repo_url: string;
     commit: string;
     domain: string;
+    tier?: string;
     view: UnitView;
     questions: Question[];
   };
@@ -46,6 +47,7 @@ export type Card = {
   declaration: string;
   decl_kind: string;
   domain: string;
+  tier: string;
   paper: string;
   expected_minutes: number;
 };
@@ -67,6 +69,8 @@ export type Me = {
   roles: Record<string, string[]>;
   reliability: number;
   wip_limit: number;
+  preferences: { domains: string[]; tiers: string[] };
+  tiers_open: string[];
   leases: Lease[];
   history: HistoryItem[];
 };
@@ -156,6 +160,9 @@ export const api = {
   }) => request<{ reviewer_id: string; token?: string }>("POST", "/api/register", body),
   me: () => request<Me>("GET", "/api/me"),
   declareAffiliation: (lab: string) => request("POST", "/api/me/affiliations", { lab }),
+  setPreferences: (domains: string[], tiers: string[]) =>
+    request("PUT", "/api/me/preferences", { domains, tiers }),
+  domains: () => request<string[]>("GET", "/api/domains"),
   choiceSet: () => request<ChoiceSet>("POST", "/api/choice-set"),
   take: (set_id: string, ticket_id: string) =>
     request<Lease>("POST", "/api/leases", { set_id, ticket_id }),

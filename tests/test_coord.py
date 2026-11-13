@@ -23,6 +23,7 @@ from dpc.coord import (
     Vault,
     commitment,
 )
+from dpc.coord.tiers import tier_of, tier_open
 from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import Source
 from dpc.honeypots import HoneypotPool, Mutant, MutantFileSource, Origin
@@ -499,3 +500,56 @@ def test_two_thousand_reviews_a_week(tmp_path: Path) -> None:
     elapsed = time.perf_counter() - start
     assert elapsed < 120, f"{elapsed:.1f}s for 2000 reviews"
     assert env.coord.stats()["reviews_last_7_days"] >= 2000  # type: ignore[operator]
+
+
+# ------------------------------------------------------------- tiers, preferences
+def tiered(prefix: str, difficulties: list[float], domain: str = "analysis") -> list[TicketSpec]:
+    return [TicketSpec(view(f"{prefix}.u{i}"), domain=domain, difficulty=b)
+            for i, b in enumerate(difficulties)]
+
+
+def test_difficulty_tiers() -> None:
+    assert [tier_of(b) for b in (-1.0, -0.5, 0.0, 0.5, 1.4, 1.5, 3.0)] == [
+        "easy", "medium", "medium", "hard", "hard", "excellence", "excellence"]
+    assert tier_open("hard", roles=set(), group="doctoral", maintainer=False)
+    assert not tier_open("hard", roles=set(), group="student", maintainer=False)
+    assert tier_open("hard", roles={"PV"}, group="student", maintainer=False)
+    assert not tier_open("excellence", roles={"PV"}, group="doctoral", maintainer=False)
+    assert tier_open("excellence", roles=set(), group="other", maintainer=True)
+
+
+@pytest.mark.req("SR-05")
+def test_hard_tickets_need_experience_until_they_have_waited_long(env: Env) -> None:
+    env.coord.open_submission(title="P", repo_url="https://x", commit="c" * 40,
+                              tickets=tiered("P", [2.0]))
+    (tid,) = env.coord.state.tickets
+    newcomer = env.people(1, "new", group="student")[0]
+    expert = env.people(1, "exp", group="expert")[0]
+    reason = env.coord.why_not(newcomer, env.coord.state.tickets[tid], "review")
+    assert reason is not None and "excellence" in reason
+    assert env.coord.choice_set(newcomer) is None
+    assert env.coord.why_not(expert, env.coord.state.tickets[tid], "review") is None
+    assert env.coord.tiers_open(newcomer) == ["easy", "medium"]
+    env.clock.advance(days=15)  # waited past tier_gate_age_s: open to everyone (SR-05)
+    assert env.coord.why_not(newcomer, env.coord.state.tickets[tid], "review") is None
+
+
+@pytest.mark.req("SR-32", "SR-38")
+def test_preferences_raise_the_chance_but_never_empty_the_choice_set(env: Env) -> None:
+    env.coord.open_submission(title="P", repo_url="https://x", commit="c" * 40,
+                              tickets=tiered("P", [0.0, 0.0, 0.0], domain="algebra"))
+    env.coord.open_submission(title="Q", repo_url="https://x", commit="d" * 40,
+                              tickets=tiered("Q", [0.0, 0.0, 0.0], domain="analysis"))
+    rid = env.people(1)[0]
+    env.coord.set_preferences(rid, domains=["analysis"])
+    cs = env.coord.choice_set(rid)
+    assert cs is not None and len(cs.tickets) == 4
+    domains = [env.coord.state.tickets[t].domain for t in cs.tickets]
+    assert domains[:3] == ["analysis"] * 3 and domains[3] == "algebra"  # preferred first, filled
+    assert env.events("reviewer.preferences_set")[0]["domains"] == ["analysis"]
+    env.coord.set_preferences(rid, domains=["algebra"])  # a change draws a new set
+    again = env.coord.choice_set(rid)
+    assert again is not None and again.set_id != cs.set_id
+    assert env.coord.state.tickets[again.tickets[0]].domain == "algebra"
+    with pytest.raises(CoordError, match="unknown tiers"):
+        env.coord.set_preferences(rid, tiers=["legendary"])

@@ -34,7 +34,16 @@ from pydantic import BaseModel, ValidationError
 from dpc.audit.log import AuditLog, Entry, utc_now
 from dpc.coord import events as ev
 from dpc.coord.params import DAY, CoordParams
-from dpc.coord.state import ChoiceSetSt, ClaimSt, LeaseSt, State, TicketSt, difficulty_bucket
+from dpc.coord.state import (
+    ChoiceSetSt,
+    ClaimSt,
+    LeaseSt,
+    ReviewerSt,
+    State,
+    TicketSt,
+    difficulty_bucket,
+)
+from dpc.coord.tiers import TIERS, Tier, tier_of, tier_open
 from dpc.coord.vault import BlobStore, Vault
 from dpc.domain.attention import Choice, fit_plackett_luce
 from dpc.domain.decision import Vote, decide, posterior_error
@@ -177,6 +186,31 @@ class Coordinator:
             self._reviewer(rid)
             self._emit("reviewer.maintainer_appointed", ev.MaintainerAppointed(reviewer=rid))
 
+    def set_preferences(self, rid: str, *, domains: Sequence[str] = (),
+                        tiers: Sequence[str] = ()) -> None:
+        """What the reviewer wants to work on (SR-32: raises the chance only)."""
+        domains = tuple(sorted({d.strip() for d in domains if d.strip()}))
+        if len(domains) > 20 or any(len(d) > 64 for d in domains):
+            raise CoordError("at most 20 domains of at most 64 characters")
+        unknown = [t for t in tiers if t not in TIERS]
+        if unknown:
+            raise CoordError(f"unknown tiers {unknown}; known: {list(TIERS)}")
+        with self.lock:
+            self._reviewer(rid)
+            self._emit("reviewer.preferences_set", ev.PreferencesSet(
+                reviewer=rid, domains=domains,
+                tiers=tuple(t for t in TIERS if t in tiers)))
+
+    def tiers_open(self, rid: str, domain: str | None = None) -> list[Tier]:
+        """Tiers the reviewer may take (in ``domain``, or in any domain)."""
+        st, now = self.state, self.now()
+        person = st.reviewers[rid]
+        domains = [domain] if domain is not None else sorted(
+            {e.domain for e in person.evidence}) or [""]
+        return [t for t in TIERS if any(
+            tier_open(t, roles=st.roles(rid, d, now), group=person.group,
+                      maintainer=person.maintainer) for d in domains)]
+
     def sync_maintainer(self, rid: str, granted: bool) -> None:
         """Follow the maintainer role of an identity provider (docs/adr/0010).
         Every change is logged. Appointments by the operator are left alone."""
@@ -257,6 +291,12 @@ class Coordinator:
         if (sub.submission_id, ticket.view.declaration) in st.seen_units[rid]:
             # Never two tickets of the same unit: a honeypot would stand out (SR-06).
             return "already worked on this declaration"
+        if duty == "review" and self.params.tier_gating and \
+                now - ticket.created < timedelta(seconds=self.params.tier_gate_age_s):
+            tier = tier_of(ticket.difficulty)
+            if not tier_open(tier, roles=st.roles(rid, ticket.domain, now), group=person.group,
+                             maintainer=person.maintainer):
+                return f"{tier} tickets need more experience in this domain"
         window = timedelta(seconds=self.params.pair_window_s)
         for p in people:
             last = st.pairs.get(frozenset((rid, p)))
@@ -314,6 +354,7 @@ class Coordinator:
         with self.lock:
             self._reviewer(rid)
             st, now = self.state, self.now()
+            person = st.reviewers[rid]
             current = st.choice_sets.get(st.latest_set.get(rid, ""))
             if current and not current.consumed and now < current.expires and any(
                     self.why_not(rid, st.tickets[t], "review") is None for t in current.tickets):
@@ -326,19 +367,24 @@ class Coordinator:
             if not eligible:
                 return None
             order = [eligible[i] for i in self.rng.permutation(len(eligible))]
+            # Preferred tickets first (SR-32: preferences raise the chance only);
+            # the rest fills the set, so nobody is left without tickets.
+            preferred = [t for t in order if _preferred(person, t)]
+            others = [t for t in order if not _preferred(person, t)]
             picked: list[TicketSt] = []
             units: set[tuple[str, str]] = set()
-            for distinct_papers in (True, False):
-                papers = {t.submission_id for t in picked}
-                for t in order:
-                    unit = (t.submission_id, t.view.declaration)
-                    if len(picked) >= self.params.choice_set_size or unit in units:
-                        continue
-                    if distinct_papers and t.submission_id in papers:
-                        continue
-                    picked.append(t)
-                    units.add(unit)
-                    papers.add(t.submission_id)
+            for pool in (preferred, others):
+                for distinct_papers in (True, False):
+                    papers = {t.submission_id for t in picked}
+                    for t in pool:
+                        unit = (t.submission_id, t.view.declaration)
+                        if len(picked) >= self.params.choice_set_size or unit in units:
+                            continue
+                        if distinct_papers and t.submission_id in papers:
+                            continue
+                        picked.append(t)
+                        units.add(unit)
+                        papers.add(t.submission_id)
             set_id = self.new_id("CS")
             expires = now + timedelta(seconds=self.params.choice_set_ttl_s)
             self._emit("choice_set.drawn", ev.ChoiceSetDrawn(
@@ -628,3 +674,9 @@ class Coordinator:
             "active_leases": len(st.active_leases()),
             "audit_head": head.hash if (head := self.log.head()) else None,
         }
+
+
+def _preferred(person: ReviewerSt, ticket: TicketSt) -> bool:
+    """Does the ticket match the reviewer's preferences (none set: all do)?"""
+    return ((not person.pref_domains or ticket.domain in person.pref_domains)
+            and (not person.pref_tiers or tier_of(ticket.difficulty) in person.pref_tiers))

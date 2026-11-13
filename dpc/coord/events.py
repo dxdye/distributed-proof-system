@@ -68,6 +68,15 @@ class MaintainerAppointed(_P):
     by: Literal["operator", "identity_provider"] = "operator"
 
 
+class PreferencesSet(_P):
+    """What a reviewer wants to work on. It only raises the chance that such
+    tickets are offered; it never decides coverage (SR-32, SR-39)."""
+
+    reviewer: str
+    domains: tuple[str, ...] = ()
+    tiers: tuple[Literal["easy", "medium", "hard", "excellence"], ...] = ()
+
+
 class MaintainerRevoked(_P):
     reviewer: str
     by: Literal["operator", "identity_provider"]
@@ -205,6 +214,7 @@ PAYLOADS: dict[str, type[_P]] = {
     "reviewer.affiliation_declared": AffiliationDeclared,
     "reviewer.maintainer_appointed": MaintainerAppointed,
     "reviewer.maintainer_revoked": MaintainerRevoked,
+    "reviewer.preferences_set": PreferencesSet,
     "submission.opened": SubmissionOpened,
     "submission.closed": SubmissionClosed,
     "ticket.created": TicketCreated,

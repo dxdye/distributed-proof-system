@@ -935,3 +935,78 @@ fieldset.failed label.inline {
   background: var(--warn-soft);
   margin-right: 0.4rem;
 }
+
+/* Difficulty tiers and preferences */
+.card-badges {
+  display: flex;
+  gap: 0.4rem;
+}
+.badge.tier-easy {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+.badge.tier-medium {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.badge.tier-hard {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+.badge.tier-excellence {
+  color: var(--error);
+  background: var(--error-soft);
+}
+details.prefs {
+  margin: 0.25rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+details.prefs summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+details.prefs[open] summary {
+  margin-bottom: 0.6rem;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+.chip-label {
+  width: 6rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+button.chip {
+  min-height: 0;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  margin: 0;
+}
+button.chip:hover:not(:disabled) {
+  background: var(--card);
+  border-color: var(--ink-strong);
+}
+button.chip[aria-pressed="true"],
+button.chip[aria-pressed="true"]:hover:not(:disabled) {
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  border-color: var(--btn-border);
+}
+button + button.chip {
+  margin-left: 0;
+}

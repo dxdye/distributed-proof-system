@@ -53,6 +53,11 @@ class CoordParams:
     max_evidence_bytes: int = 64_000
     #: Shortest justification of an "incorrect" verdict, in characters (SR-09).
     min_reason_chars: int = 30
+    # --- difficulty tiers (dpc.coord.tiers) ---
+    #: Hard and excellence tickets only for those qualified (trust, group, maintainer).
+    tier_gating: bool = True
+    #: After this age a ticket is open to everyone, so that none starves (SR-05).
+    tier_gate_age_s: int = 14 * DAY
 
     @property
     def parallel(self) -> int:

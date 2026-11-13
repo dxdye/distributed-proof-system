@@ -45,6 +45,9 @@ class ReviewerSt:
     affiliation_tags: set[str] = field(default_factory=set)
     maintainer: bool = False
     maintainer_by: str | None = None  # "operator" or "identity_provider"
+    pref_domains: tuple[str, ...] = ()
+    pref_tiers: tuple[str, ...] = ()
+    prefs_at: datetime | None = None
     reliability: Reliability = field(default_factory=Reliability)
     evidence: list[EvidenceRec] = field(default_factory=list)
     detections: DetectionRecord = field(default_factory=DetectionRecord)
@@ -240,6 +243,15 @@ class State:
                                           _: Entry) -> None:
         person = self.reviewers[p.reviewer]
         person.maintainer, person.maintainer_by = True, p.by
+
+    def _on_reviewer_preferences_set(self, p: ev.PreferencesSet, at: datetime,
+                                     _: Entry) -> None:
+        person = self.reviewers[p.reviewer]
+        person.pref_domains, person.pref_tiers, person.prefs_at = p.domains, p.tiers, at
+        # The current choice set was drawn for the old preferences.
+        current = self.choice_sets.get(self.latest_set.get(p.reviewer, ""))
+        if current is not None:
+            current.consumed = True
 
     def _on_reviewer_maintainer_revoked(self, p: ev.MaintainerRevoked, at: datetime,
                                         _: Entry) -> None:

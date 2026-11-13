@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
 from dpc.coord.state import LeaseSt, TicketSt
+from dpc.coord.tiers import tier_of
 from dpc.tickets.model import QUESTIONS_A, AIAssistance
 
 NOTICE = (
@@ -60,6 +61,11 @@ class RegisterReq(_Req):
 
 class AffiliationReq(_Req):
     lab: str
+
+
+class PreferencesReq(_Req):
+    domains: list[str] = []
+    tiers: list[Literal["easy", "medium", "hard", "excellence"]] = []
 
 
 class LeaseReq(_Req):
@@ -152,6 +158,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         _, expected = coord.lease_duration("review", ticket)
         return {"ticket_id": ticket.ticket_id, "declaration": ticket.view.declaration,
                 "decl_kind": ticket.view.decl_kind, "domain": ticket.domain,
+                "tier": tier_of(ticket.difficulty),
                 "paper": sub.title, "expected_minutes": max(1, round(expected / 60))}
 
     def lease_view(lease: LeaseSt) -> dict[str, Any]:
@@ -167,6 +174,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             "ticket": {
                 "ticket_id": ticket.ticket_id, "paper": sub.title, "repo_url": sub.repo_url,
                 "commit": sub.commit, "domain": ticket.domain,
+                "tier": tier_of(ticket.difficulty),
                 "view": ticket.view.model_dump(mode="json"),
                 "questions": [{"id": q, "text": QUESTIONS[q]} for q in QUESTIONS_A],
             },
@@ -263,11 +271,27 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "reviewer_id": rid, "pseudonym": coord.vault.pseudonym(rid),
                 "group": person.group, "maintainer": person.maintainer,
                 "roles": {d: sorted(st.roles(rid, d, now)) for d in domains},
+                "preferences": {"domains": list(person.pref_domains),
+                                "tiers": list(person.pref_tiers)},
+                "tiers_open": coord.tiers_open(rid),
                 "reliability": round(person.reliability.rate.mean, 3),
                 "wip_limit": person.reliability.wip_limit("A"),
                 "leases": [lease_view(lease) for lease in st.active_leases(rid)],
                 "history": history[::-1][:50],
             }
+
+    @app.put("/api/me/preferences")
+    def preferences(req: PreferencesReq, rid: Rid) -> dict[str, bool]:
+        call(coord.set_preferences, rid, domains=req.domains, tiers=req.tiers)
+        return {"ok": True}
+
+    @app.get("/api/domains")
+    def domains(_: Rid) -> list[str]:
+        """Domains of the open class-A tickets (names only, no counts)."""
+        with coord.lock:
+            st = coord.state
+            return sorted({t.domain for t in st.tickets.values()
+                           if t.ticket_class == "A" and st.is_open(t)})
 
     @app.post("/api/me/affiliations")
     def affiliation(req: AffiliationReq, rid: Rid) -> dict[str, bool]:

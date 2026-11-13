@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Lease, type ReviewInput } from "../api";
 import { Infoview } from "../components/Infoview";
+import { TierBadge } from "../components/Tier";
 import { navigate } from "../router";
 
 /** Short labels of the checklist questions (the full text is in the ticket). */
@@ -256,7 +257,7 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
           <div>
             <h2>{t.paper}</h2>
             <p className="muted small">
-              {t.domain} · <a href={t.repo_url}>{t.repo_url}</a> @{" "}
+              <TierBadge tier={t.tier} /> {t.domain} · <a href={t.repo_url}>{t.repo_url}</a> @{" "}
               <code>{t.commit.slice(0, 12)}</code>
             </p>
           </div>
