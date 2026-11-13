@@ -295,6 +295,42 @@ The threads grow into the error catalogue of §8.9 and are a natural place to
 propose definition tests (§5.2).
 *Evidence:* Walkthrough with the project owner (2026-11-14).
 
+### C-26 · §11.1 Anytime reports, §10.1 PRL, §10.3 The map — a public progress page · refine
+*Proposed:* The concept already asks for a report at any time (class-A coverage,
+the class-B bound, the PRL), interim reports at a fixed cadence (SR-42) and a
+map of attention against PRL (§10.3). Make it a public, live page, readable
+without signing in, so that everyone sees the big picture and reviewers see
+what they are part of. Per submission it shows:
+- the problem: title, the paper, the informal main statement;
+- the PRL with its meaning;
+- class-A coverage in % and declarations by state (accepted, error found, in
+  review);
+- confirmed findings, and the estimated probability that an accepted
+  declaration is wrong;
+- a forecast (P50/P85) once throughput has been measured;
+- interest per paper (ψ, §10.2), progress over time;
+- notes by maintainers, which signed-in users can vote up or down.
+
+Rules that keep the page from leaking or anchoring:
+- **Counts are by declaration, never by ticket.** Ticket counts would expose
+  the number of planted errors.
+- **A declaration counts as decided only when all of its tickets are.**
+  Otherwise someone holding a planted copy would learn from the page that the
+  real ticket is already decided.
+- **The Lean statement of the main theorem is shown only once its declaration
+  is decided and the planted errors of the submission are revealed.** Before
+  that, the paper's statement is shown, which is the same for the real ticket
+  and its copies.
+- **No live verdict tallies** (share of "faithful" or "problem found"). They
+  would anchor reviewers (§10.5 "Beliebtheit erst nach der Wahl", §9.4) and
+  move with planted errors. What is shown is decided and confirmed results.
+- **No up- or downvotes on submissions.** Votes on a lab's work invite
+  brigading and pressure (FMEA R21); interest is measured from choices with
+  completed work, weighted by trust (§10.5). Votes apply to maintainer notes
+  only, for sorting.
+
+*Evidence:* Walkthrough with the project owner (2026-11-14).
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -439,3 +475,10 @@ and since when they take part, is shown." See C-25.
 *Proposed:* "Votes on posts shall influence neither trust, roles nor
 decisions. A post can lead to a change of a decision only through a reopen
 request decided by a maintainer." See C-25.
+
+### S-23 · SR-42 Interim reports — a public progress page · refine
+*Proposed:* Add to SR-42: "The anytime report of every submission is public
+and live: PRL, class-A coverage, decided declarations, confirmed findings,
+estimated residual error and forecast. It counts declarations, not tickets,
+counts a declaration as decided only when all its tickets are, and shows no
+live verdict tallies." See C-26.
