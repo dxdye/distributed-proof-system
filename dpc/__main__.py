@@ -182,12 +182,12 @@ def _coordinator(args: argparse.Namespace) -> Coordinator:
 
 def cmd_demo(args: argparse.Namespace) -> int:
     """Seed a local demo: the mutation fixture as a submission, one maintainer."""
-    from dpc.coord.demo import seed_demo
+    from dpc.coord.demo import DISPLAY, MUTATION, seed_demo
 
     coord = _coordinator(args)
     executor = HostExecutor(trusted=True, cache_dir=Path(args.cache).resolve())
     info = seed_demo(coord, Path(args.data).resolve() / "demo-work", executor,
-                     share=args.share)
+                     share=args.share, submissions=(MUTATION, DISPLAY))
     _, token = coord.register(args.maintainer, "expert", notice_acknowledged=True)
     rid = coord.vault.reviewer_for_pseudonym(args.maintainer)
     assert rid is not None
@@ -387,7 +387,7 @@ def main(argv: list[str] | None = None) -> int:
     coord_args(p)
     p.set_defaults(func=cmd_appoint)
 
-    p = sub.add_parser("demo", help="seed a local demo from the mutation fixture (M4)")
+    p = sub.add_parser("demo", help="seed a local demo from own fixtures (M4)")
     p.add_argument("--share", type=float, default=0.2, help="honeypot share h")
     p.add_argument("--maintainer", default="maintainer", help="pseudonym of the maintainer")
     p.add_argument("--cache", default=str(DEFAULT_CACHE))

@@ -9,7 +9,7 @@ import pytest
 
 from dpc.audit import AuditLog
 from dpc.coord import BlobStore, Coordinator, CoordParams, Vault
-from dpc.coord.demo import seed_demo
+from dpc.coord.demo import DISPLAY, seed_demo
 from dpc.lean.executor import HostExecutor
 
 
@@ -35,3 +35,18 @@ def test_demo_seeds_a_reviewable_submission(tmp_path: Path, host_executor: HostE
         changed = [a for a, b in zip(real.components, hp.view.components, strict=True)
                    if a.text != b.text]
         assert len(changed) == 1
+
+
+@pytest.mark.lean
+@pytest.mark.req("SR-06", "SR-21")
+def test_demo_shows_a_misleading_display_rule(tmp_path: Path,
+                                              host_executor: HostExecutor) -> None:
+    """The display fixture's tickets carry both renderings (ADR 0011); its
+    honeypots too, so they look like the real tickets in both."""
+    coord = Coordinator(AuditLog(tmp_path / "log.sqlite"), Vault(tmp_path / "vault.sqlite"),
+                        blobs=BlobStore(tmp_path / "blobs"), rng=np.random.default_rng(0))
+    seed_demo(coord, tmp_path / "work", host_executor, share=0.2, submissions=(DISPLAY,))
+    tickets = list(coord.state.tickets.values())
+    claims = [t for t in tickets if t.view.declaration == "Display.claim"]
+    assert claims and all(t.view.components[0].display_differs for t in claims)
+    assert all(c.trusted_text is not None for t in tickets for c in t.view.components)
