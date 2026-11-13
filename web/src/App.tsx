@@ -7,6 +7,7 @@ import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
 import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
+import { How } from "./views/How";
 import { Imprint, Privacy } from "./views/Legal";
 import { JoinForm, SignIn } from "./views/Register";
 import { StatsView } from "./views/StatsView";
@@ -49,7 +50,8 @@ export function App() {
   const signedIn = Boolean(session?.authenticated && session.registered);
   const page = route[0] ?? "work";
   let body;
-  if (page === "imprint") body = <Imprint />;
+  if (page === "how") body = <How />;
+  else if (page === "imprint") body = <Imprint />;
   else if (page === "privacy") body = <Privacy />;
   else if (error) body = <p className="error">{error}</p>;
   else if (page === "stats") body = <StatsView />;
@@ -93,6 +95,9 @@ export function App() {
                 My reviews
               </a>
             )}
+            <a href="#/how" aria-current={current("how")}>
+              How it works
+            </a>
             <a href="#/stats" aria-current={current("stats")}>
               Statistics
             </a>

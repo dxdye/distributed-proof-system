@@ -1232,3 +1232,21 @@ button.small {
 .latex-help summary {
   cursor: pointer;
 }
+
+/* How it works */
+.how .card ul,
+.how .card ol {
+  padding-left: 1.2rem;
+}
+.how .card li {
+  margin-bottom: 0.5rem;
+}
+.how-questions li {
+  margin-bottom: 1rem;
+}
+.how-questions p {
+  margin: 0.2rem 0 0;
+}
+.how .columns {
+  margin-bottom: 1.5rem;
+}

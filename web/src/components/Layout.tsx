@@ -64,6 +64,9 @@ export function SiteFooter() {
               <a href="#/work">Review</a>
             </li>
             <li>
+              <a href="#/how">How it works</a>
+            </li>
+            <li>
               <a href="#/stats">Statistics</a>
             </li>
           </ul>
