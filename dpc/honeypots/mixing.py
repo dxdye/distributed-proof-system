@@ -50,8 +50,16 @@ def honeypot_view(original: UnitView, mutant: Mutant) -> UnitView:
                              f"{mutant.target} {mutant.component!r}")
     if comp.text != mutant.original:
         raise MutantMismatch(f"{original.declaration}: rendering differs from the mutant's")
-    replaced = comp.model_copy(update={"text": mutant.mutant,
-                                       "glossary": mutant.glossary or comp.glossary})
+    # Real tickets carry a second rendering without the submission's display
+    # rules (docs/adr/0011). A honeypot without one would stand out.
+    if comp.trusted_text is not None and mutant.trusted_mutant is None:
+        raise MutantMismatch(f"{original.declaration}: the mutant has no plain rendering")
+    update: dict[str, object] = {"text": mutant.mutant,
+                                 "glossary": mutant.glossary or comp.glossary}
+    if comp.trusted_text is not None:
+        update["trusted_text"] = mutant.trusted_mutant
+        update["trusted_glossary"] = mutant.trusted_glossary or comp.trusted_glossary
+    replaced = comp.model_copy(update=update)
     return original.model_copy(update={"components": tuple(
         replaced if c is comp else c for c in original.components)})
 

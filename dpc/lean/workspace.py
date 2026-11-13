@@ -43,6 +43,7 @@ from dpc.lean.executor import (
     RunResult,
     _analyzer_args,
     _mutate_args,
+    _render_args,
     _replay_args,
     _run,
     compile_failure,
@@ -395,6 +396,20 @@ class VolumeWorkspace:
         """Untrusted step: loads the submission's environment extensions."""
         args = _mutate_args(imports, decls, str(self.executor.OUT / out.name), render)
         return self._tool(image, manifest, "dpc-mutate", args, out)
+
+    def render_trusted(self, image: str, manifest: Manifest, *, roots: Sequence[str],
+                       decls: Sequence[str], mutants: Path | None, out: Path) -> RunResult:
+        """Untrusted step without the submission's code: views and mutants rendered
+        with the extensions of the toolchain and the official packages only
+        (docs/adr/0011). ``mutants`` must lie next to ``out``."""
+        if mutants is not None and mutants.parent != out.parent:
+            raise ValueError("the mutants file must lie in the output directory")
+        trusted = trusted_lean_path(self.executor.WORK, manifest)
+        mount = self.executor.OUT
+        args = _render_args(roots, trusted, decls,
+                            str(mount / mutants.name) if mutants else None,
+                            str(mount / out.name))
+        return self._tool(image, manifest, "dpc-render", args, out)
 
     def replay(self, image: str, manifest: Manifest, *, roots: Sequence[str],
                out: Path) -> RunResult:

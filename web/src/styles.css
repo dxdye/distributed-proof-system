@@ -359,3 +359,22 @@ footer {
   margin: 0;
   flex: 1;
 }
+
+/* Second rendering without the submission's display rules (ADR 0011) */
+.display-warning {
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid var(--error);
+  background: var(--accent-soft);
+  border-radius: 4px;
+}
+.component.differs {
+  border-left: 3px solid var(--error);
+  padding-left: 0.8rem;
+}
+.term-label {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

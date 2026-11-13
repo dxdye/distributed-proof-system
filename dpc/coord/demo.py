@@ -16,6 +16,7 @@ from dpc.coord.importer import load_views
 from dpc.coord.service import Coordinator, TicketSpec
 from dpc.honeypots import HoneypotPool, MutantFileSource, MutantSet, Origin
 from dpc.lean.executor import HostExecutor
+from dpc.lean.render import merge_mutants, merge_views
 from dpc.tickets.views import UnitView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -42,6 +43,14 @@ def seed_demo(coord: Coordinator, workdir: Path, executor: HostExecutor, *,
                                  render=render)
         if not result.ok:
             raise DemoError(result.output)
+        # Second rendering without the submission's display rules (ADR 0011).
+        trusted = out.with_name(out.stem + "-trusted.jsonl")
+        result = executor.render_trusted(project, roots=["Mutation"],
+                                         decls=list(DECLS) if render else [],
+                                         mutants=None if render else out, out=trusted)
+        if not result.ok:
+            raise DemoError(result.output)
+        (merge_views if render else merge_mutants)(out, trusted)
     views = load_views(views_file)
     specs = [TicketSpec(UnitView.from_render(views[d]), domain="arithmetic") for d in DECLS]
     pool = HoneypotPool([MutantFileSource(mutants_file, Origin.OWN_REPOSITORY, "fixture")],

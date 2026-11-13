@@ -6,6 +6,12 @@ constructors of an inductive type — exactly the parts `dpc-mutate` mutates
 the elaborated term pretty-printed with binder types, plus a glossary of the
 constants it uses (name and type: the static part of an infoview).
 
+Every component is rendered twice (docs/adr/0011): ``text`` with the
+submission's own display rules (notation, coercions, unexpanders), and
+``trusted_text`` with those of Lean and the official libraries only. Where the
+two differ, the submission's display rules change what a reviewer sees, and
+the client shows both.
+
 Real tickets and honeypots are built from the same rendering: a honeypot is the
 view of its original unit with exactly one component replaced by the mutant
 (`dpc.honeypots.mixing.honeypot_view`). The source text is deliberately not
@@ -36,6 +42,13 @@ class Component(_Model):
     label: str = ""  # the constructor, for target "ctor"
     text: str
     glossary: tuple[GlossaryEntry, ...] = ()
+    #: Without the submission's display rules; None if not rendered.
+    trusted_text: str | None = None
+    trusted_glossary: tuple[GlossaryEntry, ...] = ()
+
+    @property
+    def display_differs(self) -> bool:
+        return self.trusted_text is not None and self.trusted_text != self.text
 
 
 class UnitView(_Model):

@@ -30,6 +30,7 @@ from dpc.ingest import Submission, ingest
 from dpc.ingest.volume import ingest_in_volume, volume_name
 from dpc.lean.executor import DockerExecutor, HostExecutor, LeanExecutor, Limits
 from dpc.lean.project import Manifest
+from dpc.lean.render import merge_mutants, merge_views
 from dpc.lean.workspace import VolumeWorkspace
 from dpc.requirements import load_requirements
 from dpc.sim import ReviewerType, SimConfig, simulate
@@ -147,6 +148,16 @@ def _run_in_volume(args: argparse.Namespace, *, render: bool, out: Path) -> int:
     if not result.ok:
         print(result.output, file=sys.stderr)
         return 1
+    # The same once more without the submission's display rules (ADR 0011).
+    trusted = out.with_name(out.stem + "-trusted.jsonl")
+    plain = ws.render_trusted(image, manifest, roots=[submission.root_module],
+                              decls=decls if render else [],
+                              mutants=None if render else out, out=trusted)
+    if not plain.ok:
+        print(plain.output, file=sys.stderr)
+        return 1
+    counts = merge_views(out, trusted) if render else merge_mutants(out, trusted)
+    print(json.dumps({"trusted_render": counts}), file=sys.stderr)
     return 0
 
 

@@ -6,7 +6,7 @@ import json
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -34,6 +34,11 @@ class Mutant(BaseModel):
     mutant: str
     mutant_hash: str
     glossary: tuple[GlossaryEntry, ...] = ()  # constants of the mutated component
+    #: The mutated expression, encoded for `dpc-render` (usable mutants only).
+    expr: Any = None
+    #: The mutant without the submission's display rules (docs/adr/0011).
+    trusted_mutant: str | None = None
+    trusted_glossary: tuple[GlossaryEntry, ...] = ()
 
     @property
     def usable(self) -> bool:

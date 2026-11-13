@@ -124,6 +124,20 @@ def _replay_args(roots: Sequence[str], trusted: Sequence[str], jobs: int,
     return [*args, "--jobs", str(max(1, jobs)), "--out", out]
 
 
+def _render_args(roots: Sequence[str], trusted: Sequence[str], decls: Sequence[str],
+                 mutants: str | None, out: str) -> list[str]:
+    args: list[str] = []
+    for module in roots:
+        args += ["--root", module]
+    for entry in trusted:
+        args += ["--trusted", entry]
+    for decl in decls:
+        args += ["--decl", decl]
+    if mutants is not None:
+        args += ["--mutants", mutants]
+    return [*args, "--out", out]
+
+
 def compile_failure(compiled: RunResult) -> EvidenceCheck | None:
     if compiled.timed_out:
         return EvidenceCheck.failed("time limit exceeded (SR-10)", compiled.output)
@@ -209,6 +223,13 @@ class HostExecutor:
         ``render``, the ticket views of the declarations instead (M4)."""
         return self._tool(project, "dpc-mutate",
                           _mutate_args(imports, decls, str(out), render), out)
+
+    def render_trusted(self, project: Path, *, roots: Sequence[str], decls: Sequence[str],
+                       mutants: Path | None, out: Path) -> RunResult:
+        """Views and mutants without the submission's display rules (ADR 0011)."""
+        trusted = trusted_lean_path(project, read_manifest(project))
+        args = _render_args(roots, trusted, decls, str(mutants) if mutants else None, str(out))
+        return self._tool(project, "dpc-render", args, out)
 
     def replay(self, project: Path, *, roots: Sequence[str], out: Path,
                jobs: int = 2) -> RunResult:

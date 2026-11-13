@@ -3,6 +3,10 @@ import type { Component, GlossaryEntry, UnitView } from "../api";
 
 // Static infoview (SR-21): the elaborated statement of each component, with the
 // types of the constants it uses on hover and in a glossary. No local Lean needed.
+//
+// Every component is also rendered without the submission's own display rules
+// (notation, coercions, unexpanders; ADR 0011). Where the two differ, the plain
+// version comes first and the submission's version is shown below it.
 
 const IDENT = /([A-Za-z_][A-Za-z0-9_.'!?₀-₉]*)/g;
 
@@ -49,21 +53,39 @@ function heading(c: Component, kind: string): string {
   return `Constructor ${c.label}`;
 }
 
+export function displayDiffers(c: Component): boolean {
+  return c.trusted_text != null && c.trusted_text !== c.text;
+}
+
 function ComponentBox({ component, kind }: { component: Component; kind: string }) {
   const [open, setOpen] = useState(false);
+  const differs = displayDiffers(component);
+  // Hover types and glossary always from the plain rendering when there is one:
+  // the submission's notation could make a constant's type look different too.
+  const glossary =
+    component.trusted_text != null ? (component.trusted_glossary ?? []) : component.glossary;
   return (
-    <section className="component">
+    <section className={differs ? "component differs" : "component"}>
       <h4>{heading(component, kind)}</h4>
-      <Term text={component.text} glossary={component.glossary} />
-      {component.glossary.length > 0 && (
+      {differs ? (
+        <>
+          <p className="term-label">Plain: Lean and Mathlib notation only</p>
+          <Term text={component.trusted_text ?? ""} glossary={glossary} />
+          <p className="term-label">As the submission displays it</p>
+          <Term text={component.text} glossary={component.glossary} />
+        </>
+      ) : (
+        <Term text={component.text} glossary={glossary} />
+      )}
+      {glossary.length > 0 && (
         <div className="glossary">
           <button className="link" onClick={() => setOpen(!open)}>
-            {open ? "Hide" : "Show"} the {component.glossary.length} constants used
+            {open ? "Hide" : "Show"} the {glossary.length} constants used
           </button>
           {open && (
             <table>
               <tbody>
-                {component.glossary.map((g) => (
+                {glossary.map((g) => (
                   <tr key={g.name}>
                     <td className="mono">{g.name}</td>
                     <td className="mono small">{g.type}</td>
@@ -79,12 +101,24 @@ function ComponentBox({ component, kind }: { component: Component; kind: string 
 }
 
 export function Infoview({ view }: { view: UnitView }) {
+  const differing = view.components.filter(displayDiffers).length;
+  const checked = view.components.some((c) => c.trusted_text != null);
   return (
     <div className="infoview">
       <div className="decl-head">
         <span className="badge">{view.decl_kind}</span>
         <code>{view.declaration}</code>
       </div>
+      {differing > 0 && (
+        <p className="display-warning">
+          The submission's own display rules change how {differing === 1 ? "one part" : `${differing} parts`}{" "}
+          of this declaration look. Both versions are shown below. The plain one is what the
+          declaration actually says; judge that one.
+        </p>
+      )}
+      {checked && differing === 0 && (
+        <p className="muted small">Looks the same without the submission's own notation.</p>
+      )}
       {view.components.map((c) => (
         <ComponentBox key={`${c.target}:${c.label}`} component={c} kind={view.decl_kind} />
       ))}

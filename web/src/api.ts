@@ -7,6 +7,9 @@ export type Component = {
   label: string;
   text: string;
   glossary: GlossaryEntry[];
+  // Rendered without the submission's own display rules (ADR 0011).
+  trusted_text?: string | null;
+  trusted_glossary?: GlossaryEntry[];
 };
 export type UnitView = {
   declaration: string;
