@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type Me, type Session } from "./api";
 import { loadAuth, signOut, type Provider } from "./auth";
-import { BrandMark, SiteFooter, ThemeSwitch } from "./components/Layout";
+import { BrandMark, SiteFooter } from "./components/Layout";
 import { StorageNotice } from "./components/StorageNotice";
 import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
@@ -71,7 +71,6 @@ export function App() {
       <div className="service-bar">
         <div className="container">
           <span>Research prototype · Review of Lean 4 formalizations</span>
-          <ThemeSwitch />
         </div>
       </div>
       <header className="site-header">
@@ -111,7 +110,7 @@ export function App() {
                 </span>
               )}
               <button
-                className="secondary"
+                className="secondary small"
                 onClick={async () => {
                   setMe(null);
                   setSession({ authenticated: false });

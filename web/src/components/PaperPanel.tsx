@@ -29,7 +29,6 @@ export function PaperPanel({
   if (!passage) {
     return (
       <section className="paper-panel missing">
-        <h3>The paper says</h3>
         <p>
           No passage of the paper has been mapped to this declaration yet. Look it up yourself
           {paperRef ? (
@@ -67,7 +66,6 @@ export function PaperPanel({
 
   return (
     <section className="paper-panel">
-      <h3>The paper says</h3>
       <p className="paper-source small">
         {src.url ? <a href={src.url}>{src.title}</a> : src.title}
         {id && <span className="mono"> · {id}</span>} · <strong>{passage.locator}</strong>

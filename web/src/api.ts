@@ -10,6 +10,8 @@ export type Component = {
   // Rendered without the submission's own display rules (ADR 0011).
   trusted_text?: string | null;
   trusted_glossary?: GlossaryEntry[];
+  // The same term typeset as LaTeX, where unambiguous (null: not available).
+  latex?: string | null;
 };
 export type UnitView = {
   declaration: string;

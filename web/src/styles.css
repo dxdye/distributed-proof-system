@@ -1059,3 +1059,105 @@ button + button.chip {
 .contest {
   margin-top: 0.5rem;
 }
+
+/* Compact actions; buttons in flex groups use the gap, not margins */
+button.small {
+  min-height: 2.15rem;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.86rem;
+}
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.toolbar > button + button,
+.row > button + button,
+.who > button {
+  margin-left: 0;
+}
+.footer-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.appearance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.site-footer .theme-switch {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.site-footer .theme-switch button {
+  color: var(--footer-muted);
+}
+.site-footer .theme-switch button + button {
+  border-left-color: rgba(255, 255, 255, 0.25);
+}
+.site-footer .theme-switch button[aria-pressed="true"] {
+  background: #ffffff;
+  color: #000000;
+}
+.site-footer .theme-switch button:hover:not([aria-pressed="true"]) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+/* Reference (paper / LaTeX) behind a switch; Lean statement full width */
+.reference {
+  margin: 0.75rem 0 1.5rem;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.9rem;
+}
+.segmented button {
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-radius: 0;
+  min-height: 0;
+  padding: 0.35rem 1rem;
+  font-size: 0.86rem;
+  font-weight: 550;
+  margin: 0;
+}
+.segmented button + button {
+  border-left: 1px solid var(--line-strong);
+  margin-left: 0;
+}
+.segmented button[aria-pressed="true"] {
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+}
+.segmented button:hover:not([aria-pressed="true"]) {
+  background: var(--surface);
+  color: var(--ink);
+}
+.reference-empty {
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+.latex-panel .latex-item {
+  padding: 0.6rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 0.6rem;
+  overflow-x: auto;
+}
+.lean-panel h3 {
+  margin-top: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}

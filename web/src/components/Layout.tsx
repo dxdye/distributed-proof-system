@@ -81,9 +81,14 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <div className="container">
-          Research prototype. Lean 4 proofs are checked by the Lean kernel; statements are reviewed
-          by people.
+        <div className="container footer-bottom-row">
+          <span>
+            Research prototype. Lean 4 proofs are checked by the Lean kernel; statements are
+            reviewed by people.
+          </span>
+          <span className="appearance">
+            Appearance <ThemeSwitch />
+          </span>
         </div>
       </div>
     </footer>
