@@ -1598,3 +1598,20 @@ button.vote.on {
   padding-top: 0.8rem;
   border-top: 1px solid var(--line);
 }
+
+.scheduled {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+.scheduled p {
+  margin: 0;
+  max-width: 44rem;
+}
+.scheduled button {
+  flex: none;
+}

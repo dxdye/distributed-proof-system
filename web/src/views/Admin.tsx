@@ -55,24 +55,7 @@ export function Admin() {
       <section className="card">
         <div className="row">
           <h2>Submissions</h2>
-          <button
-            className="secondary"
-            title="End leases whose time ran out and reveal planted errors that are due, now instead of at the next minute"
-            onClick={() =>
-              run(
-                api.admin.tick,
-                (r) => `${r.expired} leases expired, ${r.revealed} honeypots revealed`,
-              )
-            }
-          >
-            Run scheduled tasks now
-          </button>
         </div>
-        <p className="muted small">
-          Every minute the service ends leases whose time has run out (this lowers the reliability
-          of whoever let them lapse) and reveals planted errors whose waiting time is over, in
-          batches. "Run scheduled tasks now" does this immediately instead of at the next minute.
-        </p>
         {message && <p className="muted">{message}</p>}
         <table>
           <thead>
@@ -117,6 +100,25 @@ export function Admin() {
             ))}
           </tbody>
         </table>
+        <div className="scheduled">
+          <p className="muted small">
+            Every minute the service ends leases whose time has run out (this lowers the reliability
+            of whoever let them lapse) and reveals planted errors whose waiting time is over, in
+            batches. The button does this now instead of at the next minute.
+          </p>
+          <button
+            className="secondary"
+            title="End leases whose time ran out and reveal planted errors that are due, now instead of at the next minute"
+            onClick={() =>
+              run(
+                api.admin.tick,
+                (r) => `${r.expired} leases expired, ${r.revealed} honeypots revealed`,
+              )
+            }
+          >
+            Run scheduled tasks now
+          </button>
+        </div>
       </section>
       <section className="card">
         <h2>Escalated tickets</h2>
