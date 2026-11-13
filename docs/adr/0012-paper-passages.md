@@ -50,6 +50,26 @@ dedicated mapping ticket before class A will replace the file.
   `ticket.mapping_contested`, and maintainers see all contests
   (`/api/admin/contested`).
 
+**Typeset formula (switch "As a formula").**
+- `DpcAnalyzer.Latex` writes the Lean term itself as LaTeX. It is not a
+  translation: every construct has exactly one rendering. A term with any part
+  that has none (`let`, `match`, projections) gets no LaTeX at all, rather than
+  a partial or guessed one.
+- What matters for junk values stays visible. On ℕ and ℤ, subtraction, division
+  and remainder carry the type as a subscript (truncated subtraction, floor
+  division). Casts are written with their target type, and binders keep their
+  types.
+- The formula is produced by `dpc-render`, which runs no code of the
+  submission (ADR 0011), so display rules cannot alter it. Honeypots get the
+  formula of their mutant, or are not used where real views have one.
+- The paper passage and the formula sit behind one switch above the Lean
+  statement. The Lean statement has the full width and stays the binding
+  version.
+
+SR-36 holds back aids that can anchor the verdict, e.g. back-translation,
+until after round 1. The typeset formula is not such an aid: it is the same
+term, mechanically rendered.
+
 ## Consequences
 
 - Fidelity becomes reviewable, and honeypot detection rates measure what they

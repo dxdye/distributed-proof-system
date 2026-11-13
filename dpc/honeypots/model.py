@@ -39,6 +39,7 @@ class Mutant(BaseModel):
     #: The mutant without the submission's display rules (docs/adr/0011).
     trusted_mutant: str | None = None
     trusted_glossary: tuple[GlossaryEntry, ...] = ()
+    latex_mutant: str | None = None  # the mutant typeset as LaTeX
 
     @property
     def usable(self) -> bool:

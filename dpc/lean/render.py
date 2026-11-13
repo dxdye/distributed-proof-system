@@ -54,6 +54,7 @@ def merge_views(views: Path, trusted: Path) -> dict[str, int]:
                 continue
             comp["trusted_text"] = other["text"]
             comp["trusted_glossary"] = other["glossary"]
+            comp["latex"] = other.get("latex")
             merged += 1
             differs += other["text"] != comp["text"]
     _write(views, records)
@@ -77,6 +78,7 @@ def merge_mutants(mutants: Path, trusted: Path) -> dict[str, int]:
         if other is not None:
             record["trusted_mutant"] = other["text"]
             record["trusted_glossary"] = other["glossary"]
+            record["latex_mutant"] = other.get("latex")
             merged += 1
     _write(mutants, records)
     return {"mutants": merged}

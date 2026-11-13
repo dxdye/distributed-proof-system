@@ -45,6 +45,8 @@ class Component(_Model):
     #: Without the submission's display rules; None if not rendered.
     trusted_text: str | None = None
     trusted_glossary: tuple[GlossaryEntry, ...] = ()
+    #: The same term typeset as LaTeX (docs/adr/0012); None: no unambiguous form.
+    latex: str | None = None
 
     @property
     def display_differs(self) -> bool:

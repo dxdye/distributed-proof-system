@@ -1,6 +1,7 @@
 import DpcAnalyzer.Render
 import DpcAnalyzer.ExprJson
 import DpcAnalyzer.Trust
+import DpcAnalyzer.Latex
 
 /-!
 `dpc-render`: the ticket views once more, **without** the submission's
@@ -116,7 +117,9 @@ def viewRecord (loaded : Loaded) (name : Name) : CoreM Json := do
   let mut comps := #[]
   for (target, label, e) in components lookup ci do
     ensureAll loaded.untrusted e
-    comps := comps.push (← (componentJson target label e name).run')
+    let comp ← (componentJson target label e name).run'
+    let tex ← (Latex.typeset e).run'
+    comps := comps.push (comp.setObjVal! "latex" ((tex.map toJson).getD Json.null))
   return Json.mkObj [("kind", toJson "trusted_view"), ("decl", toJson (toString name)),
                      ("components", Json.arr comps)]
 
@@ -130,11 +133,12 @@ def mutantRecord (loaded : Loaded) (m : Json) : CoreM (Option Json) := do
   ensureAll loaded.untrusted e
   let text ← (pp e).run'
   let gloss ← (glossary e decl).run'
+  let tex ← (Latex.typeset e).run'
   let field := fun (k : String) => (m.getObjVal? k).toOption.getD Json.null
   return some <| Json.mkObj [
     ("kind", toJson "trusted_mutant"), ("decl", field "decl"), ("target", field "target"),
     ("component", field "component"), ("mutant_hash", field "mutant_hash"),
-    ("text", toJson text), ("glossary", gloss)]
+    ("text", toJson text), ("glossary", gloss), ("latex", (tex.map toJson).getD Json.null)]
 
 def main (argv : List String) : IO UInt32 := do
   let args ← match parseArgs argv {} with

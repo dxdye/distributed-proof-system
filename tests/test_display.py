@@ -118,12 +118,15 @@ def test_a_misleading_display_rule_is_exposed(host_executor: HostExecutor,
     claim = views["Display.claim"].components[0]
     assert claim.text == "∀ (n : Nat), 0 < n → n < n + 1"
     assert claim.trusted_text == "∀ (n : Nat), 0 ≤ n → n ≤ n + 1"
+    # The typeset formula comes from the trusted process too (ADR 0012).
+    assert claim.latex == r"\forall n \in \mathbb{N},\ 0 \le n \implies n \le n + 1"
     honest = [c for d in decls[1:] for c in views[d].components]
     assert honest and all(c.trusted_text == c.text for c in honest)
     usable = [m for m in mutants.usable if m.decl == "Display.claim"]
     assert usable and all(m.trusted_mutant for m in usable)
     hp = honeypot_view(views["Display.claim"], usable[0]).components[0]
     assert hp.display_differs and "≤" in (hp.trusted_text or "")
+    assert hp.latex is not None and hp.latex != claim.latex
 
 
 @pytest.mark.lean
@@ -140,3 +143,5 @@ def test_without_own_notation_both_renderings_agree(host_executor: HostExecutor,
     assert comps and all(c.trusted_text == c.text for c in comps)
     usable = mutants.usable
     assert usable and all(m.trusted_mutant == m.mutant for m in usable)
+    assert all(c.latex for c in comps if c.target == "type")  # all typeset
+    assert all(m.latex_mutant for m in usable if m.target == "type")
