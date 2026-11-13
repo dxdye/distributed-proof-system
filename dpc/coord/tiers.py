@@ -38,7 +38,7 @@ Tier = Literal["easy", "medium", "hard", "excellence"]
 TIERS: tuple[Tier, ...] = ("easy", "medium", "hard", "excellence")
 
 #: Upper bounds of the score for easy, medium and hard; above: excellence.
-BOUNDS = (2.0, 3.5, 5.5)
+BOUNDS = (2.0, 4.5, 7.0)
 
 
 def alternations(text: str) -> int:
