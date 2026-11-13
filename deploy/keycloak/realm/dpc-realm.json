@@ -1,6 +1,6 @@
 {
   "realm": "dpc",
-  "displayName": "Distributed Proof Check (development)",
+  "displayName": "Distributed Proof Check",
   "enabled": true,
   "sslRequired": "external",
   "registrationAllowed": true,
@@ -34,7 +34,9 @@
         "http://127.0.0.1:5173/*",
         "http://localhost:5173/*"
       ],
-      "webOrigins": ["+"],
+      "webOrigins": [
+        "+"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "+"
@@ -82,32 +84,57 @@
   ],
   "users": [
     {
+      "id": "3080810d-8276-4fd6-b947-728aedcf2f52",
       "username": "maintainer",
       "enabled": true,
       "email": "maintainer@example.invalid",
       "emailVerified": true,
       "firstName": "Dev",
       "lastName": "Maintainer",
-      "credentials": [{ "type": "password", "value": "maintainer", "temporary": false }],
-      "realmRoles": ["dpc-maintainer"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "maintainer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "dpc-maintainer"
+      ]
     },
     {
+      "id": "bec2d571-fc33-485e-a004-0f1faca3e05d",
       "username": "reviewer1",
       "enabled": true,
       "email": "reviewer1@example.invalid",
       "emailVerified": true,
       "firstName": "Dev",
       "lastName": "Reviewer One",
-      "credentials": [{ "type": "password", "value": "reviewer1", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "reviewer1",
+          "temporary": false
+        }
+      ]
     },
     {
+      "id": "8c5bee67-0b83-41e6-8346-7503eadf3369",
       "username": "reviewer2",
       "enabled": true,
       "email": "reviewer2@example.invalid",
       "emailVerified": true,
       "firstName": "Dev",
       "lastName": "Reviewer Two",
-      "credentials": [{ "type": "password", "value": "reviewer2", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "reviewer2",
+          "temporary": false
+        }
+      ]
     }
-  ]
+  ],
+  "displayNameHtml": "Distributed Proof Check",
+  "loginTheme": "dpc"
 }

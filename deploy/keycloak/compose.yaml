@@ -16,3 +16,5 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - ./realm:/opt/keycloak/data/import:ro
+      # Login theme "dpc" (colours, font, mark of the web client).
+      - ./themes:/opt/keycloak/themes:ro

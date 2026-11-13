@@ -1,0 +1,147 @@
+/* Distributed Proof Check: login theme on top of keycloak.v2 (PatternFly 5).
+ * Same tokens as web/src/styles.css: light mode sober with a dark-blue accent,
+ * dark mode pure black with white primary buttons and a muted teal accent.
+ * Inter is self-hosted (SIL OFL, see ../fonts/OFL-Inter.txt). */
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../fonts/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../fonts/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  --dpc-bg: #f4f6f8;
+  --dpc-card: #ffffff;
+  --dpc-ink: #12161b;
+  --dpc-ink-strong: #000000;
+  --dpc-muted: #56606d;
+  --dpc-line: #dde2e8;
+  --dpc-accent: #0b4f8a;
+  --dpc-accent-hover: #083c69;
+  --dpc-btn-bg: #0b4f8a;
+  --dpc-btn-ink: #ffffff;
+  --dpc-btn-hover: #083c69;
+  --dpc-mark-bg: #0b4f8a;
+  --dpc-mark-ink: #ffffff;
+
+  --pf-v5-global--FontFamily--text: "Inter Variable", Inter, system-ui, sans-serif;
+  --pf-v5-global--FontFamily--heading: "Inter Variable", Inter, system-ui, sans-serif;
+  --pf-v5-global--primary-color--100: var(--dpc-accent);
+  --pf-v5-global--primary-color--200: var(--dpc-accent-hover);
+  --pf-v5-global--link--Color: var(--dpc-accent);
+  --pf-v5-global--link--Color--hover: var(--dpc-accent-hover);
+  --keycloak-card-top-color: var(--dpc-accent);
+}
+
+/* Dark mode: keycloak.v2 sets this class when the system prefers dark. */
+.pf-v5-theme-dark {
+  --dpc-bg: #000000;
+  --dpc-card: #0e0e0e;
+  --dpc-ink: #c9c9c9;
+  --dpc-ink-strong: #ffffff;
+  --dpc-muted: #8d8d8d;
+  --dpc-line: #232323;
+  --dpc-accent: #7db8ab;
+  --dpc-accent-hover: #9ad3c5;
+  --dpc-btn-bg: #ffffff;
+  --dpc-btn-ink: #000000;
+  --dpc-btn-hover: #dddddd;
+  --dpc-mark-bg: #ffffff;
+  --dpc-mark-ink: #000000;
+
+  --pf-v5-global--BackgroundColor--100: var(--dpc-card);
+  --pf-v5-global--BackgroundColor--200: var(--dpc-bg);
+  --pf-v5-global--Color--100: var(--dpc-ink);
+  --pf-v5-global--Color--200: var(--dpc-muted);
+  --pf-v5-global--BorderColor--100: var(--dpc-line);
+  --pf-v5-global--primary-color--100: var(--dpc-accent);
+  --pf-v5-global--link--Color: var(--dpc-accent);
+  --pf-v5-global--link--Color--hover: var(--dpc-accent-hover);
+  --keycloak-card-top-color: #ffffff;
+}
+
+html.login-pf,
+.login-pf body {
+  background: var(--dpc-bg) !important;
+  font-family: var(--pf-v5-global--FontFamily--text);
+}
+
+/* Header: the mark (⊢ in a square) and the name, as on the web client. */
+#kc-header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1.35rem !important;
+  font-weight: 700;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
+  color: var(--dpc-ink-strong) !important;
+}
+#kc-header-wrapper::before {
+  content: "";
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 6px;
+  background: var(--dpc-mark-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M10 8v16M10 16h12' stroke='%23ffffff' stroke-width='3' stroke-linecap='square' fill='none'/%3E%3C/svg%3E") center / 100% no-repeat;
+}
+.pf-v5-theme-dark #kc-header-wrapper::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M10 8v16M10 16h12' stroke='%23000000' stroke-width='3' stroke-linecap='square' fill='none'/%3E%3C/svg%3E");
+}
+
+/* The card */
+.pf-v5-c-login__main {
+  background: var(--dpc-card);
+  border: 1px solid var(--dpc-line);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  overflow: hidden;
+}
+.pf-v5-theme-dark .pf-v5-c-login__main {
+  box-shadow: none;
+}
+.pf-v5-c-login__main-header {
+  border-top-width: 3px;
+}
+#kc-page-title {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--dpc-ink-strong);
+}
+
+/* Buttons */
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--dpc-btn-bg);
+  --pf-v5-c-button--m-primary--Color: var(--dpc-btn-ink);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--dpc-btn-hover);
+  --pf-v5-c-button--m-primary--hover--Color: var(--dpc-btn-ink);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--dpc-btn-hover);
+  --pf-v5-c-button--m-primary--focus--Color: var(--dpc-btn-ink);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--dpc-btn-hover);
+  --pf-v5-c-button--m-primary--active--Color: var(--dpc-btn-ink);
+  border-radius: 6px;
+  font-weight: 600;
+}
+.pf-v5-c-form-control {
+  border-radius: 6px;
+}
+
+.pf-v5-theme-dark .pf-v5-c-form-control {
+  --pf-v5-c-form-control--BackgroundColor: #0b0b0b;
+}

@@ -86,7 +86,10 @@ with the realm from `deploy/keycloak/realm/dpc-realm.json`. The realm contains:
 - users `maintainer`, `reviewer1` and `reviewer2` (password = user name);
 - the client `dpc-test` with password grant, for automated tests only.
 
-`dpc serve --auth config/auth-keycloak.json` enables it.
+`dpc serve --auth config/auth-keycloak.json` enables it. The login pages use
+the theme `dpc` (`deploy/keycloak/themes`): keycloak.v2 with the colours, font and
+mark of the web client, in light and dark mode. The dev users have fixed ids, so
+re-importing the realm keeps their link to reviewer accounts.
 
 ## Consequences
 
