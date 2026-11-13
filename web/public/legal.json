@@ -1,0 +1,18 @@
+{
+  "_comment": "Operator data for the imprint and the privacy policy, read at runtime (no rebuild needed). Every value in [brackets] is a placeholder; the legal pages show a draft banner while any remain. The texts are templates and not legally reviewed: have them checked by the operator's data protection officer before going live.",
+  "operator": "[Name der Einrichtung bzw. des Betreibers]",
+  "legal_form": "[Rechtsform]",
+  "represented_by": "[Vertretungsberechtigte Person und Funktion]",
+  "address": ["[Straße und Hausnummer]", "[Postleitzahl und Ort]"],
+  "email": "[E-Mail-Adresse]",
+  "phone": "[Telefonnummer]",
+  "vat_id": "[Umsatzsteuer-Identifikationsnummer, falls vorhanden]",
+  "supervisory_authority": "[Zuständige Aufsichtsbehörde des Betreibers]",
+  "content_responsible": "[Name und Anschrift der inhaltlich verantwortlichen Person]",
+  "dpo": "[Kontakt der bzw. des Datenschutzbeauftragten]",
+  "dpa_authority": "[Zuständige Datenschutz-Aufsichtsbehörde]",
+  "legal_basis": "[Rechtsgrundlagen, mit der bzw. dem Datenschutzbeauftragten festzulegen]",
+  "log_retention": "[Speicherdauer der Server-Protokolle]",
+  "account_retention": "[Speicherdauer von Konten nach dem Ende der Teilnahme]",
+  "hosting": "[Ort und Art des Hostings]"
+}

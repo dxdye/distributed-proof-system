@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type Me, type Session } from "./api";
 import { loadAuth, signOut, type Provider } from "./auth";
+import { StorageNotice } from "./components/StorageNotice";
 import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
 import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
+import { Imprint, Privacy } from "./views/Legal";
 import { JoinForm, SignIn } from "./views/Register";
 import { StatsView } from "./views/StatsView";
 import { Work } from "./views/Work";
@@ -46,7 +48,9 @@ export function App() {
   const signedIn = Boolean(session?.authenticated && session.registered);
   const page = route[0] ?? "work";
   let body;
-  if (error) body = <p className="error">{error}</p>;
+  if (page === "imprint") body = <Imprint />;
+  else if (page === "privacy") body = <Privacy />;
+  else if (error) body = <p className="error">{error}</p>;
   else if (page === "stats") body = <StatsView />;
   else if (!providers || !session) body = <p className="muted">Loading…</p>;
   else if (!session.authenticated) body = <SignIn providers={providers} onSignedIn={refresh} />;
@@ -87,6 +91,11 @@ export function App() {
         )}
       </header>
       <main>{body}</main>
+      <footer>
+        <a href="#/imprint">Imprint · Impressum</a>
+        <a href="#/privacy">Privacy · Datenschutz</a>
+      </footer>
+      <StorageNotice />
     </div>
   );
 }

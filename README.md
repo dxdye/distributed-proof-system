@@ -90,6 +90,10 @@ pixi run keycloak-up          # http://localhost:8080, admin console: admin / ad
 pixi run serve --data data/demo --params config/demo-params.json --auth config/auth-keycloak.json
 ```
 
+Before hosting the web service, fill in `web/public/legal.json` (operator data
+for the imprint and the privacy policy; read at runtime, the pages show a draft
+banner while placeholders remain) and have the texts reviewed.
+
 For a real submission: ingest it (above), then render the ticket views,
 generate honeypot candidates and open it for review:
 

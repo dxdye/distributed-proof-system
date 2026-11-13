@@ -308,3 +308,54 @@ dl.kv dd {
 .who {
   font-size: 0.9rem;
 }
+
+/* Legal pages, footer and storage notice */
+footer {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  padding: 1rem 1.5rem 4.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.legal {
+  max-width: 52rem;
+}
+.legal .row {
+  justify-content: space-between;
+}
+.legal li {
+  margin-bottom: 0.5rem;
+}
+.lang .link:disabled {
+  color: var(--ink);
+  font-weight: 600;
+  cursor: default;
+}
+.draft {
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed var(--error);
+  border-radius: 6px;
+  color: var(--error);
+}
+.storage-notice {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0.8rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-size: 0.85rem;
+}
+.storage-notice p {
+  margin: 0;
+  flex: 1;
+}

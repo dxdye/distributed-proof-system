@@ -134,6 +134,9 @@ export function JoinForm({ onDone, title = "Join as reviewer" }: { onDone: () =>
             <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
             I have read this notice ({notice.version}).
           </label>
+          <p className="small">
+            Details: <a href="#/privacy">privacy policy</a>.
+          </p>
         </div>
       )}
       {error && <p className="error">{error}</p>}
