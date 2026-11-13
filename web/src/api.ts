@@ -49,6 +49,7 @@ export type Lease = {
     tier?: string;
     view: UnitView;
     questions: Question[];
+    purpose?: string;
     paper_ref: string | null;
     paper_passage: PaperPassage | null;
     mapping_contested_by_me: boolean;

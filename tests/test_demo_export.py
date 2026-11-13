@@ -36,7 +36,8 @@ def test_snapshot_plants_errors_only_from_fixtures(tmp_path: Path) -> None:
     ], out)
     snap = json.loads(out.read_text("utf-8"))
     assert snap["schema"] == SCHEMA and counts == {"tickets": 4, "honeypots": 1}
-    assert snap["questions"][0]["id"] == "fidelity"
+    assert snap["questions"]["definition"][0]["id"] == "fidelity"
+    assert "Nothing is proven" in snap["purpose"]["definition"]
     fx, real = snap["submissions"]
     planted = [t for t in fx["tickets"] if t["honeypot"]]
     assert len(planted) == 1 and planted[0]["view"]["components"][0]["text"] == "0 ≤ n"

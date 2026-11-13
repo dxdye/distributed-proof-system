@@ -3,6 +3,7 @@ import { api, ApiError, type Me, type Session } from "./api";
 import { loadAuth, signOut, type Provider } from "./auth";
 import { BrandMark, SiteFooter } from "./components/Layout";
 import { StorageNotice } from "./components/StorageNotice";
+import { UserMenu } from "./components/UserMenu";
 import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
 import { History } from "./views/History";
@@ -74,23 +75,14 @@ export function App() {
         <div className="container">
           <span>Research prototype · Review of Lean 4 formalizations</span>
           {session?.authenticated && (
-            <span className="who">
-              {me && (
-                <span>
-                  Signed in as <strong>{me.pseudonym}</strong>
-                </span>
-              )}
-              <button
-                className="link"
-                onClick={async () => {
-                  setMe(null);
-                  setSession({ authenticated: false });
-                  await signOut();
-                }}
-              >
-                Sign out
-              </button>
-            </span>
+            <UserMenu
+              me={me}
+              onSignOut={async () => {
+                setMe(null);
+                setSession({ authenticated: false });
+                await signOut();
+              }}
+            />
           )}
         </div>
       </div>

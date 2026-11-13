@@ -7,10 +7,10 @@ import { navigate } from "../router";
 
 /** Short labels of the checklist questions (the full text is in the ticket). */
 export const QUESTION_LABELS: Record<string, string> = {
-  fidelity: "Not what the paper claims",
+  fidelity: "Not what the paper says",
   junk_values: "Junk values",
   edge_cases: "Edge cases",
-  vacuity: "Hypotheses cannot hold together",
+  vacuity: "Vacuous or trivial",
   quantifiers: "Quantifiers or types",
 };
 
@@ -53,9 +53,7 @@ function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
   return (
     <section className="card">
       <h3>Your verdict</h3>
-      <p className="muted small">
-        Questions to go through (concept §5): does the formal statement say what the paper means?
-      </p>
+      <p className="muted small">Go through these questions. If one of them fails, say which.</p>
       <ul className="questions">
         {lease.ticket.questions.map((q) => (
           <li key={q.id}>{q.text}</li>
@@ -289,6 +287,7 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
             : ""}
           There is no clock running: take the time the ticket needs.
         </p>
+        {t.purpose && <p className="purpose">{t.purpose}</p>}
         <Reference
           view={t.view}
           passage={t.paper_passage}

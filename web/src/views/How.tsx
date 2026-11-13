@@ -79,7 +79,11 @@ export function How() {
       <section className="card">
         <h2>The five questions</h2>
         <p className="muted">
-          Every ticket asks the same five questions. A verdict "incorrect" names the one that fails.
+          Every ticket asks five questions. A verdict "incorrect" names the one that fails. For a
+          theorem they ask whether it claims what the paper claims. A definition or a structure
+          claims nothing and has no proof: it fixes what a word means, and every theorem using it
+          inherits any mistake. There the same questions ask whether it defines what the paper
+          defines.
         </p>
         <ol className="how-questions">
           {QUESTIONS.map((q) => (

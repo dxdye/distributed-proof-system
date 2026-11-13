@@ -17,14 +17,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dpc.api.app import NOTICE, QUESTIONS
+from dpc.api.app import NOTICE
 from dpc.coord.params import CoordParams
 from dpc.coord.service import NOTICE_VERSION
 from dpc.coord.tiers import tier_of_view
 from dpc.honeypots.mixing import MutantMismatch, honeypot_view
 from dpc.honeypots.model import MutantSet
-from dpc.tickets.model import QUESTIONS_A
 from dpc.tickets.paper import PaperMap
+from dpc.tickets.questions import PURPOSE, TEXTS
 from dpc.tickets.views import UnitView
 
 SCHEMA = "dpc.click-dummy/1"
@@ -95,7 +95,10 @@ def export(sources: list[Source], out: Path) -> dict[str, int]:
     snapshot = {
         "schema": SCHEMA,
         "notice": {"version": NOTICE_VERSION, "text": NOTICE},
-        "questions": [{"id": q, "text": QUESTIONS[q]} for q in QUESTIONS_A],
+        # The checklist by kind of declaration (dpc.tickets.questions).
+        "questions": {kind: [{"id": q, "text": text} for q, text in texts.items()]
+                      for kind, texts in TEXTS.items()},
+        "purpose": PURPOSE,
         "min_reason_chars": params.min_reason_chars,
         "choice_set_size": params.choice_set_size,
         "submissions": submissions,

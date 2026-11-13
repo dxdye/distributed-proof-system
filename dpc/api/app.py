@@ -24,7 +24,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
 from dpc.coord.state import LeaseSt, TicketSt
-from dpc.tickets.model import QUESTIONS_A, AIAssistance
+from dpc.tickets.model import AIAssistance
+from dpc.tickets.questions import purpose_for, questions_for
 
 NOTICE = (
     "Reviews you submit (verdicts, justifications, evidence files) are published "
@@ -35,16 +36,8 @@ NOTICE = (
     "a lab whose submissions you might review."
 )
 
-QUESTIONS: dict[str, str] = {
-    "fidelity": "Does the formal statement say what the paper claims — no more, no less?",
-    "junk_values": "Could junk values (x / 0 = 0, default values, truncated subtraction) "
-                   "make the statement weaker than intended?",
-    "edge_cases": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in "
-                  "the paper?",
-    "vacuity": "Can all hypotheses be satisfied at the same time, or is the statement "
-               "vacuous?",
-    "quantifiers": "Are quantifiers, their order and the types of bound variables right?",
-}
+#: The checklist of theorems (other kinds: dpc.tickets.questions).
+QUESTIONS: dict[str, str] = {q["id"]: q["text"] for q in questions_for("theorem")}
 
 
 class _Req(BaseModel):
@@ -185,7 +178,8 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "paper_passage": ticket.paper.model_dump(mode="json") if ticket.paper else None,
                 "mapping_contested_by_me": any(r == lease.reviewer for r, _ in ticket.contests),
                 "view": ticket.view.model_dump(mode="json"),
-                "questions": [{"id": q, "text": QUESTIONS[q]} for q in QUESTIONS_A],
+                "questions": questions_for(ticket.view.decl_kind),
+                "purpose": purpose_for(ticket.view.decl_kind),
             },
         }
         if lease.duty == "claim" and lease.claim_id is not None:

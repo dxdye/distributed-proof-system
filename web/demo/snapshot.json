@@ -4,28 +4,79 @@
   "version": "2026-11-registration-v1",
   "text": "Reviews you submit (verdicts, justifications, evidence files) are published under an open licence together with the reports, and may be used to train and evaluate AI systems. Your account is pseudonymous: the published audit log identifies you only by a random id. Do not use your real name as pseudonym if you do not want to be identifiable. Declare any employment by or commission from a lab whose submissions you might review."
  },
- "questions": [
-  {
-   "id": "fidelity",
-   "text": "Does the formal statement say what the paper claims — no more, no less?"
-  },
-  {
-   "id": "junk_values",
-   "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended?"
-  },
-  {
-   "id": "edge_cases",
-   "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
-  },
-  {
-   "id": "vacuity",
-   "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
-  },
-  {
-   "id": "quantifiers",
-   "text": "Are quantifiers, their order and the types of bound variables right?"
-  }
- ],
+ "questions": {
+  "theorem": [
+   {
+    "id": "fidelity",
+    "text": "Does the formal statement say what the paper claims — no more, no less?"
+   },
+   {
+    "id": "junk_values",
+    "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended?"
+   },
+   {
+    "id": "edge_cases",
+    "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+   },
+   {
+    "id": "vacuity",
+    "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+   },
+   {
+    "id": "quantifiers",
+    "text": "Are quantifiers, their order and the types of bound variables right?"
+   }
+  ],
+  "definition": [
+   {
+    "id": "fidelity",
+    "text": "Does it define what the paper defines (and what its name suggests)?"
+   },
+   {
+    "id": "junk_values",
+    "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it?"
+   },
+   {
+    "id": "edge_cases",
+    "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+   },
+   {
+    "id": "vacuity",
+    "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+   },
+   {
+    "id": "quantifiers",
+    "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+   }
+  ],
+  "structure": [
+   {
+    "id": "fidelity",
+    "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+   },
+   {
+    "id": "junk_values",
+    "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended?"
+   },
+   {
+    "id": "edge_cases",
+    "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+   },
+   {
+    "id": "vacuity",
+    "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+   },
+   {
+    "id": "quantifiers",
+    "text": "Are quantifiers, their order and the types of the fields right?"
+   }
+  ]
+ },
+ "purpose": {
+  "theorem": "This is the statement of a theorem. The Lean kernel has checked its proof; check that it states what the paper claims.",
+  "definition": "This is a definition. Nothing is proven here: it fixes what a word means, and every theorem that uses it inherits any mistake. Check that it defines what the paper defines.",
+  "structure": "This is a structure (a bundle of conditions or data). Nothing is proven here: theorems that assume it rely on exactly these conditions. Check that they are the conditions of the paper, no more and no fewer."
+ },
  "min_reason_chars": 30,
  "choice_set_size": 4,
  "submissions": [

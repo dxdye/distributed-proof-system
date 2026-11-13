@@ -1322,3 +1322,102 @@ nav.main-nav {
     overflow-x: auto;
   }
 }
+
+/* What to check on this kind of declaration */
+.purpose {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 0.25rem 0 1rem;
+}
+
+/* Account menu in the service bar */
+.user-menu {
+  position: relative;
+  margin-left: auto;
+}
+button.user-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 0;
+  padding: 0.2rem 0.5rem 0.2rem 0.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 550;
+}
+button.user-toggle:hover:not(:disabled),
+button.user-toggle[aria-expanded="true"] {
+  background: var(--card);
+  border-color: var(--line-strong);
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.caret {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 60;
+  min-width: 14rem;
+  padding: 0.35rem;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+.user-head {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.65rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+.user-dropdown a,
+button.user-signout {
+  display: block;
+  text-align: left;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 450;
+}
+.user-dropdown a:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+button.user-signout {
+  min-height: 0;
+  margin: 0.3rem 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding-top: 0.6rem;
+}
+button.user-signout:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--line);
+}
