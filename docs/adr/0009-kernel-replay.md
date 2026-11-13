@@ -96,8 +96,9 @@ been verified, before the analysis. It logs:
   completely. In the quasi-Riemann case that covers 30 dependent formalization
   projects in addition to the repository itself.
 - The replay costs roughly the kernel share of the build plus one import per
-  module. On the fixtures it takes seconds. The measurement on the
-  quasi-Riemann volume is still open.
+  module. Quasi-Riemann: 2 943 replayed modules (53 394 declarations) in
+  19 min 35 s with 7 processes and 1.7 GB RAM, against about 1 h 40 min for the
+  build. Nothing was rejected.
 - Projects that put their own modules under a root name of an official package
   (e.g. `Mathlib.Foo` in a non-official package) can no longer be analysed.
   They were already rejected before, by the provenance check.

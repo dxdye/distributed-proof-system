@@ -29,6 +29,7 @@ Second case study after [Navier–Stokes](navier-stokes.md), same questions
 | B_new(T) (proof internals) | 19 442 ticket units |
 | Provenance of hardened modules | all verified |
 | Integrity of hardened packages | unchanged by the build (54 388 files checked before and after) |
+| Kernel replay (ADR 0009, 2026-11-13) | 8 596 modules in the closure: 1 552 toolchain and 4 101 official-package modules trusted by location; **2 943 modules replayed** (the repository and its 30 non-official dependencies), **53 394 declarations, none rejected**; 10 unsafe or partial constants skipped |
 
 The class-A ticket in full, as a reviewer sees it (`dpc render`):
 
@@ -59,6 +60,7 @@ Navier–Stokes study.
 | Build of the import closure (7 061 jobs) | ≈ 1 h 40 min (15 min, interrupted on purpose, then 84 min incremental) |
 | Analysis, core run | 136 s |
 | Analysis, metadata run | 167 s |
+| Kernel replay (added 2026-11-13; 7 processes, 1.7 GB RAM) | 19 min 35 s |
 | **Total** | **≈ 1 h 50 min** |
 
 Before the run succeeded, it surfaced two problems that are fixed:
@@ -117,8 +119,9 @@ them. This is exactly what honeypots are meant to measure.
    own modules is the same mechanism at a larger scale.
    *Implemented since:* [ADR 0009](../adr/0009-kernel-replay.md) replays every
    module not loaded from the toolchain or an official package, here the
-   repository and its 30 non-official dependencies. Its measurement on this
-   volume is still open.
+   repository and its 30 non-official dependencies. On this volume it replayed
+   2 943 modules with 53 394 declarations in under 20 minutes and rejected
+   none: the proof artefacts of this submission passed the kernel.
 4. **Class B as defined by the concept matters less here.** Sampling proof
    internals finds errors that do not change the meaning of the statement.
    For a reuse-oriented library (Mathlib-style) class B is relevant; for a
