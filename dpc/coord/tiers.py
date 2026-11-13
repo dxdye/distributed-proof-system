@@ -17,12 +17,13 @@ The score is computed from the ticket view, i.e. from what the reviewer sees:
 A honeypot carries the tier of its original. Thresholds are first guesses,
 to be calibrated with the pilot's measured difficulty (concept §8.2, IRT).
 
-Hard and excellence tickets are open to those who can be expected to handle
-them: through trust earned in the ticket's domain (PV, PVV), the declared
-group, or the maintainer role. The declared group is self-reported, but it
-only opens the door: the weight of a verdict always comes from measured
-trust. A ticket that has waited longer than ``tier_gate_age_s`` is open to
-everyone, so that no class-A ticket starves (SR-05).
+Hard and excellence tickets are open to those who have earned it in the
+ticket's domain: hard with the PV role, excellence with the PVV role
+(concept §6.3), and to maintainers. Access, like weight, comes only from what
+the log has measured; a self-declared group opens nothing, since a fake
+account could otherwise occupy the scarce hard tickets. A ticket that has
+waited longer than ``tier_gate_age_s`` is open to everyone, so that no class-A
+ticket starves (SR-05).
 """
 
 from __future__ import annotations
@@ -76,10 +77,10 @@ def tier_of(difficulty: float) -> Tier:
     return "excellence"
 
 
-def tier_open(tier: Tier, *, roles: Collection[str], group: str, maintainer: bool) -> bool:
+def tier_open(tier: Tier, *, roles: Collection[str], maintainer: bool) -> bool:
     """May someone with these roles (in the ticket's domain) take this tier?"""
     if tier in ("easy", "medium") or maintainer:
         return True
     if tier == "hard":
-        return "PV" in roles or group in ("expert", "doctoral")
-    return "PVV" in roles or group == "expert"
+        return "PV" in roles
+    return "PVV" in roles

@@ -43,8 +43,8 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
     >
       <summary>What would you like to work on?</summary>
       <p className="muted small">
-        Tickets matching your choice are offered first; others fill up the rest. Nothing selected
-        means: anything.
+        Up to half of the offered tickets match your choice, the rest is drawn at random, so that
+        nobody can steer towards a particular paper. Nothing selected means: anything.
       </p>
       <div className="chip-row">
         <span className="chip-label">Domain</span>

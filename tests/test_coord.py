@@ -511,11 +511,11 @@ def tiered(prefix: str, difficulties: list[float], domain: str = "analysis") -> 
 def test_difficulty_tiers() -> None:
     assert [tier_of(b) for b in (-1.0, -0.5, 0.0, 0.5, 1.4, 1.5, 3.0)] == [
         "easy", "medium", "medium", "hard", "hard", "excellence", "excellence"]
-    assert tier_open("hard", roles=set(), group="doctoral", maintainer=False)
-    assert not tier_open("hard", roles=set(), group="student", maintainer=False)
-    assert tier_open("hard", roles={"PV"}, group="student", maintainer=False)
-    assert not tier_open("excellence", roles={"PV"}, group="doctoral", maintainer=False)
-    assert tier_open("excellence", roles=set(), group="other", maintainer=True)
+    assert not tier_open("hard", roles=set(), maintainer=False)  # a group opens nothing
+    assert tier_open("hard", roles={"PV"}, maintainer=False)
+    assert not tier_open("excellence", roles={"PV"}, maintainer=False)
+    assert tier_open("excellence", roles={"PV", "PVV"}, maintainer=False)
+    assert tier_open("excellence", roles=set(), maintainer=True)
 
 
 @pytest.mark.req("SR-05")
@@ -530,33 +530,49 @@ def test_hard_tickets_need_experience_until_they_have_waited_long(env: Env) -> N
                               tickets=[TicketSpec(hard_view, domain="analysis")])
     (tid,) = env.coord.state.tickets
     newcomer = env.people(1, "new", group="student")[0]
-    expert = env.people(1, "exp", group="expert")[0]
-    reason = env.coord.why_not(newcomer, env.coord.state.tickets[tid], "review")
-    assert reason is not None and "excellence" in reason
+    expert = env.people(1, "exp", group="expert")[0]  # self-declared: opens nothing
+    for rid in (newcomer, expert):
+        reason = env.coord.why_not(rid, env.coord.state.tickets[tid], "review")
+        assert reason is not None and "excellence" in reason
+        assert env.coord.tiers_open(rid) == ["easy", "medium"]
     assert env.coord.choice_set(newcomer) is None
-    assert env.coord.why_not(expert, env.coord.state.tickets[tid], "review") is None
-    assert env.coord.tiers_open(newcomer) == ["easy", "medium"]
+    admin = env.people(1, "admin")[0]
+    env.coord.appoint_maintainer(admin)
+    assert env.coord.why_not(admin, env.coord.state.tickets[tid], "review") is None
     env.clock.advance(days=15)  # waited past tier_gate_age_s: open to everyone (SR-05)
     assert env.coord.why_not(newcomer, env.coord.state.tickets[tid], "review") is None
 
 
 @pytest.mark.req("SR-32", "SR-38")
-def test_preferences_raise_the_chance_but_never_empty_the_choice_set(env: Env) -> None:
-    env.coord.open_submission(title="P", repo_url="https://x", commit="c" * 40,
-                              tickets=tiered("P", [0.0, 0.0, 0.0], domain="algebra"))
-    env.coord.open_submission(title="Q", repo_url="https://x", commit="d" * 40,
-                              tickets=tiered("Q", [0.0, 0.0, 0.0], domain="analysis"))
+def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
+    """Preferences fill at most half of a set, the rest is random, and they are
+    ignored where the matching tickets come from a single paper (SR-38)."""
+    env = Env(tmp_path, params(pair_window_s=0))
+    for title, domain in (("P", "algebra"), ("Q", "algebra"), ("R", "analysis"),
+                          ("S", "geometry"), ("T", "topology")):
+        env.coord.open_submission(title=title, repo_url=f"https://x/{title}",
+                                  commit=title.lower() * 40,
+                                  tickets=tiered(title, [0.0, 0.0, 0.0], domain=domain))
     rid = env.people(1)[0]
-    env.coord.set_preferences(rid, domains=["analysis"])
+    env.coord.set_preferences(rid, domains=["algebra"])  # two papers: applies
     cs = env.coord.choice_set(rid)
     assert cs is not None and len(cs.tickets) == 4
     domains = [env.coord.state.tickets[t].domain for t in cs.tickets]
-    assert domains[:3] == ["analysis"] * 3 and domains[3] == "algebra"  # preferred first, filled
-    assert env.events("reviewer.preferences_set")[0]["domains"] == ["analysis"]
-    env.coord.set_preferences(rid, domains=["algebra"])  # a change draws a new set
+    assert domains.count("algebra") >= 2  # raised: at random, 2 of 5 papers are algebra
+    assert env.events("reviewer.preferences_set")[0]["domains"] == ["algebra"]
+    chosen_by_preference = 0
+    for _ in range(20):  # the other half stays random: no set is all algebra by force
+        env.coord.set_preferences(rid, domains=["algebra"])
+        drawn = env.coord.choice_set(rid)
+        assert drawn is not None
+        chosen_by_preference += sum(env.coord.state.tickets[t].domain == "algebra"
+                                    for t in drawn.tickets)
+    assert chosen_by_preference < 20 * 4
+    env.coord.set_preferences(rid, domains=["analysis"])  # one paper only: ignored
     again = env.coord.choice_set(rid)
     assert again is not None and again.set_id != cs.set_id
-    assert env.coord.state.tickets[again.tickets[0]].domain == "algebra"
+    analysis = [t for t in again.tickets if env.coord.state.tickets[t].domain == "analysis"]
+    assert len(analysis) <= 1  # one per paper, as without preferences
     with pytest.raises(CoordError, match="unknown tiers"):
         env.coord.set_preferences(rid, tiers=["legendary"])
 

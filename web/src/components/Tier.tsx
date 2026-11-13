@@ -11,8 +11,9 @@ export const TIER_LABELS: Record<string, string> = {
 export const TIER_HINTS: Record<string, string> = {
   easy: "Short declaration, few dependencies.",
   medium: "Typical declaration.",
-  hard: "Many dependencies or deep in the formalization. Open with experience in the domain (PV), as a doctoral student or expert.",
-  excellence: "The most demanding declarations. Open to proven re-checkers (PVV) and experts.",
+  hard: "Many dependencies or deep in the formalization. Opens once you have earned the reviewer role (PV) in the domain.",
+  excellence:
+    "The most demanding declarations. Opens with the re-checker role (PVV) in the domain.",
 };
 
 export function TierBadge({ tier }: { tier?: string }) {

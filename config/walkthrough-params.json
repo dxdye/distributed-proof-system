@@ -3,5 +3,8 @@
   "reveal_batch": 1,
   "pair_window_s": 0,
   "t_min_s": 60.0,
-  "decision": {"k_min": 2}
+  "decision": {
+    "k_min": 2
+  },
+  "tier_gating": false
 }

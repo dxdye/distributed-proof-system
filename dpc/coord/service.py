@@ -210,8 +210,8 @@ class Coordinator:
         domains = [domain] if domain is not None else sorted(
             {e.domain for e in person.evidence}) or [""]
         return [t for t in TIERS if any(
-            tier_open(t, roles=st.roles(rid, d, now), group=person.group,
-                      maintainer=person.maintainer) for d in domains)]
+            tier_open(t, roles=st.roles(rid, d, now), maintainer=person.maintainer)
+            for d in domains)]
 
     def sync_maintainer(self, rid: str, granted: bool) -> None:
         """Follow the maintainer role of an identity provider (docs/adr/0010).
@@ -298,7 +298,7 @@ class Coordinator:
         if duty == "review" and self.params.tier_gating and \
                 now - ticket.created < timedelta(seconds=self.params.tier_gate_age_s):
             tier = ticket.tier
-            if not tier_open(tier, roles=st.roles(rid, ticket.domain, now), group=person.group,
+            if not tier_open(tier, roles=st.roles(rid, ticket.domain, now),
                              maintainer=person.maintainer):
                 return f"{tier} tickets need more experience in this domain"
         window = timedelta(seconds=self.params.pair_window_s)
@@ -371,24 +371,30 @@ class Coordinator:
             if not eligible:
                 return None
             order = [eligible[i] for i in self.rng.permutation(len(eligible))]
-            # Preferred tickets first (SR-32: preferences raise the chance only);
-            # the rest fills the set, so nobody is left without tickets.
+            # Preferences raise the chance only (SR-32): they fill at most
+            # pref_share of the set, the rest is drawn at random as before, and
+            # they apply only where they cannot single out one paper (SR-38).
             preferred = [t for t in order if _preferred(person, t)]
-            others = [t for t in order if not _preferred(person, t)]
+            if len({t.submission_id for t in preferred}) < self.params.pref_min_papers:
+                preferred = []
+            size = self.params.choice_set_size
             picked: list[TicketSt] = []
             units: set[tuple[str, str]] = set()
-            for pool in (preferred, others):
+            for pool, limit in ((preferred, int(size * self.params.pref_share)), (order, size)):
                 for distinct_papers in (True, False):
                     papers = {t.submission_id for t in picked}
                     for t in pool:
                         unit = (t.submission_id, t.view.declaration)
-                        if len(picked) >= self.params.choice_set_size or unit in units:
+                        if len(picked) >= limit or unit in units:
                             continue
                         if distinct_papers and t.submission_id in papers:
                             continue
                         picked.append(t)
                         units.add(unit)
                         papers.add(t.submission_id)
+            # Random order within the set: preferred tickets must not stand out by
+            # their position.
+            picked = [picked[i] for i in self.rng.permutation(len(picked))]
             set_id = self.new_id("CS")
             expires = now + timedelta(seconds=self.params.choice_set_ttl_s)
             self._emit("choice_set.drawn", ev.ChoiceSetDrawn(

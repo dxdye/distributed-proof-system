@@ -58,6 +58,12 @@ class CoordParams:
     tier_gating: bool = True
     #: After this age a ticket is open to everyone, so that none starves (SR-05).
     tier_gate_age_s: int = 14 * DAY
+    # --- preferences (SR-32, SR-38) ---
+    #: At most this share of a choice set is filled by preference; the rest is random.
+    pref_share: float = 0.5
+    #: Preferences apply only if the matching tickets come from at least this many
+    #: submissions, so that nobody can steer towards one paper (SR-38).
+    pref_min_papers: int = 2
 
     @property
     def parallel(self) -> int:
