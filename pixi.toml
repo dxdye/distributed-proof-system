@@ -21,11 +21,13 @@ fastapi = ">=0.110"
 uvicorn = ">=0.29"
 httpx = ">=0.27"
 python-multipart = ">=0.0.9"
+pyjwt = ">=2.8"
+cryptography = ">=42"
 
 [tasks]
 # --- Verification (V-model, right-hand side) ---
 test = "python -m pytest"
-test-fast = "python -m pytest -m \"not lean and not docker and not slow\""
+test-fast = "python -m pytest -m \"not lean and not docker and not slow and not keycloak\""
 lint = "ruff check dpc tests"
 format = "ruff format dpc tests"
 typecheck = "mypy dpc"
@@ -45,6 +47,9 @@ build-web = { cmd = "npm run build", cwd = "web" }
 dev-web = { cmd = "npm run dev", cwd = "web" }
 serve = "python -m dpc serve"
 demo = "python -m dpc demo"
+# Development Keycloak (docs/adr/0010): http://localhost:8080, admin console admin / admin
+keycloak-up = "docker compose -f deploy/keycloak/compose.yaml up -d"
+keycloak-down = "docker compose -f deploy/keycloak/compose.yaml down"
 
 [activation.env]
 DO_NOT_TRACK = "1"

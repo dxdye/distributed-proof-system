@@ -1,0 +1,18 @@
+# Local Keycloak for development and tests (docs/adr/0010).
+# NOT for production: dev mode over HTTP, fixed admin password, and the realm
+# contains users with known passwords and a password-grant client for tests.
+#
+#   pixi run keycloak-up      # http://localhost:8080 (admin console: admin / admin)
+#   pixi run keycloak-down
+name: dpc-keycloak
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./realm:/opt/keycloak/data/import:ro

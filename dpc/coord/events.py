@@ -63,6 +63,14 @@ class AffiliationDeclared(_P):
 
 class MaintainerAppointed(_P):
     reviewer: str
+    #: ``operator``: by command line (OD-2); ``identity_provider``: the role is
+    #: managed in the identity provider and was granted there (docs/adr/0010).
+    by: Literal["operator", "identity_provider"] = "operator"
+
+
+class MaintainerRevoked(_P):
+    reviewer: str
+    by: Literal["operator", "identity_provider"]
 
 
 class SubmissionOpened(_P):
@@ -194,6 +202,7 @@ PAYLOADS: dict[str, type[_P]] = {
     "reviewer.registered": ReviewerRegistered,
     "reviewer.affiliation_declared": AffiliationDeclared,
     "reviewer.maintainer_appointed": MaintainerAppointed,
+    "reviewer.maintainer_revoked": MaintainerRevoked,
     "submission.opened": SubmissionOpened,
     "submission.closed": SubmissionClosed,
     "ticket.created": TicketCreated,

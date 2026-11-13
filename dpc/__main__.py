@@ -229,10 +229,13 @@ def cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
     from dpc.api import create_app
+    from dpc.auth import build_authenticator, load_auth_config
 
     coord = _coordinator(args)
     web = Path(args.web) if args.web else None
-    uvicorn.run(create_app(coord, static_dir=web, tick_seconds=args.tick),
+    auth = build_authenticator(load_auth_config(Path(args.auth)), coord.vault) \
+        if args.auth else None
+    uvicorn.run(create_app(coord, auth=auth, static_dir=web, tick_seconds=args.tick),
                 host=args.host, port=args.port)
     return 0
 
@@ -385,6 +388,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--web", default="web/dist", help="built frontend to serve")
     p.add_argument("--tick", type=float, default=60.0, help="seconds between ticks")
+    p.add_argument("--auth", help="sign-in configuration (JSON), e.g. "
+                   "config/auth-keycloak.json; default: API tokens only")
     coord_args(p)
     p.set_defaults(func=cmd_serve)
 

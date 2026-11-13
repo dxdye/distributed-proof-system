@@ -1,9 +1,11 @@
 """HTTP API of the coordination service (component C9; SR-21, SR-23, SR-30).
 
-Reviewers authenticate with the bearer token issued at registration. What the
-API returns to a reviewer is built from the same fields for real tickets and
-honeypots; nothing about honeypots, trust values of others or lease expiry
-times is exposed (SR-06, SR-23, SR-30). Public endpoints return aggregates.
+Reviewers authenticate with a bearer token: the API token issued at
+registration, or an access token of a configured identity provider such as
+Keycloak (docs/adr/0010). What the API returns to a reviewer is built from the
+same fields for real tickets and honeypots; nothing about honeypots, trust
+values of others or lease expiry times is exposed (SR-06, SR-23, SR-30).
+Public endpoints return aggregates.
 """
 
 # No `from __future__ import annotations`: FastAPI resolves the dependency
@@ -19,6 +21,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
+from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
 from dpc.coord.state import LeaseSt, TicketSt
 from dpc.tickets.model import QUESTIONS_A, AIAssistance
@@ -84,9 +87,11 @@ class DecideReq(_Req):
     reason: str
 
 
-def create_app(coord: Coordinator, *, static_dir: Path | None = None,
-               tick_seconds: float | None = 60.0) -> FastAPI:
-    """``tick_seconds``: period of lease expiry and honeypot reveals (None: off)."""
+def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
+               static_dir: Path | None = None, tick_seconds: float | None = 60.0) -> FastAPI:
+    """``auth``: sign-in methods (default: the service's own API tokens only).
+    ``tick_seconds``: period of lease expiry and honeypot reveals (None: off)."""
+    authenticator = auth or Authenticator([LocalTokenProvider(coord.vault)])
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -109,12 +114,26 @@ def create_app(coord: Coordinator, *, static_dir: Path | None = None,
         except CoordError as exc:
             raise HTTPException(exc.status, str(exc)) from exc
 
-    def reviewer(authorization: Annotated[str | None, Header()] = None) -> str:
+    def identity(authorization: str | None) -> Identity:
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(401, "missing bearer token")
-        rid = coord.vault.reviewer_for_token(authorization.removeprefix("Bearer ").strip())
-        if rid is None or rid not in coord.state.reviewers:
-            raise HTTPException(401, "unknown token")
+        try:
+            return authenticator.identify(authorization.removeprefix("Bearer ").strip())
+        except AuthError as exc:
+            raise HTTPException(exc.status, str(exc)) from exc
+
+    def account(ident: Identity) -> str | None:
+        rid = ident.subject if ident.local else \
+            coord.vault.reviewer_for_identity(ident.provider, ident.subject)
+        return rid if rid is not None and rid in coord.state.reviewers else None
+
+    def reviewer(authorization: Annotated[str | None, Header()] = None) -> str:
+        ident = identity(authorization)
+        rid = account(ident)
+        if rid is None:
+            raise HTTPException(403, "no reviewer account for this sign-in; register first")
+        if ident.maintainer is not None:  # the provider manages the maintainer role
+            coord.sync_maintainer(rid, ident.maintainer)
         return rid
 
     def maintainer(rid: Annotated[str, Depends(reviewer)]) -> str:
@@ -179,8 +198,40 @@ def create_app(coord: Coordinator, *, static_dir: Path | None = None,
             head = coord.log.head()
             return {"length": len(coord.log), "head_hash": head.hash if head else None}
 
+    @app.get("/api/auth/config")
+    def auth_config() -> dict[str, object]:
+        """Sign-in methods the web client may offer."""
+        return authenticator.public_config()
+
+    @app.get("/api/auth/session")
+    def session(authorization: Annotated[str | None, Header()] = None) -> dict[str, object]:
+        """Whether a credential is valid and already has a reviewer account."""
+        if not authorization:
+            return {"authenticated": False}
+        try:
+            ident = identity(authorization)
+        except HTTPException as exc:
+            return {"authenticated": False, "error": exc.detail}
+        return {"authenticated": True, "provider": ident.provider,
+                "registered": account(ident) is not None}
+
     @app.post("/api/register")
-    def register(req: RegisterReq) -> dict[str, str]:
+    def register(req: RegisterReq,
+                 authorization: Annotated[str | None, Header()] = None) -> dict[str, str]:
+        """With an identity provider's token: links that sign-in to the new
+        account. Without: issues an API token (if local tokens are enabled)."""
+        if authorization:
+            ident = identity(authorization)
+            if ident.local or account(ident) is not None:
+                raise HTTPException(409, "already registered")
+            rid, _ = call(coord.register, req.pseudonym, req.group, req.affiliations,
+                          notice_acknowledged=req.notice_acknowledged,
+                          identity=(ident.provider, ident.subject))
+            if ident.maintainer:
+                coord.sync_maintainer(rid, True)
+            return {"reviewer_id": rid}
+        if not authenticator.local_tokens:
+            raise HTTPException(401, "sign in with an identity provider first")
         rid, token = call(coord.register, req.pseudonym, req.group, req.affiliations,
                           notice_acknowledged=req.notice_acknowledged)
         return {"reviewer_id": rid, "token": token}

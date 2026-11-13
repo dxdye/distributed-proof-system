@@ -44,6 +44,7 @@ class ReviewerSt:
     registered: datetime
     affiliation_tags: set[str] = field(default_factory=set)
     maintainer: bool = False
+    maintainer_by: str | None = None  # "operator" or "identity_provider"
     reliability: Reliability = field(default_factory=Reliability)
     evidence: list[EvidenceRec] = field(default_factory=list)
     detections: DetectionRecord = field(default_factory=DetectionRecord)
@@ -236,7 +237,13 @@ class State:
 
     def _on_reviewer_maintainer_appointed(self, p: ev.MaintainerAppointed, at: datetime,
                                           _: Entry) -> None:
-        self.reviewers[p.reviewer].maintainer = True
+        person = self.reviewers[p.reviewer]
+        person.maintainer, person.maintainer_by = True, p.by
+
+    def _on_reviewer_maintainer_revoked(self, p: ev.MaintainerRevoked, at: datetime,
+                                        _: Entry) -> None:
+        person = self.reviewers[p.reviewer]
+        person.maintainer, person.maintainer_by = False, None
 
     def _on_submission_opened(self, p: ev.SubmissionOpened, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id] = SubmissionSt(

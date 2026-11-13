@@ -3,6 +3,7 @@
 Kept apart from the audit log and never published:
 
 * accounts: pseudonym ↔ reviewer id, API tokens (stored as SHA-256 only),
+* sign-in identities: (identity provider, subject) → reviewer id (docs/adr/0010),
 * the key for affiliation tags (keyed hashes in the log, SR-23, SR-50),
 * honeypot openings until they are revealed (SR-06, SR-37). The log holds
   only a commitment ``SHA-256(canonical opening)``; revealing the opening later
@@ -24,6 +25,10 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS accounts (
     rid TEXT PRIMARY KEY, pseudonym TEXT NOT NULL UNIQUE, token_sha256 TEXT NOT NULL UNIQUE
+);
+CREATE TABLE IF NOT EXISTS identities (
+    provider TEXT NOT NULL, subject TEXT NOT NULL, rid TEXT NOT NULL,
+    PRIMARY KEY (provider, subject)
 );
 CREATE TABLE IF NOT EXISTS openings (
     ticket_id TEXT PRIMARY KEY, submission_id TEXT NOT NULL, opening TEXT NOT NULL,
@@ -81,6 +86,21 @@ class Vault:
     def reviewer_for_pseudonym(self, pseudonym: str) -> str | None:
         row = self._conn.execute("SELECT rid FROM accounts WHERE pseudonym = ?",
                                  (pseudonym,)).fetchone()
+        return None if row is None else str(row[0])
+
+    def link_identity(self, provider: str, subject: str, rid: str) -> None:
+        """One reviewer per external identity (Sybil resistance starts at the
+        identity provider; SR-41 applies the same rule to linked accounts)."""
+        try:
+            self._conn.execute("INSERT INTO identities VALUES (?, ?, ?)",
+                               (provider, subject, rid))
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("this sign-in is already linked to a reviewer") from exc
+
+    def reviewer_for_identity(self, provider: str, subject: str) -> str | None:
+        row = self._conn.execute(
+            "SELECT rid FROM identities WHERE provider = ? AND subject = ?",
+            (provider, subject)).fetchone()
         return None if row is None else str(row[0])
 
     def pseudonym(self, rid: str) -> str | None:

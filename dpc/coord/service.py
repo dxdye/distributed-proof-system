@@ -140,18 +140,26 @@ class Coordinator:
 
     # ------------------------------------------------------- registration
     def register(self, pseudonym: str, group: ev.Group = "other", affiliations: Sequence[str] = (),
-                 *, notice_acknowledged: bool) -> tuple[str, str]:
-        """Pseudonymous account (SR-23). Returns ``(reviewer id, API token)``."""
+                 *, notice_acknowledged: bool,
+                 identity: tuple[str, str] | None = None) -> tuple[str, str]:
+        """Pseudonymous account (SR-23). Returns ``(reviewer id, API token)``.
+
+        ``identity``: ``(provider, subject)`` of an external sign-in, linked to
+        the new reviewer in the vault. The log never sees it."""
         if not _PSEUDONYM.match(pseudonym):
             raise CoordError("pseudonym: 3–32 characters out of letters, digits, '_', '.', '-'")
         if not notice_acknowledged:
             raise Forbidden(f"registration requires acknowledging notice {NOTICE_VERSION} "
                             "(review data is openly licensed and may be used for training, SR-49)")
         with self.lock:
+            if identity is not None and self.vault.reviewer_for_identity(*identity):
+                raise Conflict("this sign-in already has a reviewer account")
             try:
                 rid, token = self.vault.create_account(pseudonym)
             except ValueError as exc:
                 raise Conflict(str(exc)) from exc
+            if identity is not None:
+                self.vault.link_identity(*identity, rid)
             tags = tuple(sorted({self.vault.tag(a) for a in affiliations if a.strip()}))
             self._emit("reviewer.registered", ev.ReviewerRegistered(
                 reviewer=rid, group=group, affiliation_tags=tags, notice=NOTICE_VERSION))
@@ -168,6 +176,19 @@ class Coordinator:
         with self.lock:
             self._reviewer(rid)
             self._emit("reviewer.maintainer_appointed", ev.MaintainerAppointed(reviewer=rid))
+
+    def sync_maintainer(self, rid: str, granted: bool) -> None:
+        """Follow the maintainer role of an identity provider (docs/adr/0010).
+        Every change is logged. Appointments by the operator are left alone."""
+        with self.lock:
+            self._reviewer(rid)
+            person = self.state.reviewers[rid]
+            if granted and not person.maintainer:
+                self._emit("reviewer.maintainer_appointed",
+                           ev.MaintainerAppointed(reviewer=rid, by="identity_provider"))
+            elif not granted and person.maintainer_by == "identity_provider":
+                self._emit("reviewer.maintainer_revoked",
+                           ev.MaintainerRevoked(reviewer=rid, by="identity_provider"))
 
     # --------------------------------------------------------- submissions
     def open_submission(

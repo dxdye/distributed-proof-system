@@ -42,8 +42,23 @@ def docker_available() -> bool:
     return proc.returncode == 0
 
 
+@cache
+def keycloak_available() -> bool:
+    """The development Keycloak of deploy/keycloak (docs/adr/0010)."""
+    import httpx
+
+    try:
+        r = httpx.get("http://localhost:8080/realms/dpc/.well-known/openid-configuration",
+                      timeout=3)
+    except httpx.HTTPError:
+        return False
+    return r.status_code == 200
+
+
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     for item in items:
+        if "keycloak" in item.keywords and not keycloak_available():
+            item.add_marker(pytest.mark.skip(reason="development Keycloak not running"))
         if "lean" in item.keywords and not has_lean():
             item.add_marker(pytest.mark.skip(reason="no Lean toolchain (elan) on PATH"))
         if "docker" in item.keywords and not docker_available():

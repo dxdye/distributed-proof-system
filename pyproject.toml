@@ -8,6 +8,7 @@ markers = [
     "req(*ids): links a test to system requirements (SR-xx) for the traceability matrix",
     "lean: needs a Lean toolchain (elan); slow on first run",
     "docker: needs a running Docker daemon",
+    "keycloak: needs the development Keycloak (pixi run keycloak-up)",
     "slow: long-running simulation studies (about a minute)",
 ]
 

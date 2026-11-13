@@ -1,0 +1,13 @@
+{
+  "local_tokens": true,
+  "providers": [
+    {
+      "kind": "keycloak",
+      "url": "http://localhost:8080",
+      "realm": "dpc",
+      "client_id": "dpc-web",
+      "audience": "dpc-api",
+      "maintainer_role": "dpc-maintainer"
+    }
+  ]
+}
