@@ -261,6 +261,40 @@ maintainer's time.
 
 *Evidence:* ADR 0010.
 
+### C-25 · §8.9 Learning loop — discussion after the decision · new
+*Proposed:* A community platform needs a place to talk about the work, or
+community-minded reviewers feel alone and learn little. Add a discussion per
+declaration to the learning loop, under rules that keep the measurement
+intact:
+- **When.** A declaration's thread opens only when all of its tickets are
+  decided and no planted error of the submission is still unrevealed. Before
+  that, a discussion would bind later verdicts into one chain (§9.4, R13).
+  Opening per declaration would also show, by its timing, which declaration
+  still has an open planted copy.
+- **What.** A reviewer can share their own verdict and justification, and
+  anyone signed in can comment. Planted errors are not discussed publicly:
+  whoever missed one gets the explanation privately (§8.9, "sonst lernen PV die
+  Muster der Mutationen").
+- **Votes.** Up- and downvotes sort the posts. They never enter trust, roles or
+  decisions: trust must not grow from mutual agreement. There is no karma per
+  person.
+- **Who.** Posts are anonymous by default ("Reviewer A, B, …" per thread). The
+  pseudonym is optional, per thread, because it links the person to all their
+  reviews in the published audit log (SR-23). Shown on every post:
+  - whether the author is a maintainer, so that statements are weighed
+    accordingly;
+  - since when the author has taken part, by month.
+- **Back into the process.** A post that shows a decided declaration to be
+  wrong can be raised as a reopen request. A maintainer either turns it into
+  an escalation, which is decided like any other (§6.4), or dismisses it.
+  Discussion itself never changes a decision.
+- **Hygiene.** Reporting and moderation by maintainers. Posts are licensed like
+  reviews (SR-49), and AI use is declared (SR-48).
+
+The threads grow into the error catalogue of §8.9 and are a natural place to
+propose definition tests (§5.2).
+*Evidence:* Walkthrough with the project owner (2026-11-14).
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -393,3 +427,15 @@ minutes for a four-line statement) misled reviewers.
   before M4 and are still open. Technically, maintainers are a role in the
   identity provider (C-24). Operator under discussion: a university (pilot with
   students).
+
+### S-21 · New requirement: discussion after the decision · new
+*Proposed:* "The discussion of a declaration shall open only when all of its
+tickets are decided and no planted error of the submission is unrevealed.
+Planted errors shall not be discussed publicly. Posts are anonymous unless the
+author chooses to show their pseudonym; whether the author is a maintainer,
+and since when they take part, is shown." See C-25.
+
+### S-22 · New requirement: votes carry no weight · new
+*Proposed:* "Votes on posts shall influence neither trust, roles nor
+decisions. A post can lead to a change of a decision only through a reopen
+request decided by a maintainer." See C-25.
