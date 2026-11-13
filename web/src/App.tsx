@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type Me, type Session } from "./api";
 import { loadAuth, signOut, type Provider } from "./auth";
+import { BrandMark, SiteFooter, ThemeSwitch } from "./components/Layout";
 import { StorageNotice } from "./components/StorageNotice";
 import { useRoute } from "./router";
 import { Admin } from "./views/Admin";
@@ -54,47 +55,79 @@ export function App() {
   else if (page === "stats") body = <StatsView />;
   else if (!providers || !session) body = <p className="muted">Loading…</p>;
   else if (!session.authenticated) body = <SignIn providers={providers} onSignedIn={refresh} />;
-  else if (!session.registered)
-    body = <JoinForm onDone={refresh} title="Choose your pseudonym" />;
+  else if (!session.registered) body = <JoinForm onDone={refresh} title="Choose your pseudonym" />;
   else if (!me) body = <p className="muted">Loading…</p>;
   else if (page === "lease" && route[1]) body = <LeaseView id={route[1]} reload={reload} />;
   else if (page === "history") body = <History me={me} />;
   else if (page === "admin" && me.maintainer) body = <Admin />;
   else body = <Work me={me} reload={reload} />;
 
+  const current = (name: string) => (page === name ? "page" : undefined);
   return (
     <div className="app">
-      <header>
-        <a className="brand" href="#/work">
-          Distributed Proof Check
-        </a>
-        <nav>
-          {signedIn && <a href="#/work">Work</a>}
-          {signedIn && <a href="#/history">My reviews</a>}
-          <a href="#/stats">Statistics</a>
-          {me?.maintainer && <a href="#/admin">Maintainers</a>}
-        </nav>
-        {session?.authenticated && (
-          <span className="who">
-            {me?.pseudonym}{" "}
-            <button
-              className="link"
-              onClick={async () => {
-                setMe(null);
-                setSession({ authenticated: false });
-                await signOut();
-              }}
-            >
-              sign out
-            </button>
-          </span>
-        )}
+      <button className="skip" onClick={() => document.getElementById("main")?.focus()}>
+        Skip to content
+      </button>
+      <div className="service-bar">
+        <div className="container">
+          <span>Research prototype · Review of Lean 4 formalizations</span>
+          <ThemeSwitch />
+        </div>
+      </div>
+      <header className="site-header">
+        <div className="container header-inner">
+          <a className="brand" href="#/work">
+            <BrandMark />
+            <span className="brand-text">
+              <strong>Distributed Proof Check</strong>
+              <small>Human review of machine-checked mathematics</small>
+            </span>
+          </a>
+          <nav className="main-nav" aria-label="Main">
+            {signedIn && (
+              <a href="#/work" aria-current={current("work") ?? current("lease")}>
+                Review
+              </a>
+            )}
+            {signedIn && (
+              <a href="#/history" aria-current={current("history")}>
+                My reviews
+              </a>
+            )}
+            <a href="#/stats" aria-current={current("stats")}>
+              Statistics
+            </a>
+            {me?.maintainer && (
+              <a href="#/admin" aria-current={current("admin")}>
+                Maintainers
+              </a>
+            )}
+          </nav>
+          {session?.authenticated && (
+            <span className="who">
+              {me && (
+                <span>
+                  Signed in as <strong>{me.pseudonym}</strong>
+                </span>
+              )}
+              <button
+                className="secondary"
+                onClick={async () => {
+                  setMe(null);
+                  setSession({ authenticated: false });
+                  await signOut();
+                }}
+              >
+                Sign out
+              </button>
+            </span>
+          )}
+        </div>
       </header>
-      <main>{body}</main>
-      <footer>
-        <a href="#/imprint">Imprint · Impressum</a>
-        <a href="#/privacy">Privacy · Datenschutz</a>
-      </footer>
+      <main id="main" className="container" tabIndex={-1}>
+        {body}
+      </main>
+      <SiteFooter />
       <StorageNotice />
     </div>
   );

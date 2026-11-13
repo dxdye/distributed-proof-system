@@ -216,9 +216,10 @@ function PrivacyDe({ d }: { d: LegalData }) {
       <h3>4. Speicherung in Ihrem Browser</h3>
       <p>
         Gespeichert wird nur, was für die Anmeldung technisch erforderlich ist: Ihre
-        Anmeldesitzung (Session Storage) bzw. Ihr Zugangs-Token und die Information, dass Sie den
-        Speicherhinweis gelesen haben (Local Storage), sowie die Sitzungs-Cookies des
-        Anmeldedienstes. Dafür ist keine Einwilligung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Es
+        Anmeldesitzung (Session Storage) bzw. Ihr Zugangs-Token, die Information, dass Sie den
+        Speicherhinweis gelesen haben, und ein von Ihnen gewähltes Farbschema (Local Storage),
+        sowie die Sitzungs-Cookies des Anmeldedienstes. Die Schriften werden von diesem Server
+        geladen, nicht von Dritten. Dafür ist keine Einwilligung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Es
         gibt keine Analyse- oder Tracking-Dienste und keine Inhalte Dritter.
       </p>
 
@@ -300,8 +301,9 @@ function PrivacyEn({ d }: { d: LegalData }) {
       <h3>4. Storage in your browser</h3>
       <p>
         Only what signing in technically requires is stored: your sign-in session (session
-        storage) or your access token and the fact that you have read the storage notice (local
-        storage), and the session cookies of the sign-in service. No consent is required for this
+        storage) or your access token, the fact that you have read the storage notice and a colour
+        scheme you chose (local storage), and the session cookies of the sign-in service. Fonts are
+        served by this server, not by third parties. No consent is required for this
         (§ 25 (2) no. 2 TDDDG). There are no analytics or tracking services and no third-party
         content.
       </p>

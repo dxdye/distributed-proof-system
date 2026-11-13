@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { api, type Stats } from "../api";
 
 // Public aggregates only (SR-23).
@@ -31,10 +31,10 @@ export function StatsView() {
         <h3>Tickets</h3>
         <dl className="kv">
           {Object.entries(stats.tickets_by_status).map(([k, v]) => (
-            <span key={k}>
+            <Fragment key={k}>
               <dt>{k === "honeypot" ? "planted errors (revealed)" : k}</dt>
               <dd>{v}</dd>
-            </span>
+            </Fragment>
           ))}
         </dl>
         <p className="muted small">
@@ -44,8 +44,8 @@ export function StatsView() {
       <section className="card narrow">
         <h2>Interest per paper</h2>
         <p className="muted small">
-          Estimated from binding choices (Plackett–Luce). It orders papers; it never decides
-          whether class A is reviewed (SR-39).
+          Estimated from binding choices (Plackett–Luce). It orders papers; it never decides whether
+          class A is reviewed (SR-39).
         </p>
         {Object.keys(psi).length === 0 ? (
           <p className="muted">No completed choices yet.</p>

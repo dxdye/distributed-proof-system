@@ -5,60 +5,137 @@ import { signInWith, signInWithToken, type OidcProvider, type Provider } from ".
 // Sign-in with an identity provider or an API token (docs/adr/0010), and the
 // pseudonymous registration (SR-23) with the notice on review data (SR-49).
 
-export function SignIn({ providers, onSignedIn }: { providers: Provider[]; onSignedIn: () => void }) {
+export function SignIn({
+  providers,
+  onSignedIn,
+}: {
+  providers: Provider[];
+  onSignedIn: () => void;
+}) {
   const oidc = providers.filter((p): p is OidcProvider => p.kind === "oidc");
   const local = providers.some((p) => p.kind === "local");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div className="columns">
-      {oidc.length > 0 && (
-        <div className="card narrow">
-          <h2>Sign in</h2>
-          <p className="small muted">
-            New here? After signing in you choose a pseudonym. Your sign-in stays private: the
-            published audit log knows you only by a random id.
+    <>
+      <section className="hero">
+        <span className="eyebrow">Research prototype</span>
+        <h1>Check that formal proofs say what the paper claims.</h1>
+        <p className="lead">
+          The Lean kernel checks that a proof is valid. It does not check that the statement means
+          what the paper says. Distributed Proof Check closes that gap with careful human review,
+          and measures how reliable that review is.
+        </p>
+      </section>
+      <ol className="steps">
+        <li>
+          <strong>Machine checks</strong>
+          <p>
+            Every declaration of a submission passes the Lean kernel again; only the standard axioms
+            are allowed.
           </p>
-          {oidc.map((p) => (
-            <button
-              key={p.name}
-              onClick={() => signInWith(p).catch((e) => setError((e as Error).message))}
-            >
-              Sign in with {p.label}
-            </button>
-          ))}
-          {error && <p className="error">{error}</p>}
-        </div>
-      )}
-      {local && (
+        </li>
+        <li>
+          <strong>Human review</strong>
+          <p>
+            Reviewers check, under a pseudonym, that statements and definitions mean what the paper
+            claims.
+          </p>
+        </li>
+        <li>
+          <strong>Measured reliability</strong>
+          <p>
+            Planted errors and re-checks measure how well the review works. Reports are published
+            openly.
+          </p>
+        </li>
+      </ol>
+      {oidc.length > 0 ? (
         <>
-          <JoinForm onDone={onSignedIn} title={oidc.length ? "Or join with an access token" : "Join as reviewer"} />
-          <div className="card narrow">
-            <h2>Sign in with an access token</h2>
-            <label>
-              Access token
-              <input value={token} onChange={(e) => setToken(e.target.value)} />
-            </label>
-            <button
-              disabled={!token}
-              onClick={() => {
-                signInWithToken(token);
-                onSignedIn();
-              }}
-            >
-              Sign in
-            </button>
+          <div className="columns">
+            <div className="card">
+              <h2>Sign in</h2>
+              <p className="muted">
+                New here? After signing in you choose a pseudonym. Your sign-in stays private: the
+                published audit log knows you only by a random id.
+              </p>
+              {oidc.map((p) => (
+                <button
+                  key={p.name}
+                  onClick={() => signInWith(p).catch((e) => setError((e as Error).message))}
+                >
+                  Sign in with {p.label}
+                </button>
+              ))}
+              {error && <p className="error">{error}</p>}
+            </div>
+            <div className="card">
+              <h2>What you do here</h2>
+              <ul className="checklist">
+                <li>Take a ticket: one statement or definition of a formalization.</li>
+                <li>Compare it with the paper and answer five short questions.</li>
+                <li>Say whether it is correct, with a reason if it is not.</li>
+              </ul>
+              <p className="muted small">A ticket takes about 45 minutes. There is no countdown.</p>
+            </div>
           </div>
+          {local && (
+            <details className="alt-access">
+              <summary>Other ways to sign in: access token</summary>
+              <TokenAccess onSignedIn={onSignedIn} token={token} setToken={setToken} />
+            </details>
+          )}
         </>
+      ) : (
+        local && <TokenAccess onSignedIn={onSignedIn} token={token} setToken={setToken} />
       )}
+    </>
+  );
+}
+
+/** Sign-in with the service's own API tokens (no identity provider). */
+function TokenAccess({
+  onSignedIn,
+  token,
+  setToken,
+}: {
+  onSignedIn: () => void;
+  token: string;
+  setToken: (t: string) => void;
+}) {
+  return (
+    <div className="columns">
+      <JoinForm onDone={onSignedIn} title="Join with an access token" />
+      <div className="card">
+        <h2>Sign in with an access token</h2>
+        <label>
+          Access token
+          <input value={token} onChange={(e) => setToken(e.target.value)} />
+        </label>
+        <button
+          disabled={!token}
+          onClick={() => {
+            signInWithToken(token);
+            onSignedIn();
+          }}
+        >
+          Sign in
+        </button>
+      </div>
     </div>
   );
 }
 
 /** Registration. Signed in with an identity provider, the account is linked to
  * that sign-in; otherwise the server issues an API token, shown once. */
-export function JoinForm({ onDone, title = "Join as reviewer" }: { onDone: () => void; title?: string }) {
+export function JoinForm({
+  onDone,
+  title = "Join as reviewer",
+}: {
+  onDone: () => void;
+  title?: string;
+}) {
   const [notice, setNotice] = useState<{ version: string; text: string } | null>(null);
   const [pseudonym, setPseudonym] = useState("");
   const [group, setGroup] = useState("other");
@@ -68,7 +145,10 @@ export function JoinForm({ onDone, title = "Join as reviewer" }: { onDone: () =>
   const [token, setNewToken] = useState<string | null>(null);
 
   useEffect(() => {
-    api.notice().then(setNotice).catch((e) => setError(String(e.message)));
+    api
+      .notice()
+      .then(setNotice)
+      .catch((e) => setError(String(e.message)));
   }, []);
 
   async function submit() {
@@ -77,7 +157,10 @@ export function JoinForm({ onDone, title = "Join as reviewer" }: { onDone: () =>
       const res = await api.register({
         pseudonym,
         group,
-        affiliations: affiliations.split(",").map((a) => a.trim()).filter(Boolean),
+        affiliations: affiliations
+          .split(",")
+          .map((a) => a.trim())
+          .filter(Boolean),
         notice_acknowledged: ack,
       });
       if (res.token) setNewToken(res.token);
@@ -131,8 +214,8 @@ export function JoinForm({ onDone, title = "Join as reviewer" }: { onDone: () =>
         <div className="notice">
           <p className="small">{notice.text}</p>
           <label className="inline">
-            <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-            I have read this notice ({notice.version}).
+            <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />I have
+            read this notice ({notice.version}).
           </label>
           <p className="small">
             Details: <a href="#/privacy">privacy policy</a>.

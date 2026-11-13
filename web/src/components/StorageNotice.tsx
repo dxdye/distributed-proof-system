@@ -13,12 +13,14 @@ export function StorageNotice() {
   return (
     <div className="storage-notice" role="region" aria-label="Storage notice">
       <p>
-        This site stores only what signing in needs: your session in this browser and the session
-        cookies of the sign-in service. No tracking, no analytics.
+        This site stores only what signing in needs (your session in this browser, the session
+        cookies of the sign-in service) and, if you choose one, your colour scheme. No tracking, no
+        analytics.
         <br />
         <span lang="de">
-          Diese Seite speichert nur, was die Anmeldung braucht: Ihre Sitzung in diesem Browser und
-          die Sitzungs-Cookies des Anmeldedienstes. Kein Tracking, keine Analyse.
+          Diese Seite speichert nur, was die Anmeldung braucht (Ihre Sitzung in diesem Browser, die
+          Sitzungs-Cookies des Anmeldedienstes), und, falls gewählt, Ihr Farbschema. Kein Tracking,
+          keine Analyse.
         </span>{" "}
         <a href="#/privacy">Privacy policy / Datenschutz</a>
       </p>

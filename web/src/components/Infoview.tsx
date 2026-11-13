@@ -111,9 +111,12 @@ export function Infoview({ view }: { view: UnitView }) {
       </div>
       {differing > 0 && (
         <p className="display-warning">
-          The submission's own display rules change how {differing === 1 ? "one part" : `${differing} parts`}{" "}
-          of this declaration look. Both versions are shown below. The plain one is what the
-          declaration actually says; judge that one.
+          The submission's own display rules change how{" "}
+          {differing === 1
+            ? "one part of this declaration looks"
+            : `${differing} parts of this declaration look`}
+          . Both versions are shown below. The plain one is what the declaration actually says;
+          judge that one.
         </p>
       )}
       {checked && differing === 0 && (
@@ -124,7 +127,10 @@ export function Infoview({ view }: { view: UnitView }) {
       ))}
       {view.context.length > 0 && (
         <p className="muted small">
-          Builds on (also under review): {view.context.map((c) => <code key={c}>{c} </code>)}
+          Builds on (also under review):{" "}
+          {view.context.map((c) => (
+            <code key={c}>{c} </code>
+          ))}
         </p>
       )}
     </div>

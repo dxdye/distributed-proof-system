@@ -70,14 +70,15 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
               <a href={`#/lease/${l.lease_id}`}>
                 <code>{l.ticket.view.declaration}</code>
               </a>{" "}
-              <span className="badge">{l.duty}</span> <span className="muted">{l.ticket.paper}</span>{" "}
+              <span className="badge">{l.duty}</span>{" "}
+              <span className="muted">{l.ticket.paper}</span>{" "}
               <span className="muted small">· expected {duration(l.expected_minutes)}</span>
             </li>
           ))}
         </ul>
         <p className="muted small">
-          You can hold up to {me.wip_limit} tickets at a time. Returning a ticket carries no
-          penalty.
+          You can hold up to {me.wip_limit} {me.wip_limit === 1 ? "ticket" : "tickets"} at a time.
+          Returning a ticket carries no penalty.
         </p>
       </section>
 
