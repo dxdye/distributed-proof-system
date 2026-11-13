@@ -19,6 +19,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from dpc.tickets.notes import note_for
+
 SCHEMA = "dpc.trusted-render/1"
 
 
@@ -29,6 +31,11 @@ def _records(path: Path) -> list[dict[str, Any]]:
 def _write(path: Path, records: Iterable[dict[str, Any]]) -> None:
     path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records),
                     encoding="utf-8", newline="\n")
+
+
+def _annotate(glossary: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Add the junk-value note of each constant, if there is one."""
+    return [{**g, "note": note_for(g["name"])} if note_for(g["name"]) else g for g in glossary]
 
 
 def _trusted(path: Path) -> list[dict[str, Any]]:
@@ -53,7 +60,7 @@ def merge_views(views: Path, trusted: Path) -> dict[str, int]:
             if other is None:
                 continue
             comp["trusted_text"] = other["text"]
-            comp["trusted_glossary"] = other["glossary"]
+            comp["trusted_glossary"] = _annotate(other["glossary"])
             comp["latex"] = other.get("latex")
             merged += 1
             differs += other["text"] != comp["text"]
@@ -77,7 +84,7 @@ def merge_mutants(mutants: Path, trusted: Path) -> dict[str, int]:
         other = by_key.get(mutant_key(record))
         if other is not None:
             record["trusted_mutant"] = other["text"]
-            record["trusted_glossary"] = other["glossary"]
+            record["trusted_glossary"] = _annotate(other["glossary"])
             record["latex_mutant"] = other.get("latex")
             merged += 1
     _write(mutants, records)

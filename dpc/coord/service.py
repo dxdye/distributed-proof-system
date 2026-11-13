@@ -43,7 +43,7 @@ from dpc.coord.state import (
     TicketSt,
     difficulty_bucket,
 )
-from dpc.coord.tiers import TIERS, Tier, tier_of, tier_open
+from dpc.coord.tiers import TIERS, Tier, tier_of_view, tier_open
 from dpc.coord.vault import BlobStore, Vault
 from dpc.domain.attention import Choice, fit_plackett_luce
 from dpc.domain.decision import Vote, decide, posterior_error
@@ -259,7 +259,8 @@ class Coordinator:
                     ticket_id=tid, submission_id=sid, ticket_class="A", view=slot.view,
                     domain=spec.domain, difficulty=ev.dec(spec.difficulty),
                     slots=self.params.parallel,
-                    commitment=self.vault.put_opening(sid, opening), paper=spec.paper))
+                    commitment=self.vault.put_opening(sid, opening), paper=spec.paper,
+                    tier=tier_of_view(spec.view)))  # the original's view, also for honeypots
             return sid
 
     def close_submission(self, rid: str, submission_id: str) -> None:
@@ -296,7 +297,7 @@ class Coordinator:
             return "already worked on this declaration"
         if duty == "review" and self.params.tier_gating and \
                 now - ticket.created < timedelta(seconds=self.params.tier_gate_age_s):
-            tier = tier_of(ticket.difficulty)
+            tier = ticket.tier
             if not tier_open(tier, roles=st.roles(rid, ticket.domain, now), group=person.group,
                              maintainer=person.maintainer):
                 return f"{tier} tickets need more experience in this domain"
@@ -703,4 +704,4 @@ class Coordinator:
 def _preferred(person: ReviewerSt, ticket: TicketSt) -> bool:
     """Does the ticket match the reviewer's preferences (none set: all do)?"""
     return ((not person.pref_domains or ticket.domain in person.pref_domains)
-            and (not person.pref_tiers or tier_of(ticket.difficulty) in person.pref_tiers))
+            and (not person.pref_tiers or ticket.tier in person.pref_tiers))

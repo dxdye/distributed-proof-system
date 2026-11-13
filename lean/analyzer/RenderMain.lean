@@ -60,6 +60,8 @@ structure Loaded where
   frontier : Array Name := #[]
   /-- Constants of the untrusted modules, read as data. -/
   untrusted : Std.HashMap Name ConstantInfo := {}
+  /-- "core" or "library" per imported (trusted) module. -/
+  moduleOrigin : Std.HashMap Name String := {}
 
 /-- Walk the import graph. Trusted modules are not opened here; untrusted ones
 are read as data only. -/
@@ -110,6 +112,41 @@ def errorRecord (what : String) (e : Exception) : CoreM Json :=
   return Json.mkObj [("kind", toJson "error"), ("item", toJson what),
                      ("error", toJson (← e.toMessageData.toString))]
 
+/-- Notation classes: their general signatures say nothing about the use site
+(which division, which order), so the glossary leaves them out. The typeset
+formula shows what they stand for. -/
+def notationClasses : Array Name := #[
+  ``HAdd.hAdd, ``HSub.hSub, ``HMul.hMul, ``HDiv.hDiv, ``HMod.hMod, ``HPow.hPow,
+  ``HSMul.hSMul, ``OfNat.ofNat, ``LT.lt, ``LE.le, ``GT.gt, ``GE.ge, ``Eq, ``Ne, ``Not,
+  ``And, ``Or, ``Iff, ``Exists, ``Membership.mem, ``Neg.neg, ``Inv.inv,
+  ``HasSubset.Subset, ``Union.union, ``Inter.inter, ``SDiff.sdiff,
+  ``EmptyCollection.emptyCollection, `DFunLike.coe]
+
+def firstParagraph (s : String) : String :=
+  let p := ((s.splitOn "\n\n").headD s).replace "\n" " "
+  if p.length > 400 then (p.take 400).toString ++ " …" else p
+
+/-- The glossary of the plain rendering: each constant with its type, where it
+comes from (Lean core, a library such as Mathlib, or the submission) and the
+first paragraph of its docstring. -/
+def trustedGlossary (loaded : Loaded) (e : Expr) (self : Name) : MetaM Json := do
+  let env ← getEnv
+  let names := e.getUsedConstants.qsort (fun a b => a.toString < b.toString)
+  let mut out := #[]
+  for c in names do
+    if c == self || c.isInternal || notationClasses.contains c then continue
+    if ← isInstance c then continue
+    let some ci := env.find? c | continue
+    let origin := if loaded.untrusted.contains c then "submission" else
+      match env.getModuleIdxFor? c with
+      | some idx => (env.header.moduleNames[idx]?.bind loaded.moduleOrigin.get?).getD "library"
+      | none => "core"
+    let doc ← if origin == "submission" then pure none else findDocString? env c
+    out := out.push <| Json.mkObj [
+      ("name", toJson (toString c)), ("type", toJson (← pp ci.type)), ("origin", toJson origin),
+      ("doc", (doc.map (toJson ∘ firstParagraph)).getD Json.null)]
+  return Json.arr out
+
 def viewRecord (loaded : Loaded) (name : Name) : CoreM Json := do
   let env ← getEnv
   let lookup := fun n => loaded.untrusted[n]? <|> env.find? n
@@ -119,7 +156,9 @@ def viewRecord (loaded : Loaded) (name : Name) : CoreM Json := do
     ensureAll loaded.untrusted e
     let comp ← (componentJson target label e name).run'
     let tex ← (Latex.typeset e).run'
-    comps := comps.push (comp.setObjVal! "latex" ((tex.map toJson).getD Json.null))
+    let gloss ← (trustedGlossary loaded e name).run'
+    comps := comps.push ((comp.setObjVal! "latex" ((tex.map toJson).getD Json.null)).setObjVal!
+      "glossary" gloss)
   return Json.mkObj [("kind", toJson "trusted_view"), ("decl", toJson (toString name)),
                      ("components", Json.arr comps)]
 
@@ -132,7 +171,7 @@ def mutantRecord (loaded : Loaded) (m : Json) : CoreM (Option Json) := do
   let decl := ((m.getObjValAs? String "decl").toOption.getD "").toName
   ensureAll loaded.untrusted e
   let text ← (pp e).run'
-  let gloss ← (glossary e decl).run'
+  let gloss ← (trustedGlossary loaded e decl).run'
   let tex ← (Latex.typeset e).run'
   let field := fun (k : String) => (m.getObjVal? k).toOption.getD Json.null
   return some <| Json.mkObj [
@@ -155,11 +194,14 @@ def main (argv : List String) : IO UInt32 := do
   allowInitializers
   let env ← importModules (loaded.frontier.map ({ module := · })) {} (loadExts := true)
   let env := env.setExporting false
+  let mut moduleOrigin : Std.HashMap Name String := {}
   for m in env.header.moduleNames do
     let (origin, _) ← c.classify m
     if origin == .untrusted then
       IO.eprintln s!"dpc-render: trusted modules import the untrusted module {m}"
       return 1
+    moduleOrigin := moduleOrigin.insert m (if origin == .core then "core" else "library")
+  let loaded := { loaded with moduleOrigin }
   let mutants ← match args.mutants with
     | some f => do
       let lines := (← IO.FS.lines f).filter (· ≠ "")

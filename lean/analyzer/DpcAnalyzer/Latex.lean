@@ -212,6 +212,16 @@ partial def known (c : Name) (f : Expr) (args : Array Expr) : MetaM (Option Frag
     | _ => return none
   | `abs, 4 => return some (atom s!"\\left|{(← go (arg 3)).tex}\\right|")
   | `Norm.norm, 3 => return some (atom s!"\\left\\lVert {(← go (arg 2)).tex}\\right\\rVert")
+  -- bundled maps used as functions, order extremes, coercions into `WithTop`
+  | `DFunLike.coe, k =>
+    if k < 5 then return none
+    let head ← go (arg 4)
+    let rest := args.extract 5 k
+    if rest.isEmpty then return some head
+    return some (← call (head.at pApp) rest)
+  | `Top.top, 2 => return some (atom "\\top")
+  | `Bot.bot, 2 => return some (atom "\\bot")
+  | `WithTop.some, 2 => return some ⟨s!"\{\\uparrow}{(← go (arg 1)).at pApp}", pApp⟩
   -- casts: written with their target type
   | ``Nat.cast, 3 | ``Int.cast, 3 | `Rat.cast, 3 =>
     return some (atom s!"\\left({(← go (arg 2)).tex} : {(← go (← inferType (mkAppN f args))).tex}\\right)")

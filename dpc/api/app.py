@@ -24,7 +24,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
 from dpc.coord.state import LeaseSt, TicketSt
-from dpc.coord.tiers import tier_of
 from dpc.tickets.model import QUESTIONS_A, AIAssistance
 
 NOTICE = (
@@ -164,7 +163,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         minutes = max(1, round(expected / 60)) if coord.has_estimate("review", ticket) else None
         return {"ticket_id": ticket.ticket_id, "declaration": ticket.view.declaration,
                 "decl_kind": ticket.view.decl_kind, "domain": ticket.domain,
-                "tier": tier_of(ticket.difficulty),
+                "tier": ticket.tier,
                 "paper": sub.title, "expected_minutes": minutes}
 
     def lease_view(lease: LeaseSt) -> dict[str, Any]:
@@ -181,7 +180,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             "ticket": {
                 "ticket_id": ticket.ticket_id, "paper": sub.title, "repo_url": sub.repo_url,
                 "commit": sub.commit, "domain": ticket.domain,
-                "tier": tier_of(ticket.difficulty),
+                "tier": ticket.tier,
                 "paper_ref": sub.paper_ref,
                 "paper_passage": ticket.paper.model_dump(mode="json") if ticket.paper else None,
                 "mapping_contested_by_me": any(r == lease.reviewer for r, _ in ticket.contests),

@@ -105,6 +105,8 @@ class TicketCreated(_P):
     commitment: Hex64  # SHA-256 of the honeypot opening (SR-37)
     #: The paper passage this declaration formalises (SR-24); None: not mapped yet.
     paper: PaperPassage | None = None
+    #: Absolute difficulty tier (dpc.coord.tiers); None in older logs.
+    tier: Literal["easy", "medium", "hard", "excellence"] | None = None
 
 
 class MappingContested(_P):

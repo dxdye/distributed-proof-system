@@ -36,7 +36,9 @@ function Term({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
             <span className="hover" role="tooltip">
               {hits.map((h) => (
                 <span key={h.name} className="hover-line">
-                  <b>{h.name}</b> : {h.type}
+                  <b>{h.name}</b> : {h.type} <Origin origin={h.origin} />
+                  {h.doc && <span className="hover-doc">{h.doc}</span>}
+                  {h.note && <span className="hover-note">{h.note}</span>}
                 </span>
               ))}
             </span>
@@ -45,6 +47,19 @@ function Term({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
       })}
     </pre>
   );
+}
+
+const ORIGIN_LABELS: Record<string, string> = {
+  core: "Lean",
+  library: "Mathlib",
+  submission: "this submission",
+};
+
+/** Where a constant comes from: Lean, a hardened library, or the submission
+ * itself (whose definitions are under review too). */
+function Origin({ origin }: { origin?: string | null }) {
+  if (!origin) return null;
+  return <span className={`badge origin origin-${origin}`}>{ORIGIN_LABELS[origin] ?? origin}</span>;
 }
 
 function heading(c: Component, kind: string): string {
@@ -87,8 +102,14 @@ function ComponentBox({ component, kind }: { component: Component; kind: string 
               <tbody>
                 {glossary.map((g) => (
                   <tr key={g.name}>
-                    <td className="mono">{g.name}</td>
-                    <td className="mono small">{g.type}</td>
+                    <td>
+                      <span className="mono">{g.name}</span> <Origin origin={g.origin} />
+                    </td>
+                    <td>
+                      <span className="mono small">{g.type}</span>
+                      {g.doc && <p className="small muted glossary-doc">{g.doc}</p>}
+                      {g.note && <p className="small glossary-note">{g.note}</p>}
+                    </td>
                   </tr>
                 ))}
               </tbody>

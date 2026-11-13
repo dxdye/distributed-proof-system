@@ -16,6 +16,7 @@ from typing import Literal
 from dpc.audit.log import Entry
 from dpc.coord import events as ev
 from dpc.coord.params import DAY, CoordParams
+from dpc.coord.tiers import Tier, tier_of
 from dpc.domain.anomaly import DetectionRecord
 from dpc.domain.lease import Reliability
 from dpc.domain.trust import Source, TrustState, record
@@ -121,6 +122,7 @@ class TicketSt:
     error_confirmed: bool = False
     honeypot: bool | None = None  # None until the commitment is opened
     paper: PaperPassage | None = None
+    tier: Tier = "medium"
     #: (reviewer, reason) of every contest of the paper mapping (SR-24)
     contests: list[tuple[str, str]] = field(default_factory=list)
 
@@ -274,7 +276,8 @@ class State:
     def _on_ticket_created(self, p: ev.TicketCreated, at: datetime, _: Entry) -> None:
         self.tickets[p.ticket_id] = TicketSt(
             p.ticket_id, p.submission_id, p.ticket_class, p.view, p.domain,
-            float(p.difficulty), p.commitment, at, p.slots, paper=p.paper)
+            float(p.difficulty), p.commitment, at, p.slots, paper=p.paper,
+            tier=p.tier or tier_of(float(p.difficulty)))
         self.submissions[p.submission_id].tickets.append(p.ticket_id)
 
     def _on_ticket_mapping_contested(self, p: ev.MappingContested, at: datetime,

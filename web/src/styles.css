@@ -1161,3 +1161,44 @@ button.small {
   letter-spacing: 0.06em;
   color: var(--muted);
 }
+
+/* Glossary: origin, docstring, junk-value note */
+.badge.origin {
+  font-size: 0.66rem;
+  padding: 0.05rem 0.35rem;
+  margin-left: 0.25rem;
+}
+.badge.origin-core {
+  color: var(--muted);
+  background: var(--surface);
+}
+.badge.origin-library {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.badge.origin-submission {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+.glossary-doc {
+  margin: 0.25rem 0 0;
+}
+.glossary-note,
+.hover-note {
+  margin: 0.3rem 0 0;
+  padding: 0.3rem 0.5rem;
+  border-left: 3px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: 0 4px 4px 0;
+}
+.hover-doc,
+.hover-note {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  white-space: normal;
+}
+.hover-doc {
+  color: var(--muted);
+}

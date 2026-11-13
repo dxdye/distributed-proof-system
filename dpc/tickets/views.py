@@ -35,6 +35,11 @@ class _Model(BaseModel):
 class GlossaryEntry(_Model):
     name: str
     type: str
+    #: Where the constant comes from: "core" (Lean), "library" (official
+    #: packages such as Mathlib) or "submission" (plain rendering only).
+    origin: str | None = None
+    doc: str | None = None  # first paragraph of its docstring, if any
+    note: str | None = None  # junk value to know about (dpc.tickets.notes)
 
 
 class Component(_Model):

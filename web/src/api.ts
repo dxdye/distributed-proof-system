@@ -1,7 +1,13 @@
 // Typed client for the coordination API (dpc/api/app.py).
 import { accessToken } from "./auth";
 
-export type GlossaryEntry = { name: string; type: string };
+export type GlossaryEntry = {
+  name: string;
+  type: string;
+  origin?: "core" | "library" | "submission" | null;
+  doc?: string | null;
+  note?: string | null;
+};
 export type Component = {
   target: "type" | "value" | "ctor";
   label: string;

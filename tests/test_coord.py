@@ -23,11 +23,11 @@ from dpc.coord import (
     Vault,
     commitment,
 )
-from dpc.coord.tiers import tier_of, tier_open
+from dpc.coord.tiers import tier_of, tier_of_view, tier_open
 from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import Source
 from dpc.honeypots import HoneypotPool, Mutant, MutantFileSource, Origin
-from dpc.tickets.views import Component, UnitView
+from dpc.tickets.views import Component, GlossaryEntry, UnitView
 
 LAB = "Frontier Lab"
 
@@ -520,8 +520,14 @@ def test_difficulty_tiers() -> None:
 
 @pytest.mark.req("SR-05")
 def test_hard_tickets_need_experience_until_they_have_waited_long(env: Env) -> None:
+    big = "∀ ε > 0, ∃ δ > 0, ∀ x, ∃ y, " + "‖f x - f y‖ ≤ C / (1 + ‖x‖) ^ K ∧ " * 12 + "True"
+    glossary = tuple(GlossaryEntry(name=f"Mathlib.c{i}", type="ℝ → ℝ", origin="library")
+                     for i in range(12))
+    hard_view = UnitView(declaration="P.big", decl_kind="theorem", components=(
+        Component(target="type", text=big, glossary=glossary),))
+    assert tier_of_view(hard_view) == "excellence"
     env.coord.open_submission(title="P", repo_url="https://x", commit="c" * 40,
-                              tickets=tiered("P", [2.0]))
+                              tickets=[TicketSpec(hard_view, domain="analysis")])
     (tid,) = env.coord.state.tickets
     newcomer = env.people(1, "new", group="student")[0]
     expert = env.people(1, "exp", group="expert")[0]
@@ -553,3 +559,14 @@ def test_preferences_raise_the_chance_but_never_empty_the_choice_set(env: Env) -
     assert env.coord.state.tickets[again.tickets[0]].domain == "algebra"
     with pytest.raises(CoordError, match="unknown tiers"):
         env.coord.set_preferences(rid, tiers=["legendary"])
+
+
+def test_tiers_are_absolute_not_relative_to_the_submission() -> None:
+    """A short lemma about natural numbers is easy in every submission; the
+    relative difficulty b_i would call the average ticket of any paper medium."""
+    small = UnitView(declaration="Mut.exists_gt", decl_kind="theorem", components=(
+        Component(target="type", text="∀ (n : Nat), ∃ (m : Nat), n < m", glossary=(
+            GlossaryEntry(name="Exists", type="…", origin="core"),
+            GlossaryEntry(name="LT.lt", type="…", origin="core"),
+            GlossaryEntry(name="Nat", type="Type", origin="core"))),))
+    assert tier_of_view(small) == "easy"
