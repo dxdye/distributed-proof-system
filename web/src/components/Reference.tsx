@@ -33,10 +33,10 @@ export function Reference({
     <section className="reference">
       <div className="segmented" role="tablist" aria-label="Reference">
         <button role="tab" aria-pressed={tab === "paper"} onClick={() => setTab("paper")}>
-          The paper says
+          Paper: informal statement
         </button>
         <button role="tab" aria-pressed={tab === "latex"} onClick={() => setTab("latex")}>
-          As a formula (LaTeX)
+          Lean: typeset as a formula
         </button>
       </div>
       {tab === "paper" ? (
