@@ -9,7 +9,7 @@
     <script>
       // Apply the stored colour scheme before the first paint (see src/theme.ts).
       try {
-        var t = localStorage.getItem("dpc.theme");
+        var t = sessionStorage.getItem("dpc.theme");
         if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     </script>

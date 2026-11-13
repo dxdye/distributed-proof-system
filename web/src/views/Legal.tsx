@@ -35,17 +35,23 @@ function loadLegal(): Promise<LegalData> {
 
 /** Any value still a placeholder in [brackets]? */
 function isDraft(d: LegalData): boolean {
-  return Object.entries(d).some(
-    ([k, v]) => !k.startsWith("_") && JSON.stringify(v).includes("["),
-  );
+  return Object.entries(d).some(([k, v]) => !k.startsWith("_") && JSON.stringify(v).includes("["));
 }
 
-function LegalPage({ title, children }: { title: Record<Lang, string>; children: (d: LegalData, lang: Lang) => ReactNode }) {
+function LegalPage({
+  title,
+  children,
+}: {
+  title: Record<Lang, string>;
+  children: (d: LegalData, lang: Lang) => ReactNode;
+}) {
   const [data, setData] = useState<LegalData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>("de");
   useEffect(() => {
-    loadLegal().then(setData).catch((e) => setError((e as Error).message));
+    loadLegal()
+      .then(setData)
+      .catch((e) => setError((e as Error).message));
   }, []);
   if (error) return <p className="error">{error}</p>;
   if (!data) return <p className="muted">Loading…</p>;
@@ -71,7 +77,9 @@ function LegalPage({ title, children }: { title: Record<Lang, string>; children:
         </p>
       )}
       {lang === "en" && (
-        <p className="small muted">Translation for convenience; the German version is authoritative.</p>
+        <p className="small muted">
+          Translation for convenience; the German version is authoritative.
+        </p>
       )}
       {children(data, lang)}
     </div>
@@ -192,8 +200,8 @@ function PrivacyDe({ d }: { d: LegalData }) {
           <b>Anmeldung:</b> Bei der Anmeldung über den Anmeldedienst (Keycloak) verarbeitet dieser
           Benutzernamen, E-Mail-Adresse, Namen und ein Passwort-Hash. Die Plattform speichert nur
           die Verknüpfung zwischen der Kennung des Anmeldedienstes und Ihrer zufälligen
-          Prüfer-Kennung, getrennt vom Prüfprotokoll und nie veröffentlicht. Alternativ erhalten
-          Sie ein Zugangs-Token, von dem nur ein Hash gespeichert wird.
+          Prüfer-Kennung, getrennt vom Prüfprotokoll und nie veröffentlicht. Alternativ erhalten Sie
+          ein Zugangs-Token, von dem nur ein Hash gespeichert wird.
         </li>
         <li>
           <b>Prüfungen:</b> Urteile, Begründungen, Belegdateien, Bearbeitungszeit und Ihre Angabe
@@ -215,12 +223,12 @@ function PrivacyDe({ d }: { d: LegalData }) {
 
       <h3>4. Speicherung in Ihrem Browser</h3>
       <p>
-        Gespeichert wird nur, was für die Anmeldung technisch erforderlich ist: Ihre
-        Anmeldesitzung (Session Storage) bzw. Ihr Zugangs-Token, die Information, dass Sie den
-        Speicherhinweis gelesen haben, und ein von Ihnen gewähltes Farbschema (Local Storage),
-        sowie die Sitzungs-Cookies des Anmeldedienstes. Die Schriften werden von diesem Server
-        geladen, nicht von Dritten. Dafür ist keine Einwilligung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Es
-        gibt keine Analyse- oder Tracking-Dienste und keine Inhalte Dritter.
+        Gespeichert wird nur, was für die Anmeldung technisch erforderlich ist: Ihre Anmeldesitzung
+        (Session Storage) bzw. Ihr Zugangs-Token, die Information, dass Sie den Speicherhinweis
+        gelesen haben (Local Storage), ein für den aktuellen Besuch gewähltes Farbschema (Session
+        Storage) sowie die Sitzungs-Cookies des Anmeldedienstes. Die Schriften werden von diesem
+        Server geladen, nicht von Dritten. Dafür ist keine Einwilligung erforderlich (§ 25 Abs. 2
+        Nr. 2 TDDDG). Es gibt keine Analyse- oder Tracking-Dienste und keine Inhalte Dritter.
       </p>
 
       <h3>5. Rechtsgrundlagen</h3>
@@ -257,9 +265,9 @@ function PrivacyEn({ d }: { d: LegalData }) {
 
       <h3>2. What this is about</h3>
       <p>
-        Distributed Proof Check is a platform on which volunteers check, under a pseudonym,
-        whether formalized mathematical proofs (Lean 4) state what the corresponding paper
-        claims. Your reviews are published with the reports, under a random id only.
+        Distributed Proof Check is a platform on which volunteers check, under a pseudonym, whether
+        formalized mathematical proofs (Lean 4) state what the corresponding paper claims. Your
+        reviews are published with the reports, under a random id only.
       </p>
 
       <h3>3. Data we process</h3>
@@ -270,9 +278,9 @@ function PrivacyEn({ d }: { d: LegalData }) {
         </li>
         <li>
           <b>Account:</b> the pseudonym you chose, your group (e.g. student, doctoral), the version
-          of the notice you acknowledged at registration, and any employment or commissions by
-          labs you declare. The latter appear in the audit log only as a keyed hash (HMAC), so
-          that conflicts of interest can be checked without disclosing them.
+          of the notice you acknowledged at registration, and any employment or commissions by labs
+          you declare. The latter appear in the audit log only as a keyed hash (HMAC), so that
+          conflicts of interest can be checked without disclosing them.
         </li>
         <li>
           <b>Sign-in:</b> When you sign in through the sign-in service (Keycloak), that service
@@ -300,12 +308,12 @@ function PrivacyEn({ d }: { d: LegalData }) {
 
       <h3>4. Storage in your browser</h3>
       <p>
-        Only what signing in technically requires is stored: your sign-in session (session
-        storage) or your access token, the fact that you have read the storage notice and a colour
-        scheme you chose (local storage), and the session cookies of the sign-in service. Fonts are
-        served by this server, not by third parties. No consent is required for this
-        (§ 25 (2) no. 2 TDDDG). There are no analytics or tracking services and no third-party
-        content.
+        Only what signing in technically requires is stored: your sign-in session (session storage)
+        or your access token, the fact that you have read the storage notice (local storage), a
+        colour scheme chosen for the current visit (session storage), and the session cookies of the
+        sign-in service. Fonts are served by this server, not by third parties. No consent is
+        required for this (§ 25 (2) no. 2 TDDDG). There are no analytics or tracking services and no
+        third-party content.
       </p>
 
       <h3>5. Legal basis</h3>
@@ -314,8 +322,8 @@ function PrivacyEn({ d }: { d: LegalData }) {
       <h3>6. Retention and erasure</h3>
       <p>
         Accounts: {d.account_retention}. The audit log is deliberately immutable. On erasure, the
-        link between your account and your random id is deleted; your published reviews can then
-        no longer be attributed to a person.
+        link between your account and your random id is deleted; your published reviews can then no
+        longer be attributed to a person.
       </p>
 
       <h3>7. Hosting</h3>
@@ -324,8 +332,8 @@ function PrivacyEn({ d }: { d: LegalData }) {
       <h3>8. Your rights</h3>
       <p>
         You have the right of access, rectification, erasure, restriction of processing, data
-        portability and objection, and the right to withdraw consent at any time with effect for
-        the future. You may lodge a complaint with a data protection supervisory authority:{" "}
+        portability and objection, and the right to withdraw consent at any time with effect for the
+        future. You may lodge a complaint with a data protection supervisory authority:{" "}
         {d.dpa_authority}.
       </p>
     </>

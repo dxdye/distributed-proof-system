@@ -51,6 +51,27 @@ export function How() {
       </section>
 
       <section className="card">
+        <h2>What Lean is</h2>
+        <p>
+          <a href="https://lean-lang.org/">Lean</a> is a programming language and a proof assistant.
+          A mathematical statement is written down precisely, as Lean code, and so is its proof. A
+          small, carefully reviewed core, the <b>kernel</b>, checks every step of the proof. If the
+          kernel accepts it, the proof is correct for the statement as written, from the axioms used
+          — no matter whether a person or an AI system wrote it.
+        </p>
+        <p>
+          <b>Mathlib</b> is Lean's library of formalized mathematics, maintained by a large
+          community: numbers, analysis, algebra, the Riemann zeta function and much more.
+          Formalizations build on it.
+        </p>
+        <p>
+          What the kernel cannot check is the step from the paper to the code: whether the statement
+          as written is the one the paper means. That step is what you review here. Reading Lean is
+          enough for it; you do not need to write proofs.
+        </p>
+      </section>
+
+      <section className="card">
         <h2>What a ticket is</h2>
         <p>
           A ticket is one declaration of a formalization: the main theorem, or a definition it

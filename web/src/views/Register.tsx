@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { signInWith, signInWithToken, type OidcProvider, type Provider } from "../auth";
+import { Intro } from "../components/Intro";
 
 // Sign-in with an identity provider or an API token (docs/adr/0010), and the
 // pseudonymous registration (SR-23) with the notice on review data (SR-49).
@@ -27,7 +28,18 @@ export function SignIn({
           what the paper says. Distributed Proof Check closes that gap with careful human review,
           and measures how reliable that review is.
         </p>
+        <div className="hero-actions">
+          <button
+            onClick={() =>
+              document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            Sign in or join
+          </button>
+          <a href="#/how">How it works</a>
+        </div>
       </section>
+      <Intro />
       <ol className="steps">
         <li>
           <strong>Machine checks</strong>
@@ -51,6 +63,7 @@ export function SignIn({
           </p>
         </li>
       </ol>
+      <div id="sign-in" />
       {oidc.length > 0 ? (
         <>
           <div className="columns">
@@ -77,7 +90,7 @@ export function SignIn({
                 <li>Compare it with the paper and answer five short questions.</li>
                 <li>Say whether it is correct, with a reason if it is not.</li>
               </ul>
-              <p className="muted small">A ticket takes about 45 minutes. There is no countdown.</p>
+              <p className="muted small">There is no countdown: take the time a ticket needs.</p>
             </div>
           </div>
           {local && (
