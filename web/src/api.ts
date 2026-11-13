@@ -18,6 +18,13 @@ export type UnitView = {
   context: string[];
 };
 export type Question = { id: string; text: string };
+export type PaperPassage = {
+  source: { title: string; arxiv: string | null; version: string | null; url: string | null };
+  locator: string;
+  statement: string;
+  mapped_by: string;
+  note: string;
+};
 export type Lease = {
   lease_id: string;
   duty: "review" | "pvv" | "claim";
@@ -34,6 +41,9 @@ export type Lease = {
     tier?: string;
     view: UnitView;
     questions: Question[];
+    paper_ref: string | null;
+    paper_passage: PaperPassage | null;
+    mapping_contested_by_me: boolean;
   };
   claim?: {
     claim_id: string;
@@ -170,6 +180,8 @@ export const api = {
   extend: (id: string) => request<Lease>("POST", `/api/leases/${id}/extend`),
   giveBack: (id: string) => request("POST", `/api/leases/${id}/return`),
   review: (id: string, body: ReviewInput) => request("POST", `/api/leases/${id}/review`, body),
+  contestMapping: (id: string, reason: string) =>
+    request("POST", `/api/leases/${id}/contest-mapping`, { reason }),
   decideClaim: (id: string, confirmed: boolean, reason: string) =>
     request("POST", `/api/leases/${id}/claim`, { confirmed, reason }),
   nextDuty: () => request<Lease | null>("POST", "/api/duties/next"),
@@ -180,6 +192,16 @@ export const api = {
     tick: () => request<{ expired: number; revealed: number }>("POST", "/api/admin/tick"),
     submissions: () => request<SubmissionRow[]>("GET", "/api/admin/submissions"),
     escalated: () => request<Escalated[]>("GET", "/api/admin/escalated"),
+    contested: () =>
+      request<
+        {
+          ticket_id: string;
+          declaration: string;
+          paper: string;
+          locator: string;
+          reasons: string[];
+        }[]
+      >("GET", "/api/admin/contested"),
     decide: (ticket: string, error: boolean, reason: string) =>
       request("POST", `/api/admin/tickets/${ticket}/decide`, { error, reason }),
     close: (submission: string) => request("POST", `/api/admin/submissions/${submission}/close`),

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Lease, type ReviewInput } from "../api";
 import { Infoview } from "../components/Infoview";
+import { PaperPanel } from "../components/PaperPanel";
 import { TierBadge } from "../components/Tier";
 import { navigate } from "../router";
 
@@ -285,7 +286,20 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
             : ""}
           There is no clock running: take the time the ticket needs.
         </p>
-        <Infoview view={t.view} />
+        <div className="compare">
+          <PaperPanel
+            passage={t.paper_passage}
+            paperRef={t.paper_ref}
+            leaseId={lease.lease_id}
+            contested={t.mapping_contested_by_me}
+            minChars={lease.min_reason_chars}
+            active={active}
+          />
+          <section className="lean-panel">
+            <h3>Lean says</h3>
+            <Infoview view={t.view} />
+          </section>
+        </div>
       </section>
       {active && lease.duty === "claim" && <ClaimForm lease={lease} onDone={done} />}
       {active && lease.duty !== "claim" && <ReviewForm lease={lease} onDone={done} />}

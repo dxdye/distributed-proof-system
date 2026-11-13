@@ -24,6 +24,7 @@ from dpc.coord.service import Coordinator, TicketSpec
 from dpc.honeypots import HoneypotPool, MutantFileSource, MutantSet, Origin
 from dpc.lean.executor import HostExecutor
 from dpc.lean.render import merge_mutants, merge_views
+from dpc.tickets.paper import PaperMap
 from dpc.tickets.views import UnitView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -85,7 +86,12 @@ def seed_submission(coord: Coordinator, workdir: Path, executor: HostExecutor,
         raise DemoError(result.output)
     views_file, mutants_file = _render(executor, project, demo, workdir)
     views = load_views(views_file)
-    specs = [TicketSpec(UnitView.from_render(views[d]), domain=demo.domain)
+    # The fixture's demo "paper" (SR-24), if it has one.
+    paper_file = FIXTURES / demo.fixture / "paper.yaml"
+    paper = PaperMap.load(paper_file) if paper_file.is_file() else None
+    specs = [TicketSpec(UnitView.from_render(views[d]),
+                        domain=(paper.domain(d) if paper else None) or demo.domain,
+                        paper=paper.passage(d) if paper else None)
              for d in demo.decls]
     pool = HoneypotPool([MutantFileSource(mutants_file, Origin.OWN_REPOSITORY, demo.fixture)],
                         np.random.default_rng())

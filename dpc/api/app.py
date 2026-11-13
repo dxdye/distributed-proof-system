@@ -85,6 +85,10 @@ class ReviewReq(_Req):
     ai_provider: str | None = None
 
 
+class ContestReq(_Req):
+    reason: str
+
+
 class ClaimReq(_Req):
     confirmed: bool
     reason: str
@@ -178,6 +182,9 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "ticket_id": ticket.ticket_id, "paper": sub.title, "repo_url": sub.repo_url,
                 "commit": sub.commit, "domain": ticket.domain,
                 "tier": tier_of(ticket.difficulty),
+                "paper_ref": sub.paper_ref,
+                "paper_passage": ticket.paper.model_dump(mode="json") if ticket.paper else None,
+                "mapping_contested_by_me": any(r == lease.reviewer for r, _ in ticket.contests),
                 "view": ticket.view.model_dump(mode="json"),
                 "questions": [{"id": q, "text": QUESTIONS[q]} for q in QUESTIONS_A],
             },
@@ -353,6 +360,11 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
              failed=req.failed, evidence=evidence, evidence_kind=req.evidence_kind, ai=ai)
         return {"ok": True}
 
+    @app.post("/api/leases/{lease_id}/contest-mapping")
+    def contest(lease_id: str, req: ContestReq, rid: Rid) -> dict[str, bool]:
+        call(coord.contest_mapping, rid, lease_id, req.reason)
+        return {"ok": True}
+
     @app.post("/api/leases/{lease_id}/claim")
     def claim(lease_id: str, req: ClaimReq, rid: Rid) -> dict[str, bool]:
         call(coord.resolve_claim, rid, lease_id, confirmed=req.confirmed, reason=req.reason)
@@ -390,6 +402,19 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
     def close(submission_id: str, rid: Admin) -> dict[str, bool]:
         call(coord.close_submission, rid, submission_id)
         return {"ok": True}
+
+    @app.get("/api/admin/contested")
+    def contested(_: Admin) -> list[dict[str, Any]]:
+        """Paper mappings reviewers say are wrong (SR-24)."""
+        with coord.lock:
+            out = []
+            for t in coord.state.tickets.values():
+                if t.contests and t.paper is not None:
+                    out.append({"ticket_id": t.ticket_id, "declaration": t.view.declaration,
+                                "paper": coord.state.submissions[t.submission_id].title,
+                                "locator": t.paper.locator,
+                                "reasons": [reason for _, reason in t.contests]})
+            return out
 
     @app.get("/api/admin/submissions")
     def submissions(_: Admin) -> list[dict[str, Any]]:

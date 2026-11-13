@@ -1,0 +1,37 @@
+# Demo "paper" of the mutation fixture: what each declaration is meant to say.
+# Used by `dpc demo` to show the paper side of a ticket (SR-24).
+# Single-quoted YAML strings: LaTeX backslashes need no escaping.
+mapped_by: demo maintainer
+source:
+  title: Mutation fixture (demo paper)
+units:
+  Mut.pos_le:
+    locator: Lemma 1
+    statement: 'For every natural number $n$ with $0 < n$ we have $1 \le n$.'
+  Mut.total:
+    locator: Lemma 2
+    statement: 'For all natural numbers $a, b$: $a \le b$ or $b < a$.'
+  Mut.redundant:
+    locator: Lemma 3
+    statement: 'If $1 < n$ (and hence $0 < n$), then $2 \le n$.'
+  Mut.exists_gt:
+    locator: Lemma 4
+    statement: 'For every natural number $n$ there is an $m$ with $n < m$.'
+  Mut.succ_pos':
+    locator: Lemma 5
+    statement: '$0 < n + 1$ for every natural number $n$.'
+  Mut.double:
+    locator: Definition 1
+    statement: '$\operatorname{double}(n) = 2n$ for natural numbers $n$.'
+  Mut.plusZero:
+    locator: Definition 2
+    statement: '$\operatorname{plusZero}(n) = n + 0$, that is, $n$.'
+  Mut.Bounded:
+    locator: Definition 3
+    statement: 'A function $f : \mathbb{N} \to \mathbb{N}$ is bounded if $f(n) \le 10$ for all $n$.'
+  Mut.window:
+    locator: Lemma 6
+    statement: 'If $2 \le n < 3$, then $n = 2$.'
+  Mut.positive:
+    locator: Definition 4
+    statement: '$n$ is positive if $0 < n$ and $1 \le n$.'

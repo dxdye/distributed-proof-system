@@ -1010,3 +1010,52 @@ button.chip[aria-pressed="true"]:hover:not(:disabled) {
 button + button.chip {
   margin-left: 0;
 }
+
+/* Paper says / Lean says (SR-24) */
+.compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 0.5rem;
+}
+@media (max-width: 960px) {
+  .compare {
+    grid-template-columns: 1fr;
+  }
+}
+.paper-panel,
+.lean-panel {
+  min-width: 0;
+}
+.paper-panel h3,
+.lean-panel h3 {
+  margin-top: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.paper-statement {
+  margin: 0 0 0.8rem;
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--ink-strong);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+.paper-panel.missing p {
+  padding: 0.9rem 1rem;
+  border-left: 3px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.math-display {
+  display: block;
+  margin: 0.4rem 0;
+}
+.contest {
+  margin-top: 0.5rem;
+}

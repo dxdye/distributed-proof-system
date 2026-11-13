@@ -20,6 +20,7 @@ from dpc.domain.anomaly import DetectionRecord
 from dpc.domain.lease import Reliability
 from dpc.domain.trust import Source, TrustState, record
 from dpc.tickets.model import Evidence
+from dpc.tickets.paper import PaperPassage
 from dpc.tickets.views import UnitView
 
 LeaseStatus = Literal["active", "done", "returned", "expired", "cancelled"]
@@ -119,6 +120,9 @@ class TicketSt:
     decided_at: datetime | None = None
     error_confirmed: bool = False
     honeypot: bool | None = None  # None until the commitment is opened
+    paper: PaperPassage | None = None
+    #: (reviewer, reason) of every contest of the paper mapping (SR-24)
+    contests: list[tuple[str, str]] = field(default_factory=list)
 
     def review_count(self) -> int:
         return sum(1 for r in self.reviews if r.duty == "review")
@@ -138,6 +142,7 @@ class SubmissionSt:
     opened: datetime
     closed: bool = False
     tickets: list[str] = field(default_factory=list)
+    paper_ref: str | None = None
 
 
 @dataclass
@@ -260,7 +265,8 @@ class State:
 
     def _on_submission_opened(self, p: ev.SubmissionOpened, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id] = SubmissionSt(
-            p.submission_id, p.title, p.repo_url, p.commit, p.lab_tag, p.authors, at)
+            p.submission_id, p.title, p.repo_url, p.commit, p.lab_tag, p.authors, at,
+            paper_ref=p.paper_ref)
 
     def _on_submission_closed(self, p: ev.SubmissionClosed, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id].closed = True
@@ -268,8 +274,12 @@ class State:
     def _on_ticket_created(self, p: ev.TicketCreated, at: datetime, _: Entry) -> None:
         self.tickets[p.ticket_id] = TicketSt(
             p.ticket_id, p.submission_id, p.ticket_class, p.view, p.domain,
-            float(p.difficulty), p.commitment, at, p.slots)
+            float(p.difficulty), p.commitment, at, p.slots, paper=p.paper)
         self.submissions[p.submission_id].tickets.append(p.ticket_id)
+
+    def _on_ticket_mapping_contested(self, p: ev.MappingContested, at: datetime,
+                                     _: Entry) -> None:
+        self.tickets[p.ticket_id].contests.append((p.reviewer, p.reason))
 
     def _on_ticket_round_opened(self, p: ev.RoundOpened, at: datetime, _: Entry) -> None:
         ticket = self.tickets[p.ticket_id]

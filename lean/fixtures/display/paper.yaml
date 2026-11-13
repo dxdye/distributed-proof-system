@@ -1,0 +1,21 @@
+# Demo "paper" of the display fixture (SR-24): compare it with both renderings.
+# Single-quoted YAML strings: LaTeX backslashes need no escaping.
+mapped_by: demo maintainer
+source:
+  title: Display rules fixture (demo paper)
+units:
+  Display.claim:
+    locator: Proposition 1
+    statement: 'For every natural number $n$ with $0 \le n$ we have $n \le n + 1$.'
+  Display.Point:
+    locator: Definition 1
+    statement: 'A point consists of two natural numbers $x$ and $y$.'
+  Display.Point.sum:
+    locator: Definition 2
+    statement: 'The sum of a point $p = (x, y)$ is $x + y$.'
+  Display.double:
+    locator: Definition 3
+    statement: '$\operatorname{double}(n) = 2n$.'
+  Display.sum_comm:
+    locator: Lemma 1
+    statement: 'For every point $p = (x, y)$, $\operatorname{sum}(p) = y + x$.'

@@ -12,6 +12,7 @@ from pathlib import Path
 from dpc.analysis import Analysis, assign_domains
 from dpc.coord.service import TicketSpec
 from dpc.tickets import class_a_tickets
+from dpc.tickets.paper import PaperMap
 from dpc.tickets.views import UnitView
 
 DEFAULT_DOMAIN = "general"
@@ -24,13 +25,21 @@ def load_views(path: Path) -> dict[str, dict[str, object]]:
     return {str(r["decl"]): r for r in lines[1:] if r.get("kind") == "view"}
 
 
-def ticket_specs(analysis: Analysis, commit: str, views: dict[str, dict[str, object]]
-                 ) -> list[TicketSpec]:
-    """One spec per class-A unit; every unit needs a rendered view."""
+def ticket_specs(analysis: Analysis, commit: str, views: dict[str, dict[str, object]],
+                 paper: PaperMap | None = None) -> list[TicketSpec]:
+    """One spec per class-A unit; every unit needs a rendered view. ``paper``
+    adds the paper passage of each unit and corrects its domain (SR-04, SR-24)."""
+    if paper is not None:
+        unknown = sorted(set(paper.units) - {str(d) for d in views})
+        if unknown:
+            raise ValueError(f"the paper map names declarations without a view: {unknown[:3]}")
     tickets = class_a_tickets(analysis, commit, assign_domains(analysis))
     missing = [t.declaration for t in tickets if t.declaration not in views]
     if missing:
         raise ValueError(f"no rendered view for {len(missing)} units, e.g. {missing[:3]}")
     return [TicketSpec(view=UnitView.from_render(views[t.declaration], context=t.context),
-                       domain=t.domain or DEFAULT_DOMAIN, difficulty=t.difficulty_b)
+                       domain=(paper.domain(t.declaration) if paper else None)
+                       or t.domain or DEFAULT_DOMAIN,
+                       difficulty=t.difficulty_b,
+                       paper=paper.passage(t.declaration) if paper else None)
             for t in tickets]

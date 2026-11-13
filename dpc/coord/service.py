@@ -53,6 +53,7 @@ from dpc.domain.trust import time_factor
 from dpc.honeypots.mixing import plan_stream
 from dpc.honeypots.sources import HoneypotPool
 from dpc.tickets.model import AIAssistance, Evidence, Review
+from dpc.tickets.paper import PaperPassage
 from dpc.tickets.views import UnitView
 
 #: Version of the registration notice on the use of review data (SR-49).
@@ -82,6 +83,7 @@ class TicketSpec:
     view: UnitView
     domain: str
     difficulty: float = 0.0
+    paper: PaperPassage | None = None  # SR-24; honeypots show their original's
 
 
 def _id(prefix: str) -> str:
@@ -229,6 +231,7 @@ class Coordinator:
         self, *, title: str, repo_url: str, commit: str, tickets: Sequence[TicketSpec],
         pool: HoneypotPool | None = None, share: float | None = None, lab: str | None = None,
         authors: Sequence[str] = (), artifact_key: str | None = None,
+        paper_ref: str | None = None,
     ) -> str:
         """Create the class-A tickets (SR-05) with honeypots mixed in (SR-06)."""
         share = self.params.honeypot_share if share is None else share
@@ -242,7 +245,7 @@ class Coordinator:
             self._emit("submission.opened", ev.SubmissionOpened(
                 submission_id=sid, title=title, repo_url=repo_url, commit=commit,
                 artifact_key=artifact_key, lab_tag=self.vault.tag(lab) if lab else None,
-                authors=tuple(authors)))
+                authors=tuple(authors), paper_ref=paper_ref))
             for slot in slots:
                 spec = specs[slot.view.declaration]
                 tid = self.new_id("A")
@@ -256,7 +259,7 @@ class Coordinator:
                     ticket_id=tid, submission_id=sid, ticket_class="A", view=slot.view,
                     domain=spec.domain, difficulty=ev.dec(spec.difficulty),
                     slots=self.params.parallel,
-                    commitment=self.vault.put_opening(sid, opening)))
+                    commitment=self.vault.put_opening(sid, opening), paper=spec.paper))
             return sid
 
     def close_submission(self, rid: str, submission_id: str) -> None:
@@ -516,6 +519,21 @@ class Coordinator:
                         ticket_id=ticket.ticket_id, review_seq=entry.seq, reason="sample"))
             self._evaluate(ticket.ticket_id)
             return entry
+
+    def contest_mapping(self, rid: str, lease_id: str, reason: str) -> None:
+        """The reviewer holding the lease says the paper passage is wrong (SR-24)."""
+        with self.lock:
+            lease = self._own_lease(rid, lease_id)
+            ticket = self.state.tickets[lease.ticket_id]
+            if ticket.paper is None:
+                raise CoordError("this ticket has no paper passage to contest")
+            if len(reason.strip()) < self.params.min_reason_chars:
+                raise CoordError(f"say what is wrong with the passage, in at least "
+                                 f"{self.params.min_reason_chars} characters")
+            if any(r == rid for r, _ in ticket.contests):
+                raise Conflict("you have already contested this mapping")
+            self._emit("ticket.mapping_contested", ev.MappingContested(
+                ticket_id=ticket.ticket_id, reviewer=rid, reason=reason.strip()))
 
     def _store_evidence(self, data: bytes | None, kind: str | None) -> Evidence | None:
         if data is None:

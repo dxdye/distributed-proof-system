@@ -35,6 +35,7 @@ from dpc.lean.workspace import VolumeWorkspace
 from dpc.requirements import load_requirements
 from dpc.sim import ReviewerType, SimConfig, simulate
 from dpc.sim.study import Grid, render_markdown, run_study
+from dpc.tickets.paper import PaperMap
 
 DEFAULT_CACHE = Path(".dpc-cache")
 
@@ -205,7 +206,10 @@ def cmd_open_submission(args: argparse.Namespace) -> int:
     analysis = Analysis.load(core)
     if metadata.exists():
         analysis = merge(analysis, Analysis.load(metadata))
-    specs = ticket_specs(analysis, submission.commit, load_views(workdir / "views.jsonl"))
+    paper_file = Path(args.paper) if args.paper else workdir / "paper.yaml"
+    paper = PaperMap.load(paper_file) if paper_file.is_file() else None
+    specs = ticket_specs(analysis, submission.commit, load_views(workdir / "views.jsonl"),
+                         paper)
     coord = _coordinator(args)
     rng = np.random.default_rng()
     pool = None
@@ -219,6 +223,7 @@ def cmd_open_submission(args: argparse.Namespace) -> int:
     sid = coord.open_submission(
         title=args.title or submission.root, repo_url=submission.repo_url,
         commit=submission.commit, tickets=specs, pool=pool, share=args.share, lab=args.lab,
+        paper_ref=submission.paper_ref,
         authors=authors)
     _print({"submission_id": sid, "units": len(specs),
             "tickets": len(coord.state.submissions[sid].tickets)})
@@ -379,6 +384,8 @@ def main(argv: list[str] | None = None) -> int:
                    default="any")
     p.add_argument("--lab", help="submitting lab (SR-50)")
     p.add_argument("--author", dest="authors", action="append", help="author pseudonym")
+    p.add_argument("--paper", help="paper map (YAML) of the class-A units, SR-24; "
+                   "default: <workdir>/paper.yaml if present")
     coord_args(p)
     p.set_defaults(func=cmd_open_submission)
 

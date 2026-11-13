@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from dpc.audit.log import format_ts
 from dpc.tickets.model import AIAssistance, Evidence
+from dpc.tickets.paper import PaperPassage
 from dpc.tickets.views import UnitView
 
 Dec = Annotated[str, Field(pattern=r"^-?[0-9]+(\.[0-9]+)?(e[-+]?[0-9]+)?$")]
@@ -90,6 +91,7 @@ class SubmissionOpened(_P):
     artifact_key: str | None = None
     lab_tag: Hex64 | None = None
     authors: tuple[str, ...] = ()  # reviewer ids of the authors (SR-08)
+    paper_ref: str | None = None  # the submission's reference to its paper
 
 
 class TicketCreated(_P):
@@ -101,6 +103,17 @@ class TicketCreated(_P):
     difficulty: Dec
     slots: int  # parallel review slots of round 1 (SR-28)
     commitment: Hex64  # SHA-256 of the honeypot opening (SR-37)
+    #: The paper passage this declaration formalises (SR-24); None: not mapped yet.
+    paper: PaperPassage | None = None
+
+
+class MappingContested(_P):
+    """A reviewer says the paper passage does not belong to the declaration
+    (SR-24). Maintainers see every contest."""
+
+    ticket_id: str
+    reviewer: str
+    reason: str
 
 
 class ChoiceSetDrawn(_P):
@@ -215,6 +228,7 @@ PAYLOADS: dict[str, type[_P]] = {
     "reviewer.maintainer_appointed": MaintainerAppointed,
     "reviewer.maintainer_revoked": MaintainerRevoked,
     "reviewer.preferences_set": PreferencesSet,
+    "ticket.mapping_contested": MappingContested,
     "submission.opened": SubmissionOpened,
     "submission.closed": SubmissionClosed,
     "ticket.created": TicketCreated,

@@ -100,7 +100,8 @@ generate honeypot candidates and open it for review:
 ```bash
 pixi run dpc render submission.json --workdir work/run1
 pixi run dpc mutate submission.json --workdir work/run1
-pixi run dpc open-submission submission.json --workdir work/run1 --title "…" --lab "…"
+# paper.yaml: per class-A declaration the passage of the paper (ADR 0012, SR-24)
+pixi run dpc open-submission submission.json --workdir work/run1 --title "…" --lab "…"     --paper work/run1/paper.yaml
 pixi run serve
 ```
 
@@ -161,6 +162,7 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 - [0009](docs/adr/0009-kernel-replay.md) Kernel replay and trust by location
 - [0010](docs/adr/0010-authentication.md) Authentication: pluggable identity providers, Keycloak first
 - [0011](docs/adr/0011-plain-rendering.md) Two renderings: with and without the submission's display rules
+- [0012](docs/adr/0012-paper-passages.md) The paper side of a ticket
 
 ## Conventions
 
