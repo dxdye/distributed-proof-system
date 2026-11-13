@@ -156,10 +156,12 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         """What is shown in a choice set: no counts, no popularity (SR-38)."""
         sub = coord.state.submissions[ticket.submission_id]
         _, expected = coord.lease_duration("review", ticket)
+        # SR-30: the expected duration only once it is measured; never a countdown.
+        minutes = max(1, round(expected / 60)) if coord.has_estimate("review", ticket) else None
         return {"ticket_id": ticket.ticket_id, "declaration": ticket.view.declaration,
                 "decl_kind": ticket.view.decl_kind, "domain": ticket.domain,
                 "tier": tier_of(ticket.difficulty),
-                "paper": sub.title, "expected_minutes": max(1, round(expected / 60))}
+                "paper": sub.title, "expected_minutes": minutes}
 
     def lease_view(lease: LeaseSt) -> dict[str, Any]:
         st = coord.state
@@ -170,7 +172,8 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             "extendable": lease.status == "active" and not lease.extended,
             "min_reason_chars": coord.params.min_reason_chars,
             # SR-30: the expected duration, never a countdown or expiry time.
-            "expected_minutes": max(1, round(lease.expected_s / 60)),
+            "expected_minutes": max(1, round(lease.expected_s / 60))
+            if coord.has_estimate(lease.duty, ticket) else None,
             "ticket": {
                 "ticket_id": ticket.ticket_id, "paper": sub.title, "repo_url": sub.repo_url,
                 "commit": sub.commit, "domain": ticket.domain,

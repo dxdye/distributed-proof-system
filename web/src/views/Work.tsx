@@ -86,10 +86,11 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
   );
 }
 
-function duration(minutes: number): string {
-  if (minutes < 90) return `about ${minutes} min`;
+function duration(minutes: number | null): string {
+  if (minutes === null) return "no time estimate yet";
+  if (minutes < 90) return `expected about ${minutes} min`;
   const hours = Math.round(minutes / 60);
-  return hours < 36 ? `about ${hours} h` : `about ${Math.round(hours / 24)} days`;
+  return hours < 36 ? `expected about ${hours} h` : `expected about ${Math.round(hours / 24)} days`;
 }
 
 // Choice set (SR-38): a few tickets from different papers, random order, no
@@ -156,7 +157,7 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
               </a>{" "}
               <span className="badge">{l.duty}</span>{" "}
               <span className="muted">{l.ticket.paper}</span>{" "}
-              <span className="muted small">· expected {duration(l.expected_minutes)}</span>
+              <span className="muted small">· {duration(l.expected_minutes)}</span>
             </li>
           ))}
         </ul>
@@ -202,7 +203,7 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
                   <code className="choice-name">{t.declaration}</code>
                   <span className="muted small">{t.paper}</span>
                   <span className="muted small">
-                    {t.domain} · expected {duration(t.expected_minutes)}
+                    {t.domain} · {duration(t.expected_minutes)}
                   </span>
                 </button>
               ))}

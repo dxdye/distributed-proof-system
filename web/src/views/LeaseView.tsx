@@ -280,8 +280,10 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
           )}
         </div>
         <p className="muted small">
-          Expected effort: about {lease.expected_minutes} minutes. There is no clock running — take
-          the time the ticket needs.
+          {lease.expected_minutes !== null
+            ? `Typical effort so far: about ${lease.expected_minutes} minutes. `
+            : ""}
+          There is no clock running: take the time the ticket needs.
         </p>
         <Infoview view={t.view} />
       </section>

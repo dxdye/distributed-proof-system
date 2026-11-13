@@ -393,6 +393,12 @@ class Coordinator:
             return st.choice_sets[set_id]
 
     # -------------------------------------------------------------- leases
+    def has_estimate(self, duty: str, ticket: TicketSt) -> bool:
+        """Enough finished tickets of this duty and difficulty for a time estimate?
+        Below that the default is only a lease length, not something to show."""
+        done = self.state.durations.get((duty, difficulty_bucket(ticket.difficulty)), [])
+        return len(done) >= self.params.lease_min_samples
+
     def lease_duration(self, duty: str, ticket: TicketSt) -> tuple[int, int]:
         """``(τ, expected)`` in seconds; τ from finished tickets of the same duty
         and difficulty (SR-26), the expected duration is their median (SR-30)."""

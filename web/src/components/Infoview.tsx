@@ -102,7 +102,6 @@ function ComponentBox({ component, kind }: { component: Component; kind: string 
 
 export function Infoview({ view }: { view: UnitView }) {
   const differing = view.components.filter(displayDiffers).length;
-  const checked = view.components.some((c) => c.trusted_text != null);
   return (
     <div className="infoview">
       <div className="decl-head">
@@ -118,9 +117,6 @@ export function Infoview({ view }: { view: UnitView }) {
           . Both versions are shown below. The plain one is what the declaration actually says;
           judge that one.
         </p>
-      )}
-      {checked && differing === 0 && (
-        <p className="muted small">Looks the same without the submission's own notation.</p>
       )}
       {view.components.map((c) => (
         <ComponentBox key={`${c.target}:${c.label}`} component={c} kind={view.decl_kind} />

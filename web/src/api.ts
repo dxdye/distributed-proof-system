@@ -23,7 +23,7 @@ export type Lease = {
   duty: "review" | "pvv" | "claim";
   status: string;
   extendable: boolean;
-  expected_minutes: number;
+  expected_minutes: number | null;
   min_reason_chars: number;
   ticket: {
     ticket_id: string;
@@ -49,7 +49,7 @@ export type Card = {
   domain: string;
   tier: string;
   paper: string;
-  expected_minutes: number;
+  expected_minutes: number | null;
 };
 export type ChoiceSet = { set_id: string | null; tickets: Card[] };
 export type HistoryItem = {
