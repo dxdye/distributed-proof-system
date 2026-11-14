@@ -264,6 +264,14 @@ class Coordinator:
                     tier=tier_of_view(spec.view)))  # the original's view, also for honeypots
             return sid
 
+    def record_basis(self, basis: ev.BasisRecorded) -> None:
+        """What the result relies on (C-29), from the ingest. Recorded again
+        when it changes, e.g. once the official packages are re-checked."""
+        with self.lock:
+            if basis.submission_id not in self.state.submissions:
+                raise NotFound("no such submission")
+            self._emit("submission.basis_recorded", basis)
+
     def close_submission(self, rid: str, submission_id: str) -> None:
         """Close a submission and open every remaining commitment."""
         with self.lock:

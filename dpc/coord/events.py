@@ -276,6 +276,32 @@ class SubmissionClosed(_P):
     submission_id: str
 
 
+class LibraryRef(_P):
+    name: str
+    url: str
+    rev: str
+
+
+class BasisRecorded(_P):
+    """What the result relies on (proposal C-29), from the submission's ingest:
+    what the kernel re-checked, and what is trusted without re-checking."""
+
+    submission_id: str
+    toolchain: str
+    axioms: tuple[str, ...]  # of the main theorem; only Ax0 is admitted
+    libraries: tuple[LibraryRef, ...] = ()  # official packages at their pinned revisions
+    hardened_files: int | None = None  # compared before and after the build
+    hardened_unchanged: bool | None = None
+    replayed: bool = False  # the kernel replay of ADR 0009 ran
+    modules_replayed: int = 0
+    constants_replayed: int = 0
+    replay_failures: int = 0
+    modules_trusted: int = 0  # official packages, trusted by location
+    modules_core: int = 0  # the toolchain's library
+    libraries_replayed: bool = False  # official packages re-checked as well (C-29)
+    second_kernel: bool = False  # an independent kernel re-checked (C-29)
+
+
 PAYLOADS: dict[str, type[_P]] = {
     "coord.configured": CoordConfigured,
     "reviewer.registered": ReviewerRegistered,
@@ -292,6 +318,7 @@ PAYLOADS: dict[str, type[_P]] = {
     "ticket.reopen_resolved": ReopenResolved,
     "submission.opened": SubmissionOpened,
     "submission.closed": SubmissionClosed,
+    "submission.basis_recorded": BasisRecorded,
     "ticket.created": TicketCreated,
     "ticket.round_opened": RoundOpened,
     "ticket.decided": TicketDecided,

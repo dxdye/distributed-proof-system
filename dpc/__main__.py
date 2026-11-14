@@ -187,7 +187,7 @@ def cmd_export_demo(args: argparse.Namespace) -> int:
 
     root = Path(__file__).resolve().parents[1]
     counts = export(default_sources(root, Path(args.demo_work), Path(args.case_studies)),
-                    Path(args.out))
+                    Path(args.out), Path(args.ingest_log) if args.ingest_log else None)
     _print(counts | {"file": args.out})
     return 0
 
@@ -236,8 +236,37 @@ def cmd_open_submission(args: argparse.Namespace) -> int:
         commit=submission.commit, tickets=specs, pool=pool, share=args.share, lab=args.lab,
         paper_ref=submission.paper_ref, root=submission.root,
         authors=authors)
+    basis = _record_basis(coord, sid, workdir, submission.commit, args.ingest_log)
     _print({"submission_id": sid, "units": len(specs),
-            "tickets": len(coord.state.submissions[sid].tickets)})
+            "tickets": len(coord.state.submissions[sid].tickets), "basis": basis})
+    return 0
+
+
+def _record_basis(coord: Coordinator, sid: str, workdir: Path, commit: str,
+                  ingest_log: str | None) -> dict[str, object]:
+    """What the result relies on (C-29), from the ingest's records."""
+    from dpc.coord import events as ev
+    from dpc.ingest.basis import trust_basis
+
+    log = AuditLog(Path(ingest_log)) if ingest_log else None
+    try:
+        fields = trust_basis(workdir, commit, log)
+    finally:
+        if log is not None:
+            log.close()
+    coord.record_basis(ev.BasisRecorded(submission_id=sid, **fields))
+    return fields
+
+
+def cmd_record_basis(args: argparse.Namespace) -> int:
+    """Record the trusted assumptions of an already opened submission."""
+    coord = _coordinator(args)
+    sub = coord.state.submissions.get(args.submission_id)
+    if sub is None:
+        print(f"unknown submission {args.submission_id!r}", file=sys.stderr)
+        return 1
+    _print(_record_basis(coord, sub.submission_id, Path(args.workdir).resolve(), sub.commit,
+                         args.ingest_log))
     return 0
 
 
@@ -397,8 +426,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--author", dest="authors", action="append", help="author pseudonym")
     p.add_argument("--paper", help="paper map (YAML) of the class-A units, SR-24; "
                    "default: <workdir>/paper.yaml if present")
+    p.add_argument("--ingest-log", help="audit log of the ingest: pinned libraries and "
+                   "the integrity check, for what the result relies on (C-29)")
     coord_args(p)
     p.set_defaults(func=cmd_open_submission)
+
+    p = sub.add_parser("record-basis", help="record what an opened submission relies on")
+    p.add_argument("submission_id")
+    p.add_argument("--workdir", required=True, help="with analysis/core.jsonl, replay.jsonl")
+    p.add_argument("--ingest-log", help="audit log of the ingest")
+    coord_args(p)
+    p.set_defaults(func=cmd_record_basis)
 
     p = sub.add_parser("appoint", help="appoint a maintainer")
     p.add_argument("pseudonym")
@@ -409,6 +447,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--demo-work", default="data/walkthrough/demo-work",
                    help="fixture renderings of an earlier `dpc demo`")
     p.add_argument("--case-studies", default="work/case-studies")
+    p.add_argument("--ingest-log", default="data/case-studies.sqlite",
+                   help="audit log of the case studies' ingest (pinned libraries)")
     p.add_argument("--out", default="web/demo/snapshot.json")
     p.set_defaults(func=cmd_export_demo)
 

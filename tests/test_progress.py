@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -13,9 +14,13 @@ from fastapi.testclient import TestClient
 from test_discussion import decide_error
 
 from dpc.api import create_app
+from dpc.audit import AuditLog
 from dpc.coord import Forbidden, TicketSpec, progress
+from dpc.coord import events as ev
 from dpc.honeypots import HoneypotPool, MutantFileSource, Origin
+from dpc.ingest.basis import trust_basis
 from dpc.tickets.paper import PaperPassage, PaperSource
+from dpc.tickets.views import Component, GlossaryEntry, UnitView
 
 from test_coord import Env, params, specs, view
 
@@ -170,3 +175,70 @@ def test_maintainers_see_the_declaration_as_its_reviewers_do(env: Env) -> None:
     assert d["questions"][0]["id"] == "fidelity"
     missing = {"submission_id": sid, "declaration": "P.nope"}
     assert client.get("/api/admin/declaration", params=missing, headers=maint).status_code == 404
+
+
+DATA = Path(__file__).parent / "data"
+
+
+def _ingested(tmp_path: Path) -> tuple[Path, AuditLog]:
+    """A workdir and an ingest log as the pipeline leaves them."""
+    work = tmp_path / "work"
+    (work / "analysis").mkdir(parents=True)
+    shutil.copy(DATA / "basic" / "core.jsonl", work / "analysis" / "core.jsonl")
+    records: list[dict[str, object]] = [{
+        "kind": "header", "schema": "dpc.replay/1", "toolchain": "4.33.1", "roots": ["Basic"],
+        "trusted": [], "core": "/toolchain/lib/lean", "jobs": 1}]
+    for module, origin in {"Init.Core": "core", "Mathlib.Data": "trusted",
+                           "Basic": "replayed"}.items():
+        records.append({"kind": "module", "module": module, "origin": origin, "entry": "/x",
+                        "constants": 7, "skipped": 0, "ok": True, "error": None})
+    (work / "analysis" / "replay.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in records), "utf-8")
+    log = AuditLog(tmp_path / "ingest.sqlite")
+    log.append("repo.fetched", {"commit": "c" * 40, "artifact_key": "k", "packages": [
+        {"name": "mathlib", "url": "https://github.com/leanprover-community/mathlib4.git",
+         "rev": "abc"},
+        {"name": "helpers", "url": "https://github.com/someone/helpers", "rev": "def"}]})
+    log.append("hardened.snapshot", {"artifact_key": "k", "files": 120})
+    log.append("hardened.verified", {"artifact_key": "k", "ok": True})
+    return work, log
+
+
+@pytest.mark.req("SR-42")
+def test_what_the_result_relies_on(env: Env, tmp_path: Path) -> None:
+    """Proposal C-29: the trusted assumptions, from the ingest's own records."""
+    work, log = _ingested(tmp_path)
+    fields = trust_basis(work, "c" * 40, log)
+    log.close()
+    assert fields["toolchain"] == "4.33.1" and fields["axioms"] == ["propext", "Quot.sound"]
+    assert (fields["modules_replayed"], fields["constants_replayed"]) == (1, 7)
+    assert (fields["modules_trusted"], fields["modules_core"]) == (1, 1)
+    assert [lib["name"] for lib in fields["libraries"]] == ["mathlib"]  # official only
+    assert fields["hardened_files"] == 120 and fields["hardened_unchanged"] is True
+    root = UnitView(declaration="P.u0", decl_kind="theorem", components=(Component(
+        target="type", text="∀ x, 0 ≤ Real.sqrt x", glossary=(
+            GlossaryEntry(name="Real.sqrt", type="ℝ → ℝ", origin="library"),
+            GlossaryEntry(name="P.helper", type="ℝ → ℝ", origin="submission"))),))
+    sid = env.coord.open_submission(
+        title="P", repo_url="https://x/p", commit="c" * 40, root="P.u0",
+        tickets=[TicketSpec(root, domain="analysis"), *specs("P", 2)[1:]])
+    env.coord.record_basis(ev.BasisRecorded(submission_id=sid, **fields))
+    d = progress.detail(env.coord, sid, None)
+    assert d["basis"]["libraries"][0]["rev"] == "abc"
+    assert not d["basis"]["libraries_replayed"] and not d["basis"]["second_kernel"]
+    assert d["library_definitions"] == [{
+        "name": "Real.sqrt", "type": "ℝ → ℝ", "origin": "library", "doc": None, "note": None,
+        "used_by": ["P.u0"], "reviewed": False}]
+
+
+@pytest.mark.req("SR-06")
+def test_library_definitions_wait_for_the_planted_errors(tmp_path: Path) -> None:
+    """A mutant can use a definition the real statements do not."""
+    env = planted_env(tmp_path)
+    sid = next(iter(env.coord.state.submissions))
+    admin = env.people(1, "admin")[0]
+    env.coord.appoint_maintainer(admin)
+    assert progress.detail(env.coord, sid, None)["library_definitions"] is None
+    assert progress.detail(env.coord, sid, admin)["library_definitions"] == []
+    env.log.close()
+    env.vault.close()

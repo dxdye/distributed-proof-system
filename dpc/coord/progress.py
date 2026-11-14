@@ -160,7 +160,35 @@ def detail(coord: Coordinator, submission_id: str, viewer: str | None) -> dict[s
         timeline.append({"at": coord.now().isoformat(), "decided": len(points)})
     out["timeline"] = timeline
     out["notes"] = notes(coord, submission_id, viewer)
+    out["basis"] = sub.basis.model_dump(mode="json", exclude={"submission_id"}) \
+        if sub.basis else None
+    out["library_definitions"] = library_definitions(coord, submission_id, viewer)
     return out
+
+
+def library_definitions(coord: Coordinator, submission_id: str, viewer: str | None
+                        ) -> list[dict[str, Any]] | None:
+    """The library and core definitions the class-A statements use directly
+    (C-27), with their review status. Not shown while a planted error of the
+    submission is unrevealed: a mutant can use a definition the real
+    statements do not, and the list would give it away. Maintainers see it."""
+    st = coord.state
+    maintainer = viewer is not None and viewer in st.reviewers and st.reviewers[viewer].maintainer
+    if not maintainer and coord.vault.unrevealed(honeypots_only=True,
+                                                 submission_id=submission_id):
+        return None
+    found: dict[str, dict[str, Any]] = {}
+    for u in units(coord, submission_id):
+        for comp in u.real.view.components:
+            for g in comp.trusted_glossary or comp.glossary:
+                if g.origin in ("library", "core") and g.name not in found:
+                    found[g.name] = {"name": g.name, "type": g.type, "origin": g.origin,
+                                     "doc": g.doc, "note": g.note, "used_by": set(),
+                                     "reviewed": False}  # library tickets: C-27, not yet
+                if g.name in found:
+                    found[g.name]["used_by"].add(u.declaration)
+    return [dict(d, used_by=sorted(d["used_by"]))
+            for d in sorted(found.values(), key=lambda d: (d["origin"] != "library", d["name"]))]
 
 
 def notes(coord: Coordinator, submission_id: str, viewer: str | None) -> list[dict[str, Any]]:
