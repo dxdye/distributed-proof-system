@@ -136,6 +136,8 @@ export type ThreadSummary = {
   posts: number;
   last_activity: string;
   can_share: boolean;
+  score: number; // worth reading: sorts the list, says nothing about the decision
+  my_vote: number;
 };
 export type Post = {
   post_id: string;
@@ -150,6 +152,7 @@ export type Post = {
   my_vote: number;
   ai_used: boolean;
   hidden: string | null;
+  reported_by_me?: boolean;
   text: string;
   verdict?: "correct" | "incorrect";
   reason?: string;
@@ -174,6 +177,8 @@ export type Thread = {
     reviewed_here: boolean;
   };
   reopen_pending: boolean;
+  score: number;
+  my_vote: number;
   posts: Post[];
 };
 // The public progress page (proposal C-26): counts are by declaration, never
@@ -373,6 +378,9 @@ export const api = {
       reason,
     }),
   vote: (postId: string, value: number) => request("POST", `/api/posts/${postId}/vote`, { value }),
+  voteThread: (sid: string, decl: string, value: number) =>
+    request("POST", "/api/thread/vote", { submission_id: sid, declaration: decl, value }),
+  withdrawReport: (postId: string) => request("DELETE", `/api/posts/${postId}/report`),
   report: (postId: string, reason: string) =>
     request("POST", `/api/posts/${postId}/report`, { reason }),
   progress: () => request<ProgressSummary[]>("GET", "/api/progress"),

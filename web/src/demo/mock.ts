@@ -95,6 +95,7 @@ type State = {
     status: string;
   }[];
   decided_at: Record<string, string>; // ticket id -> when decided or revealed (progress page)
+  thread_votes: Record<string, Record<string, number>>; // thread key -> voter -> ±1
 };
 type Author = Role | "ana" | "ben" | "carla";
 type MockPost = {
@@ -107,7 +108,7 @@ type MockPost = {
   failed?: string[];
   at: string;
   votes: Record<string, number>;
-  reports: string[];
+  reports: { by: string; reason: string }[];
   hidden: string | null;
   ai_used: boolean;
 };
@@ -208,7 +209,7 @@ function fresh(): State {
     seen: [],
   });
   const s: State = {
-    version: 4,
+    version: 5,
     leases: {},
     claims: [],
     contests: {},
@@ -226,6 +227,7 @@ function fresh(): State {
     named: {},
     reopens: [],
     decided_at: {},
+    thread_votes: {},
   };
   const day = (d: number) => new Date(Date.now() - d * 86400000).toISOString();
   // Examples so that every role has something to see.
@@ -462,7 +464,7 @@ function load(): State {
     const raw = sessionStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as State;
-      if (parsed.version === 4) return parsed;
+      if (parsed.version === 5) return parsed;
     }
   } catch {
     /* fresh state */
@@ -760,7 +762,7 @@ function admin(path: string, method: string, body: Json): unknown {
           declaration: decl,
           text: p.text,
           kind: p.kind,
-          reasons: p.reports,
+          reasons: p.reports.map((r) => r.reason),
         };
       });
   }
@@ -916,6 +918,7 @@ function threadJson(role: Role, sid: string, decl: string): Json {
     my_vote: p.votes[role] ?? 0,
     ai_used: p.ai_used,
     hidden: p.hidden,
+    reported_by_me: p.reports.some((r) => r.by === role),
     text: p.hidden ? "" : p.text,
     ...(p.kind === "review" && !p.hidden
       ? { verdict: p.verdict, reason: p.text, failed: p.failed ?? [] }
@@ -943,6 +946,8 @@ function threadJson(role: Role, sid: string, decl: string): Json {
     reopen_pending: state.reopens.some(
       (q) => q.ticket_id === real.ticket_id && q.status === "open",
     ),
+    score: Object.values(state.thread_votes[key] ?? {}).reduce((a, b) => a + b, 0),
+    my_vote: state.thread_votes[key]?.[role] ?? 0,
     posts: out,
   };
 }
@@ -954,25 +959,32 @@ function discussion(
   query: URLSearchParams,
 ): unknown {
   if (path === "/api/discussions") {
-    return openThreads().map(([sid, decl]) => {
-      const real = realTicket(sid, decl)!;
-      const posts = state.posts.filter((p) => p.thread === threadKey(sid, decl) && !p.hidden);
-      return {
-        submission_id: sid,
-        declaration: decl,
-        decl_kind: real.decl_kind,
-        paper: snap.submissions.find((x) => x.submission_id === sid)!.title,
-        domain: real.domain,
-        outcome: statusOf(real.ticket_id),
-        posts: posts.length,
-        last_activity:
-          posts
-            .map((p) => p.at)
-            .sort()
-            .pop() ?? "",
-        can_share: canShare(role, sid, decl),
-      };
-    });
+    return openThreads()
+      .map(([sid, decl]) => {
+        const real = realTicket(sid, decl)!;
+        const posts = state.posts.filter((p) => p.thread === threadKey(sid, decl) && !p.hidden);
+        return {
+          submission_id: sid,
+          declaration: decl,
+          decl_kind: real.decl_kind,
+          paper: snap.submissions.find((x) => x.submission_id === sid)!.title,
+          domain: real.domain,
+          outcome: statusOf(real.ticket_id),
+          posts: posts.length,
+          last_activity:
+            posts
+              .map((p) => p.at)
+              .sort()
+              .pop() ?? "",
+          can_share: canShare(role, sid, decl),
+          score: Object.values(state.thread_votes[threadKey(sid, decl)] ?? {}).reduce(
+            (a, b) => a + b,
+            0,
+          ),
+          my_vote: state.thread_votes[threadKey(sid, decl)]?.[role] ?? 0,
+        };
+      })
+      .sort((a, b) => b.score - a.score || b.last_activity.localeCompare(a.last_activity));
   }
   if (path === "/api/thread") {
     const sid = query.get("submission_id") ?? "",
@@ -1030,6 +1042,15 @@ function discussion(
     });
     return { ok: true };
   }
+  if (path === "/api/thread/vote") {
+    if (!threadOpen(sid, decl))
+      throw new HttpError(403, "the discussion opens once the declaration is decided");
+    const v = Number(body.value);
+    const votes = (state.thread_votes[key] ??= {});
+    if (v) votes[role] = v;
+    else delete votes[role];
+    return { ok: true };
+  }
   if (path === "/api/thread/reopen") {
     const reason = String(body.reason ?? "").trim();
     if (reason.length < snap.min_reason_chars)
@@ -1054,7 +1075,15 @@ function discussion(
       const v = Number(body.value);
       if (v) p.votes[role] = v;
       else delete p.votes[role];
-    } else p.reports.push(String(body.reason ?? ""));
+    } else if (_method === "DELETE") {
+      if (!p.reports.some((r) => r.by === role))
+        throw new HttpError(404, "you have not reported this post");
+      p.reports = p.reports.filter((r) => r.by !== role);
+    } else {
+      if (p.reports.some((r) => r.by === role))
+        throw new HttpError(409, "you have already reported this post");
+      p.reports.push({ by: role, reason: String(body.reason ?? "") });
+    }
     return { ok: true };
   }
   return undefined;
@@ -1164,6 +1193,7 @@ function notesJson(role: Role | null, sid: string): Json[] {
     my_vote: role ? (p.votes[role] ?? 0) : 0,
     ai_used: p.ai_used,
     hidden: p.hidden,
+    reported_by_me: role ? p.reports.some((r) => r.by === role) : false,
     text: p.hidden ? "" : p.text,
   }));
   out.sort((a, b) => b.score - a.score || a.at.localeCompare(b.at));

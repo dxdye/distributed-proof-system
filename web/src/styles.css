@@ -1622,8 +1622,19 @@ button.choice.blocked:hover:not(:disabled) {
   margin: 0;
 }
 .thread-list li {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
   padding: 0.8rem 0;
   border-bottom: 1px solid var(--line);
+}
+.thread-head {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.thread-head h2 {
+  margin: 0;
 }
 .thread-list li:last-child {
   border-bottom: 0;

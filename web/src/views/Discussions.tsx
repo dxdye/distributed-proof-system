@@ -25,12 +25,58 @@ function since(month: string): string {
   });
 }
 
+/** Up- and downvotes: they sort and never count towards trust or decisions. */
+function Votes({
+  score,
+  mine,
+  onVote,
+  disabled,
+  up,
+  down,
+}: {
+  score: number;
+  mine: number;
+  onVote: (value: number) => void;
+  disabled: string | null; // why voting is not possible, or null
+  up: string;
+  down: string;
+}) {
+  return (
+    <div className="votes" aria-label="Votes">
+      <button
+        className={mine === 1 ? "vote on" : "vote"}
+        disabled={disabled !== null}
+        title={disabled ?? up}
+        aria-pressed={mine === 1}
+        onClick={() => onVote(mine === 1 ? 0 : 1)}
+      >
+        ▲
+      </button>
+      <span className="score">{score}</span>
+      <button
+        className={mine === -1 ? "vote on" : "vote"}
+        disabled={disabled !== null}
+        title={disabled ?? down}
+        aria-pressed={mine === -1}
+        onClick={() => onVote(mine === -1 ? 0 : -1)}
+      >
+        ▼
+      </button>
+    </div>
+  );
+}
+
+const THREAD_UP = "Worth reading. Votes sort the discussions; they say nothing about the decision.";
+const THREAD_DOWN =
+  "Not worth reading. Votes sort the discussions; they say nothing about the decision.";
+
 export function Discussions() {
   const [threads, setThreads] = useState<ThreadSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
+  const load = useCallback(() => {
     api.discussions().then(setThreads, (e) => setError((e as Error).message));
   }, []);
+  useEffect(load, [load]);
   if (error) return <p className="error">{error}</p>;
   if (!threads) return <p className="muted">Loading…</p>;
   return (
@@ -39,7 +85,8 @@ export function Discussions() {
       <p className="muted">
         Once a declaration is decided, everyone who reviewed it can share their verdict, and anyone
         can join the discussion. Threads open only after the decision, so that nobody's verdict is
-        influenced. Votes sort the posts; they never count towards trust.
+        influenced. Votes sort the discussions and the posts: they say what is worth reading, never
+        whether a decision is right, and they never count towards trust.
       </p>
       {threads.length === 0 ? (
         <p className="muted">No discussion is open yet: declarations are still under review.</p>
@@ -47,15 +94,25 @@ export function Discussions() {
         <ul className="thread-list">
           {threads.map((t) => (
             <li key={`${t.submission_id}:${t.declaration}`}>
-              <a href={threadHref(t.submission_id, t.declaration)}>
-                <code>{t.declaration}</code>
-              </a>{" "}
-              <span className={`badge outcome-${t.outcome}`}>
-                {OUTCOMES[t.outcome] ?? t.outcome}
-              </span>
-              {t.can_share && <span className="badge share-hint">you can share your review</span>}
-              <div className="muted small">
-                {t.paper} · {t.domain} · {t.posts} {t.posts === 1 ? "post" : "posts"}
+              <Votes
+                score={t.score}
+                mine={t.my_vote}
+                disabled={null}
+                up={THREAD_UP}
+                down={THREAD_DOWN}
+                onVote={(v) => api.voteThread(t.submission_id, t.declaration, v).then(load)}
+              />
+              <div>
+                <a href={threadHref(t.submission_id, t.declaration)}>
+                  <code>{t.declaration}</code>
+                </a>{" "}
+                <span className={`badge outcome-${t.outcome}`}>
+                  {OUTCOMES[t.outcome] ?? t.outcome}
+                </span>
+                {t.can_share && <span className="badge share-hint">you can share your review</span>}
+                <div className="muted small">
+                  {t.paper} · {t.domain} · {t.posts} {t.posts === 1 ? "post" : "posts"}
+                </div>
               </div>
             </li>
           ))}
@@ -76,7 +133,6 @@ export function PostCard({
 }) {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
-  const vote = (v: number) => api.vote(post.post_id, post.my_vote === v ? 0 : v).then(onChange);
   const noVote = post.is_me ? "Your own post" : signedIn ? null : "Sign in to vote";
   if (post.hidden) {
     return (
@@ -87,25 +143,14 @@ export function PostCard({
   }
   return (
     <article className={post.kind === "review" ? "post review-post" : "post"}>
-      <div className="votes" aria-label="Votes">
-        <button
-          className={post.my_vote === 1 ? "vote on" : "vote"}
-          disabled={noVote !== null}
-          title={noVote ?? "Useful"}
-          onClick={() => vote(1)}
-        >
-          ▲
-        </button>
-        <span className="score">{post.score}</span>
-        <button
-          className={post.my_vote === -1 ? "vote on" : "vote"}
-          disabled={noVote !== null}
-          title={noVote ?? "Not useful"}
-          onClick={() => vote(-1)}
-        >
-          ▼
-        </button>
-      </div>
+      <Votes
+        score={post.score}
+        mine={post.my_vote}
+        disabled={noVote}
+        up="Useful"
+        down="Not useful"
+        onVote={(v) => api.vote(post.post_id, v).then(onChange)}
+      />
       <div className="post-body">
         <div className="post-head">
           <strong>{post.author}</strong>
@@ -132,7 +177,18 @@ export function PostCard({
         </p>
         {!post.is_me && signedIn && (
           <div className="post-actions">
-            {reporting ? (
+            {post.reported_by_me ? (
+              <span className="muted small">
+                You reported this post.{" "}
+                <button
+                  className="link small"
+                  title="Take the report back; maintainers will no longer see it"
+                  onClick={() => api.withdrawReport(post.post_id).then(onChange)}
+                >
+                  Withdraw report
+                </button>
+              </span>
+            ) : reporting ? (
               <span className="report">
                 <input
                   placeholder="Why should a maintainer look at this?"
@@ -142,9 +198,24 @@ export function PostCard({
                 <button
                   className="secondary small"
                   disabled={!reason.trim()}
-                  onClick={() => api.report(post.post_id, reason).then(() => setReporting(false))}
+                  onClick={() =>
+                    api.report(post.post_id, reason).then(() => {
+                      setReporting(false);
+                      setReason("");
+                      onChange();
+                    })
+                  }
                 >
                   Report
+                </button>
+                <button
+                  className="link small"
+                  onClick={() => {
+                    setReporting(false);
+                    setReason("");
+                  }}
+                >
+                  Cancel
                 </button>
               </span>
             ) : (
@@ -200,12 +271,22 @@ export function ThreadView({ sid, decl }: { sid: string; decl: string }) {
         <p className="small">
           <a href="#/discussions">← All discussions</a>
         </p>
-        <h2>
-          <code>{thread.declaration}</code>{" "}
-          <span className={`badge outcome-${thread.outcome}`}>
-            {OUTCOMES[thread.outcome] ?? thread.outcome}
-          </span>
-        </h2>
+        <div className="thread-head">
+          <Votes
+            score={thread.score}
+            mine={thread.my_vote}
+            disabled={null}
+            up={THREAD_UP}
+            down={THREAD_DOWN}
+            onVote={(v) => api.voteThread(sid, decl, v).then(load)}
+          />
+          <h2>
+            <code>{thread.declaration}</code>{" "}
+            <span className={`badge outcome-${thread.outcome}`}>
+              {OUTCOMES[thread.outcome] ?? thread.outcome}
+            </span>
+          </h2>
+        </div>
         <p className="muted small">
           {thread.paper} · {thread.domain} · <a href={thread.repo_url}>{thread.repo_url}</a> @{" "}
           <code>{thread.commit.slice(0, 12)}</code>
