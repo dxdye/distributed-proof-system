@@ -13,10 +13,10 @@ import { ProgressDetailView, ProgressList } from "./views/Progress";
 import { How } from "./views/How";
 import { Imprint, Privacy } from "./views/Legal";
 import { JoinForm, SignIn } from "./views/Register";
-import { StatsView } from "./views/StatsView";
 import { Work } from "./views/Work";
 
-export function App() {
+/** `routes`: extra pages of a special build (the click dummy's role choice). */
+export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   const route = useRoute();
   const [providers, setProviders] = useState<Provider[] | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -53,12 +53,13 @@ export function App() {
   const signedIn = Boolean(session?.authenticated && session.registered);
   const page = route[0] ?? "work";
   let body;
-  if (page === "how") body = <How />;
+  if (routes?.[page]) body = routes[page];
+  else if (page === "how") body = <How />;
   else if (page === "imprint") body = <Imprint />;
   else if (page === "privacy") body = <Privacy />;
   else if (error) body = <p className="error">{error}</p>;
-  else if (page === "stats") body = <StatsView />;
-  else if (page === "progress")
+  // Statistics became part of the progress page; old links still work.
+  else if (page === "progress" || page === "stats")
     body = route[1] ? (
       <ProgressDetailView key={route[1]} sid={decodeURIComponent(route[1])} me={me} />
     ) : (
@@ -113,29 +114,31 @@ export function App() {
             </span>
           </a>
           <nav className="main-nav" aria-label="Main">
+            {/* Your work · public · your role */}
             {signedIn && (
-              <a href="#/work" aria-current={current("work") ?? current("lease")}>
-                Review
-              </a>
+              <>
+                <a href="#/work" aria-current={current("work") ?? current("lease")}>
+                  Review
+                </a>
+                <a href="#/discussions" aria-current={current("discussions") ?? current("thread")}>
+                  Discussions
+                </a>
+                <span className="nav-sep" aria-hidden="true" />
+              </>
             )}
-            {signedIn && (
-              <a href="#/discussions" aria-current={current("discussions") ?? current("thread")}>
-                Discussions
-              </a>
-            )}
-            <a href="#/progress" aria-current={current("progress")}>
+            <a href="#/progress" aria-current={current("progress") ?? current("stats")}>
               Progress
             </a>
             <a href="#/how" aria-current={current("how")}>
               How it works
             </a>
-            <a href="#/stats" aria-current={current("stats")}>
-              Statistics
-            </a>
             {me?.maintainer && (
-              <a href="#/admin" aria-current={current("admin")}>
-                Maintainers
-              </a>
+              <>
+                <span className="nav-sep" aria-hidden="true" />
+                <a href="#/admin" aria-current={current("admin")}>
+                  Maintainers
+                </a>
+              </>
             )}
           </nav>
         </div>

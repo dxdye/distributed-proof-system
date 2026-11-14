@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// Minimal hash router: #/work, #/lease/<id>, #/history, #/stats, #/admin.
+// Minimal hash router: #/work, #/lease/<id>, #/progress/<id>, #/thread/<id>/<decl>, #/admin.
 
 export function navigate(path: string): void {
   window.location.hash = path;

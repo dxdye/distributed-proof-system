@@ -93,6 +93,7 @@ export type Me = {
   roles: Record<string, string[]>;
   reliability: number;
   wip_limit: number;
+  pvv_waiting: number; // re-checks next_duty could hand out now
   preferences: { domains: string[]; tiers: string[] };
   tiers_open: string[];
   leases: Lease[];
@@ -102,7 +103,7 @@ export type Stats = {
   reviewers: number;
   reviewers_by_group: Record<string, number>;
   submissions: number;
-  tickets_by_status: Record<string, number>;
+  planted_errors_revealed: number;
   reviews_last_7_days: number;
   open_claims: number;
   active_leases: number;

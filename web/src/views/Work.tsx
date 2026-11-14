@@ -136,16 +136,20 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
     }
   }
 
+  const [dutyError, setDutyError] = useState<string | null>(null);
   async function duty() {
-    setError(null);
+    setDutyError(null);
     try {
       const lease = await api.nextDuty();
       if (lease) {
         reload();
         navigate(`/lease/${lease.lease_id}`);
-      } else setError("No PVV duty is waiting for you right now.");
+      } else {
+        setDutyError("No re-check is waiting for you right now.");
+        reload();
+      }
     } catch (e) {
-      setError((e as Error).message);
+      setDutyError((e as Error).message);
     }
   }
 
@@ -174,15 +178,36 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
         </p>
       </section>
 
-      <section className="card">
-        <div className="row">
-          <h2>Choose your next ticket</h2>
-          {isPvv && (
-            <button className="secondary" onClick={duty}>
-              Take next PVV duty
+      {isPvv && (
+        <section className={me.pvv_waiting > 0 ? "card duty-card waiting" : "card duty-card"}>
+          <div className="row">
+            <div>
+              <span className="eyebrow">Re-checks · PVV</span>
+              <h2>
+                {me.pvv_waiting === 0
+                  ? "No re-check is waiting for you"
+                  : `${me.pvv_waiting} ${me.pvv_waiting === 1 ? "re-check is" : "re-checks are"} waiting for you`}
+              </h2>
+            </div>
+            <button
+              onClick={duty}
+              disabled={me.pvv_waiting === 0}
+              title="Takes the oldest waiting re-check: a claimed error first, then a verdict to check a second time."
+            >
+              Start a re-check
             </button>
-          )}
-        </div>
+          </div>
+          <p className="muted small">
+            As a re-checker you decide errors that reviewers have claimed, and you check verdicts of
+            others a second time. Re-checks are assigned in order, not chosen, so that nobody can
+            pick whose verdict to check. Claimed errors come first: they hold up the decision.
+          </p>
+          {dutyError && <p className="error">{dutyError}</p>}
+        </section>
+      )}
+
+      <section className="card">
+        <h2>Choose your next ticket</h2>
         <Preferences
           me={me}
           onSaved={() => {

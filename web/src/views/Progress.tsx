@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Me, type ProgressDetail, type ProgressSummary, type ProgressUnit } from "../api";
+import {
+  api,
+  type Me,
+  type ProgressDetail,
+  type ProgressSummary,
+  type ProgressUnit,
+  type Stats,
+} from "../api";
 import { Infoview } from "../components/Infoview";
 import { MathText } from "../components/MathText";
 import { ProgressChart } from "../components/ProgressChart";
@@ -136,9 +143,11 @@ function Facts({ s }: { s: ProgressSummary }) {
 
 export function ProgressList({ me }: { me: Me | null }) {
   const [list, setList] = useState<ProgressSummary[] | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     api.progress().then(setList, (e) => setError((e as Error).message));
+    api.stats().then(setStats, () => setStats(null));
   }, []);
   if (error) return <p className="error">{error}</p>;
   if (!list) return <p className="muted">Loading…</p>;
@@ -168,6 +177,7 @@ export function ProgressList({ me }: { me: Me | null }) {
           )}
         </p>
       </section>
+      {stats && <Activity stats={stats} />}
       {list.length === 0 && <p className="muted">No paper has been submitted yet.</p>}
       {list.map((s) => (
         <section key={s.submission_id} className="card progress-card">
@@ -207,8 +217,46 @@ export function ProgressList({ me }: { me: Me | null }) {
           giving their own. The formal statement of a main theorem appears once it is decided and
           the planted errors of its paper are revealed; until then, the paper's statement is shown.
         </p>
+        {stats?.audit_head && (
+          <p className="muted small">
+            Every figure is derived from the public audit log. Its current head:{" "}
+            <code>{stats.audit_head.slice(0, 16)}</code>
+          </p>
+        )}
       </section>
     </div>
+  );
+}
+
+// Activity of the whole community (formerly the statistics page). Aggregates
+// only (SR-23), and no ticket counts.
+function Activity({ stats }: { stats: Stats }) {
+  const groups = Object.entries(stats.reviewers_by_group)
+    .map(([g, n]) => `${n} ${g}`)
+    .join(", ");
+  const items: [string, number, string?][] = [
+    ["reviewers", stats.reviewers, groups ? `By group: ${groups}` : undefined],
+    ["reviews in the last 7 days", stats.reviews_last_7_days],
+    ["reviews in progress", stats.active_leases],
+    ["open claims", stats.open_claims, "Verdicts of an error, waiting for a re-check (PVV)"],
+    [
+      "planted errors revealed",
+      stats.planted_errors_revealed,
+      "Planted errors measure how reliable every reviewer is. They are revealed days later, in batches.",
+    ],
+  ];
+  return (
+    <section className="activity" aria-label="Activity">
+      <span className="eyebrow">Activity</span>
+      <ul>
+        {items.map(([label, n, hint]) => (
+          <li key={label} title={hint}>
+            <strong>{n}</strong>
+            <span>{label}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
