@@ -112,68 +112,87 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
       <button className="skip" onClick={() => document.getElementById("main")?.focus()}>
         Skip to content
       </button>
-      <div className="service-bar">
-        <div className="container">
-          <span>Research prototype · Review of Lean 4 formalizations</span>
-          {session?.authenticated && (
-            <UserMenu
-              me={me}
-              onSignOut={async () => {
-                setMe(null);
-                setSession({ authenticated: false });
-                await signOut();
-              }}
-            />
-          )}
-        </div>
-      </div>
-      <header className="site-header">
-        <div className="container header-inner">
-          <a className="brand" href="#/work">
-            <BrandMark />
-            <span className="brand-text">
-              <strong>Distributed Proof Check</strong>
-              <small>Human review of machine-checked mathematics</small>
-            </span>
-          </a>
-          <nav className="main-nav" aria-label="Main">
-            {/* Your work · public · your role */}
-            {signedIn && (
-              <>
-                <a href="#/work" aria-current={current("work") ?? current("lease")}>
-                  Review
-                </a>
-                <a href="#/discussions" aria-current={current("discussions") ?? current("thread")}>
-                  Discussions
-                </a>
-                <span className="nav-sep" aria-hidden="true" />
-              </>
-            )}
-            <a href="#/progress" aria-current={current("progress") ?? current("stats")}>
-              Progress
-            </a>
-            <a href="#/how" aria-current={current("how")}>
-              How it works
-            </a>
-            {me?.maintainer && (
-              <>
-                <span className="nav-sep" aria-hidden="true" />
-                <a href="#/admin" aria-current={current("admin")}>
-                  Maintainers
-                </a>
-              </>
-            )}
-            {session && !session.authenticated && (
-              <>
-                <span className="nav-sep" aria-hidden="true" />
-                <button className="nav-cta" onClick={signInNow}>
+      {/* Service bar and header stay at the top while scrolling. */}
+      <div className="masthead">
+        <div className="service-bar">
+          <div className="container">
+            <span>Research prototype · Review of Lean 4 formalizations</span>
+            {session?.authenticated ? (
+              <UserMenu
+                me={me}
+                onSignOut={async () => {
+                  setMe(null);
+                  setSession({ authenticated: false });
+                  await signOut();
+                }}
+              />
+            ) : (
+              session && (
+                <a
+                  className="signin-link"
+                  href={import.meta.env.MODE === "demo" ? "#/choose-role" : "#/work"}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    signInNow();
+                  }}
+                >
                   Sign in or join
-                </button>
-              </>
+                </a>
+              )
             )}
-          </nav>
+          </div>
         </div>
-      </header>
+        <header className="site-header">
+          <div className="container header-inner">
+            <a className="brand" href="#/work">
+              <BrandMark />
+              <span className="brand-text">
+                <strong>Distributed Proof Check</strong>
+                <small>Human review of machine-checked mathematics</small>
+              </span>
+            </a>
+            <nav className="main-nav" aria-label="Main">
+              {/* Your work · public · your role */}
+              {signedIn && (
+                <>
+                  <a href="#/work" aria-current={current("work") ?? current("lease")}>
+                    Review
+                  </a>
+                  <a
+                    href="#/discussions"
+                    aria-current={current("discussions") ?? current("thread")}
+                  >
+                    Discussions
+                  </a>
+                  <span className="nav-sep" aria-hidden="true" />
+                </>
+              )}
+              <a href="#/progress" aria-current={current("progress") ?? current("stats")}>
+                Progress
+              </a>
+              <a href="#/how" aria-current={current("how")}>
+                How it works
+              </a>
+              {me?.maintainer && (
+                <>
+                  <span className="nav-sep" aria-hidden="true" />
+                  <a href="#/admin" aria-current={current("admin")}>
+                    Maintainers
+                  </a>
+                </>
+              )}
+              {session && !session.authenticated && (
+                <>
+                  <span className="nav-sep" aria-hidden="true" />
+                  <button className="nav-cta" onClick={signInNow}>
+                    Sign in or join
+                  </button>
+                </>
+              )}
+            </nav>
+          </div>
+        </header>
+      </div>
       <main id="main" className="container" tabIndex={-1}>
         {body}
       </main>

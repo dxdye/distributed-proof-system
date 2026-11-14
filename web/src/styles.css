@@ -318,6 +318,28 @@ nav.main-nav button.nav-cta {
   font-size: 0.9rem;
   white-space: nowrap;
 }
+/* Service bar and header stay at the top while scrolling; anchors scrolled
+   into view keep clear of them. */
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 40; /* above content popovers, below the storage notice */
+}
+html {
+  scroll-padding-top: 7.5rem;
+}
+.service-bar a.signin-link {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.service-bar a.signin-link:hover {
+  color: var(--accent-hover);
+}
 .maintainer-note {
   border-left: 3px solid var(--btn-bg);
   background: var(--surface);
