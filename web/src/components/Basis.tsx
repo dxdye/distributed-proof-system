@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ProgressDetail } from "../api";
 
 // What a result relies on (proposal C-29): what the system re-checked, and
@@ -28,6 +29,9 @@ const LIB_NAMES: Record<string, string> = { mathlib: "Mathlib", batteries: "Batt
 export function Basis({ d }: { d: ProgressDetail }) {
   const b = d.basis;
   const defs = d.library_definitions;
+  const [all, setAll] = useState(false);
+  const FOLD = 10; // long lists (Navier–Stokes: 37) start folded
+  const shownDefs = defs && !all ? defs.slice(0, FOLD) : defs;
   const mathlib = b?.libraries.find((l) => l.name === "mathlib");
   const others = b?.libraries.filter((l) => l.name !== "mathlib") ?? [];
   return (
@@ -145,7 +149,7 @@ export function Basis({ d }: { d: ProgressDetail }) {
                 </tr>
               </thead>
               <tbody>
-                {defs.map((g) => (
+                {(shownDefs ?? []).map((g) => (
                   <tr key={g.name}>
                     <td>
                       <code title={g.type}>{g.name}</code>
@@ -166,6 +170,13 @@ export function Basis({ d }: { d: ProgressDetail }) {
                 ))}
               </tbody>
             </table>
+            {defs.length > FOLD && (
+              <p>
+                <button className="link small" onClick={() => setAll(!all)}>
+                  {all ? "Show fewer" : `Show all ${defs.length}`}
+                </button>
+              </p>
+            )}
           </>
         )}
       </div>
