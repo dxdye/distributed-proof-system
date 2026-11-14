@@ -360,9 +360,15 @@ go wrong:
   definitions its statement uses directly, with their definition, docstring
   and known conventions, and question 2 names them. A catalogue of conventions
   per Mathlib definition feeds these notes; it grows from Mathlib tickets,
-  findings and discussions (§8.9). Implemented in part: the glossary shows
-  origin and docstring of every constant, and notes on conventions for four
-  functions.
+  findings and discussions (§8.9). Implemented (2026-11-15): under the
+  statement, every ticket lists the library definitions it relies on, with
+  type, docstring and the convention to know, conventions first. Notation and
+  coercion plumbing (operators, numerals, pairs, inclusions) is left out; it
+  stays in the glossary. Question 2 names the definitions. The catalogue holds
+  notes for 16 functions, each with the Mathlib lemma that states it, and is
+  applied when a ticket is served, so earlier tickets get new notes. The list is
+  computed from the view shown, so a planted copy lists what it uses. Still
+  open: the definition body of each library definition.
 - **Definitions: by weighted sampling (§14 made concrete).** The Mathlib
   definitions in TCB(t) ∩ M of submitted results become Mathlib tickets, drawn
   with weights as in §7.1:
