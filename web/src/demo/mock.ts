@@ -208,7 +208,7 @@ function fresh(): State {
     seen: [],
   });
   const s: State = {
-    version: 3,
+    version: 4,
     leases: {},
     claims: [],
     contests: {},
@@ -388,6 +388,72 @@ function fresh(): State {
     { ana: 1 },
   );
   s.named["S-ns|"] = ["carla"];
+
+  // Navier–Stokes: two decided declarations with a discussion. Both are about
+  // how Mathlib's definitions are used (proposal C-27).
+  const nsPost = (
+    decl: string,
+    author: Author,
+    text: string,
+    at: string,
+    votes: Record<string, number>,
+  ) =>
+    s.posts.push({
+      post_id: `P-seed${s.posts.length + 1}`,
+      thread: `S-ns|NavierStokes.Comparator.${decl}`,
+      author,
+      kind: "comment",
+      text,
+      at,
+      votes,
+      reports: [],
+      hidden: null,
+      ai_used: false,
+    });
+  const ivc = find("NavierStokes.Comparator.InitialVelocityCondition", false);
+  const ivcd = find("NavierStokes.Comparator.InitialVelocityConditionDecay", false);
+  if (ivc && ivcd) {
+    s.status[ivc] = "accepted";
+    s.status[ivcd] = "accepted";
+    s.decided_at[ivc] = day(4);
+    s.decided_at[ivcd] = day(2.5);
+    nsPost(
+      "InitialVelocityCondition",
+      "ben",
+      "Divergence-free and smooth, as in the paper; the decay of u₀ is a separate structure (InitialVelocityConditionDecay), as in Fefferman's formulation.",
+      day(3.9),
+      { ana: 1 },
+    );
+    nsPost(
+      "InitialVelocityCondition",
+      "ana",
+      "Two conventions of Mathlib meet here. ContDiff takes a smoothness level in WithTop ℕ∞: the ↑⊤ in the statement is ⊤ : ℕ∞ coerced, which is C^∞; the plain ⊤ would mean analytic. And fderiv is 0 where a function is not differentiable, so divergence u₀ x = 0 alone would also accept a field that is nowhere differentiable. The ContDiff condition rules that out.",
+      day(3.7),
+      { ben: 1, carla: 1 },
+    );
+    nsPost(
+      "InitialVelocityCondition",
+      "carla",
+      "Exactly the kind of check the review should make: not only whether a Mathlib definition is the right one, but how it is used. Accepted.",
+      day(3.5),
+      { ana: 1 },
+    );
+    nsPost(
+      "InitialVelocityConditionDecay",
+      "ana",
+      "Fefferman asks |∂^α u₀(x)| ≤ C_αK (1 + |x|)^(−K) for every α and K. Here: ‖iteratedFDeriv ℝ m u₀ x‖ ≤ C / (1 + ‖x‖)^K for every order m and every K. The norm of the m-th derivative bounds every partial derivative of order m, so both say the same up to the constant.",
+      day(2.4),
+      { ben: 1, carla: 1 },
+    );
+    nsPost(
+      "InitialVelocityConditionDecay",
+      "ben",
+      "And the constant comes after ∀ m K, so it may depend on m and K, as C_αK does in the paper. With ∃ C in front, the condition would be far stronger.",
+      day(2.2),
+      { ana: 1 },
+    );
+    s.named["S-ns|NavierStokes.Comparator.InitialVelocityCondition"] = ["carla"];
+  }
   return s;
 }
 
@@ -396,7 +462,7 @@ function load(): State {
     const raw = sessionStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as State;
-      if (parsed.version === 3) return parsed;
+      if (parsed.version === 4) return parsed;
     }
   } catch {
     /* fresh state */
