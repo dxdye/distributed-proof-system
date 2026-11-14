@@ -42,6 +42,7 @@ class Source:
     mutants: Path | None = None  # own fixtures only
     honeypots: int = 0
     paper_ref: str | None = None
+    root: str | None = None  # the main theorem
 
 
 def _views(path: Path) -> list[dict[str, Any]]:
@@ -90,7 +91,8 @@ def export(sources: list[Source], out: Path) -> dict[str, int]:
         counts["tickets"] += len(tickets)
         submissions.append({"submission_id": f"S-{src.key}", "title": src.title,
                             "repo_url": src.repo_url, "commit": src.commit,
-                            "paper_ref": src.paper_ref, "tickets": tickets})
+                            "paper_ref": src.paper_ref, "root": src.root,
+                            "tickets": tickets})
     params = CoordParams()
     snapshot = {
         "schema": SCHEMA,
@@ -114,18 +116,22 @@ def default_sources(root: Path, demo_work: Path, case_studies: Path) -> list[Sou
     return [
         Source("mutation", "Mutation fixture (demo)", "https://example.org/mutation", "0" * 40,
                "arithmetic", demo_work / "mutation" / "views.jsonl",
-               fixtures / "mutation" / "paper.yaml", demo_work / "mutation" / "mutants.jsonl", 3),
+               fixtures / "mutation" / "paper.yaml", demo_work / "mutation" / "mutants.jsonl", 3,
+               root="Mut.window"),
         Source("display", "Display rules fixture (demo)", "https://example.org/display", "0" * 40,
                "arithmetic", demo_work / "display" / "views.jsonl",
-               fixtures / "display" / "paper.yaml", demo_work / "display" / "mutants.jsonl", 1),
+               fixtures / "display" / "paper.yaml", demo_work / "display" / "mutants.jsonl", 1,
+               root="Display.claim"),
         Source("ns", "Navier–Stokes existence and smoothness (Comparator)",
                "https://github.com/openai/NavierStokesAndEuler",
                "f9e8bc5b38b6e212696e8a30e3e91517af887bbd", "analysis",
                case_studies / "ns" / "views.jsonl",
                paper_ref="https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/"
-                         "navier-stokes.pdf"),
+                         "navier-stokes.pdf",
+               root="NavierStokes.Comparator.navier_stokes_breakdown_R3"),
         Source("qrh", "ζ(s) ≠ 0 for Re s > 7/8 (openai/math)", "https://github.com/openai/math",
                "4eaee87548250b2682affda7d05d947c05554bae", "number theory",
                case_studies / "qrh" / "views.jsonl",
-               case_studies / "qrh" / "paper.yaml"),
+               case_studies / "qrh" / "paper.yaml",
+               root="OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re"),
     ]

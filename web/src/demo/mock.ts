@@ -29,6 +29,7 @@ type SnapSubmission = {
   repo_url: string;
   commit: string;
   paper_ref: string | null;
+  root: string | null; // the main theorem
   tickets: SnapTicket[];
 };
 type Snapshot = {
@@ -86,7 +87,13 @@ type State = {
   // discussion after the decision (proposal C-25)
   posts: MockPost[];
   named: Record<string, string[]>; // thread key -> authors who show their pseudonym
-  reopens: { request_id: string; ticket_id: string; reason: string; status: string }[];
+  reopens: {
+    request_id: string;
+    ticket_id: string;
+    reason: string;
+    status: string;
+  }[];
+  decided_at: Record<string, string>; // ticket id -> when decided or revealed (progress page)
 };
 type Author = Role | "ana" | "ben" | "carla";
 type MockPost = {
@@ -116,9 +123,21 @@ export const ROLES: { role: Role; label: string; hint: string }[] = [
     label: "Newcomer",
     hint: "New account: easy and medium tickets, no weight yet.",
   },
-  { role: "pv", label: "Reviewer (PV)", hint: "Earned trust in the domains: hard tickets open." },
-  { role: "pvv", label: "Re-checker (PVV)", hint: "Re-checks verdicts and decides claims." },
-  { role: "maintainer", label: "Maintainer", hint: "Escalations, contested mappings, closing." },
+  {
+    role: "pv",
+    label: "Reviewer (PV)",
+    hint: "Earned trust in the domains: hard tickets open.",
+  },
+  {
+    role: "pvv",
+    label: "Re-checker (PVV)",
+    hint: "Re-checks verdicts and decides claims.",
+  },
+  {
+    role: "maintainer",
+    label: "Maintainer",
+    hint: "Escalations, contested mappings, closing.",
+  },
 ];
 const PROFILE: Record<
   Role,
@@ -188,18 +207,24 @@ function fresh(): State {
     seen: [],
   });
   const s: State = {
-    version: 2,
+    version: 3,
     leases: {},
     claims: [],
     contests: {},
     status: {},
     revealed: [],
     closed: [],
-    people: { newcomer: person(), pv: person(), pvv: person(), maintainer: person() },
+    people: {
+      newcomer: person(),
+      pv: person(),
+      pvv: person(),
+      maintainer: person(),
+    },
     next: 1,
     posts: [],
     named: {},
     reopens: [],
+    decided_at: {},
   };
   const day = (d: number) => new Date(Date.now() - d * 86400000).toISOString();
   // Examples so that every role has something to see.
@@ -268,6 +293,8 @@ function fresh(): State {
   if (dbl && win) {
     s.status[dbl] = "accepted";
     s.status[win] = "accepted";
+    s.decided_at[dbl] = day(8);
+    s.decided_at[win] = day(6);
     const key = (tid: string) =>
       `${tickets.get(tid)!.sub.submission_id}|${tickets.get(tid)!.t.declaration}`;
     const post = (
@@ -333,6 +360,33 @@ function fresh(): State {
       {},
     );
   }
+  // Notes by maintainers on the progress page (proposal C-26).
+  const note = (sid: string, text: string, at: string, votes: Record<string, number>) =>
+    s.posts.push({
+      post_id: `P-seed${s.posts.length + 1}`,
+      thread: `${sid}|`,
+      author: "carla",
+      kind: "comment",
+      text,
+      at,
+      votes,
+      reports: [],
+      hidden: null,
+      ai_used: false,
+    });
+  note(
+    "S-mutation",
+    "The main statement (Mut.window) is confirmed faithful: the paper is at PRL 2. The remaining declarations of class A are next; the definitions matter most.",
+    day(5.5),
+    { ana: 1, ben: 1 },
+  );
+  note(
+    "S-ns",
+    "The declaration to watch is the definition of a smooth solution: one condition too few, and the main theorem is about something else. One divergence check is escalated to the maintainers.",
+    day(3),
+    { ana: 1 },
+  );
+  s.named["S-ns|"] = ["carla"];
   return s;
 }
 
@@ -341,7 +395,7 @@ function load(): State {
     const raw = sessionStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as State;
-      if (parsed.version === 2) return parsed;
+      if (parsed.version === 3) return parsed;
     }
   } catch {
     /* fresh state */
@@ -420,7 +474,12 @@ function leaseJson(l: Lease): Json {
   };
   if (l.duty === "claim" && l.claim_id) {
     const c = state.claims.find((x) => x.claim_id === l.claim_id)!;
-    out.claim = { claim_id: c.claim_id, reason: c.reason, failed: c.failed, evidence: null };
+    out.claim = {
+      claim_id: c.claim_id,
+      reason: c.reason,
+      failed: c.failed,
+      evidence: null,
+    };
   }
   return out;
 }
@@ -542,6 +601,7 @@ function review(role: Role, l: Lease, body: Json): Json {
   if (t.honeypot) {
     // The real system reveals planted errors days later, in batches (SR-37).
     state.revealed.push(t.ticket_id);
+    state.decided_at[t.ticket_id] = now();
     item.planted_error = true;
     item.outcome = "error";
   } else if (verdict === "incorrect") {
@@ -591,6 +651,7 @@ function resolveClaim(role: Role, l: Lease, body: Json): Json {
   if (c.status === "confirmed") state.status[c.ticket_id] = "error";
   const { t, sub } = tickets.get(c.ticket_id)!;
   if (t.honeypot) state.revealed.push(t.ticket_id);
+  if (c.status === "confirmed" || t.honeypot) state.decided_at[c.ticket_id] = now();
   state.people[role].history.push({
     declaration: t.declaration,
     paper: sub.title,
@@ -681,7 +742,10 @@ function admin(path: string, method: string, body: Json): unknown {
         declaration: t.declaration,
         paper: sub.title,
         votes: [
-          { verdict: "correct", reason: "Trace of the derivative: the usual divergence." },
+          {
+            verdict: "correct",
+            reason: "Trace of the derivative: the usual divergence.",
+          },
           { verdict: "correct", reason: "" },
           {
             verdict: "incorrect",
@@ -708,6 +772,7 @@ function admin(path: string, method: string, body: Json): unknown {
   const decide = path.match(/^\/api\/admin\/tickets\/([^/]+)\/decide$/);
   if (decide && method === "POST") {
     state.status[decide[1]] = body.error ? "error" : "accepted";
+    state.decided_at[decide[1]] = now();
     return { ok: true };
   }
   const close = path.match(/^\/api\/admin\/submissions\/([^/]+)\/close$/);
@@ -918,6 +983,186 @@ function discussion(
   return undefined;
 }
 
+// ------------------------------------------------ public progress page (C-26)
+// Counts by declaration; a declaration is decided when its real ticket is and
+// every planted copy is revealed. The dummy does not run the decision rule, so
+// the residual error uses a nominal posterior per accepted declaration.
+const NOMINAL_P_ERROR = 0.004;
+const OPENED = new Date(Date.now() - 14 * 86400000).toISOString();
+const PRL_MEANING = [
+  "claim only",
+  "formalized, builds, standard axioms only",
+  "main statement confirmed faithful",
+  "all class-A declarations reviewed",
+  "proof internals certified",
+  "accepted by the community",
+];
+type Passage = {
+  source: { url: string | null };
+  locator: string;
+  statement: string;
+};
+type Unit = { decl: string; real: SnapTicket; all: SnapTicket[] };
+
+function unitsOf(sub: SnapSubmission): Unit[] {
+  const by = new Map<string, SnapTicket[]>();
+  for (const t of sub.tickets) by.set(t.declaration, [...(by.get(t.declaration) ?? []), t]);
+  return [...by].map(([decl, all]) => ({
+    decl,
+    all,
+    real: all.find((t) => !t.honeypot) ?? all[0],
+  }));
+}
+const ticketDecided = (t: SnapTicket) =>
+  t.honeypot ? revealed(t.ticket_id) : ["accepted", "error"].includes(statusOf(t.ticket_id));
+function unitState(u: Unit): string {
+  if (u.all.every(ticketDecided)) return statusOf(u.real.ticket_id);
+  const ids = u.all.map((t) => t.ticket_id);
+  const started =
+    Object.values(state.people).some((p) => p.seen.some((x) => ids.includes(x))) ||
+    Object.values(state.leases).some((l) => ids.includes(l.ticket_id)) ||
+    ids.some((x) => statusOf(x) !== "open");
+  return started ? "in review" : "not started";
+}
+
+function progressSummary(sub: SnapSubmission): Json {
+  const us = unitsOf(sub);
+  const states = us.map(unitState);
+  const count = (s: string) => states.filter((x) => x === s).length;
+  const accepted = count("accepted"),
+    errors = count("error");
+  const root = us.findIndex((u) => u.decl === sub.root);
+  const prl = errors
+    ? 1
+    : us.length && accepted === us.length
+      ? 3
+      : root >= 0 && states[root] === "accepted"
+        ? 2
+        : 1;
+  const paper = root >= 0 ? (us[root].real.paper as Passage | null) : null;
+  return {
+    submission_id: sub.submission_id,
+    title: sub.title,
+    repo_url: sub.repo_url,
+    commit: sub.commit,
+    paper_ref: sub.paper_ref,
+    paper_url: paper?.source.url ?? sub.paper_ref ?? null,
+    opened: OPENED,
+    closed: state.closed.includes(sub.submission_id),
+    prl,
+    prl_meaning: PRL_MEANING[prl],
+    declarations: us.length,
+    decided: accepted + errors,
+    accepted,
+    errors,
+    in_review: count("in review"),
+    not_started: count("not started"),
+    coverage: us.length ? (accepted + errors) / us.length : 0,
+    residual_error: accepted ? 1 - (1 - NOMINAL_P_ERROR) ** accepted : null,
+    forecast: null,
+    interest: null,
+    main_statement: paper?.statement ?? null,
+    main_locator: paper?.locator ?? null,
+  };
+}
+
+function notesJson(role: Role | null, sid: string): Json[] {
+  const key = threadKey(sid, "");
+  const posts = state.posts.filter((p) => p.thread === key);
+  const order: string[] = [];
+  for (const p of posts) if (!order.includes(p.author)) order.push(p.author);
+  const named = state.named[key] ?? [];
+  const out = posts.map((p) => ({
+    post_id: p.post_id,
+    kind: "comment",
+    author: named.includes(p.author)
+      ? (OTHERS[p.author]?.pseudonym ?? PROFILE[p.author as Role].pseudonym)
+      : `Maintainer ${String.fromCharCode(65 + order.indexOf(p.author))}`,
+    is_me: p.author === role,
+    maintainer: true,
+    member_since: OTHERS[p.author]?.since ?? "2026-11",
+    reviewed_here: false,
+    at: p.at,
+    score: Object.values(p.votes).reduce((a, b) => a + b, 0),
+    my_vote: role ? (p.votes[role] ?? 0) : 0,
+    ai_used: p.ai_used,
+    hidden: p.hidden,
+    text: p.hidden ? "" : p.text,
+  }));
+  out.sort((a, b) => b.score - a.score || a.at.localeCompare(b.at));
+  return out;
+}
+
+function progressDetail(role: Role | null, sub: SnapSubmission): Json {
+  const sid = sub.submission_id;
+  const us = unitsOf(sub);
+  const root = us.find((u) => u.decl === sub.root);
+  const decidedAt = (u: Unit) =>
+    u.all
+      .map((t) => state.decided_at[t.ticket_id] ?? now())
+      .sort()
+      .pop()!;
+  const times = us
+    .filter((u) => ["accepted", "error"].includes(unitState(u)))
+    .map(decidedAt)
+    .sort();
+  const closed = state.closed.includes(sid);
+  return {
+    ...progressSummary(sub),
+    root: sub.root,
+    main_view: root && threadOpen(sid, root.decl) ? root.real.view : null,
+    units: us
+      .map((u) => ({
+        declaration: u.decl,
+        decl_kind: u.real.decl_kind,
+        tier: u.real.tier,
+        domain: u.real.domain,
+        state: unitState(u),
+        discussion: threadOpen(sid, u.decl),
+      }))
+      .sort(
+        (a, b) =>
+          Number(a.declaration !== sub.root) - Number(b.declaration !== sub.root) ||
+          a.declaration.localeCompare(b.declaration),
+      ),
+    timeline: [
+      { at: OPENED, decided: 0 },
+      ...times.map((at, i) => ({ at, decided: i + 1 })),
+      ...(closed ? [] : [{ at: now(), decided: times.length }]),
+    ],
+    notes: notesJson(role, sid),
+  };
+}
+
+function progress(role: Role | null, sidRaw: string | undefined, notes: boolean, body: Json) {
+  if (!sidRaw) return snap.submissions.map(progressSummary);
+  const sid = decodeURIComponent(sidRaw);
+  const sub = snap.submissions.find((x) => x.submission_id === sid);
+  if (!sub) throw new HttpError(404, "no such submission");
+  if (!notes) return progressDetail(role, sub);
+  if (!role) throw new HttpError(401, "missing bearer token");
+  if (!PROFILE[role].maintainer) throw new HttpError(403, "maintainers only");
+  const text = String(body.text ?? "").trim();
+  if (!text) throw new HttpError(400, "a post has 1 to 5000 characters");
+  const key = threadKey(sid, "");
+  if (body.show_pseudonym && !(state.named[key] ?? []).includes(role))
+    (state.named[key] ??= []).push(role);
+  const post_id = id("P");
+  state.posts.push({
+    post_id,
+    thread: key,
+    author: role,
+    kind: "comment",
+    text,
+    at: now(),
+    votes: {},
+    reports: [],
+    hidden: null,
+    ai_used: false,
+  });
+  return { post_id };
+}
+
 function handle(
   method: string,
   path: string,
@@ -926,7 +1171,9 @@ function handle(
   query: URLSearchParams = new URLSearchParams(),
 ): unknown {
   if (path === "/api/auth/config")
-    return { providers: [{ kind: "local", name: "local", label: "Access token" }] };
+    return {
+      providers: [{ kind: "local", name: "local", label: "Access token" }],
+    };
   if (path === "/api/notice") return snap.notice;
   if (path === "/api/register") {
     if (!body.notice_acknowledged)
@@ -953,6 +1200,8 @@ function handle(
   if (path === "/api/attention") return {};
   if (path === "/api/audit/head") return { length: 0, head_hash: null };
   const role = roleOf(auth);
+  const prog = path.match(/^\/api\/progress(?:\/([^/]+))?(\/notes)?$/);
+  if (prog) return progress(role, prog[1], !!prog[2], body);
   if (path === "/api/auth/session")
     return role
       ? { authenticated: true, provider: "local", registered: true }
@@ -961,7 +1210,10 @@ function handle(
   const p = state.people[role];
   if (path === "/api/me") return me(role);
   if (path === "/api/me/preferences") {
-    p.prefs = { domains: (body.domains as string[]) ?? [], tiers: (body.tiers as string[]) ?? [] };
+    p.prefs = {
+      domains: (body.domains as string[]) ?? [],
+      tiers: (body.tiers as string[]) ?? [],
+    };
     p.set = null;
     return { ok: true };
   }
@@ -1052,7 +1304,10 @@ export function installMock(): void {
       const data = handle(method, path, body, headers.get("Authorization"), parsed.searchParams);
       save();
       if (typeof data === "string")
-        return new Response(data, { status: 200, headers: { "content-type": "text/plain" } });
+        return new Response(data, {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        });
       return new Response(JSON.stringify(data ?? null), {
         status: 200,
         headers: { "content-type": "application/json" },

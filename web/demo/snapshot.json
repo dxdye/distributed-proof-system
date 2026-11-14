@@ -86,6 +86,7 @@
    "repo_url": "https://example.org/mutation",
    "commit": "0000000000000000000000000000000000000000",
    "paper_ref": null,
+   "root": "Mut.window",
    "tickets": [
     {
      "ticket_id": "A-1000",
@@ -1135,6 +1136,7 @@
    "repo_url": "https://example.org/display",
    "commit": "0000000000000000000000000000000000000000",
    "paper_ref": null,
+   "root": "Display.claim",
    "tickets": [
     {
      "ticket_id": "A-2000",
@@ -1708,6 +1710,7 @@
    "repo_url": "https://github.com/openai/NavierStokesAndEuler",
    "commit": "f9e8bc5b38b6e212696e8a30e3e91517af887bbd",
    "paper_ref": "https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf",
+   "root": "NavierStokes.Comparator.navier_stokes_breakdown_R3",
    "tickets": [
     {
      "ticket_id": "A-3000",
@@ -4033,6 +4036,7 @@
    "repo_url": "https://github.com/openai/math",
    "commit": "4eaee87548250b2682affda7d05d947c05554bae",
    "paper_ref": null,
+   "root": "OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re",
    "tickets": [
     {
      "ticket_id": "A-4000",
