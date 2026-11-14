@@ -407,6 +407,19 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
           )}
           <a href={d.repo_url}>{d.repo_url}</a> @ <code>{d.commit.slice(0, 12)}</code> · submitted{" "}
           {new Date(d.opened).toLocaleDateString("en", { dateStyle: "medium" })}
+          {/* The report is built by the server from the audit log; the click dummy has none. */}
+          {import.meta.env.MODE !== "demo" && (
+            <>
+              {" "}
+              ·{" "}
+              <a
+                href={`/api/progress/${encodeURIComponent(sid)}/report`}
+                title="The report as of now, from the same public data as this page (Markdown, not signed yet)"
+              >
+                Report
+              </a>
+            </>
+          )}
         </p>
         <div className="progress-grid">
           <div>

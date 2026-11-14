@@ -28,7 +28,7 @@ makes the reliability of that judgement measurable:
 | M2 | Mutation generator, local and component equivalence filter, auto-detection filter, honeypot source registry and mixing | ✅ 47 + 7 honeypot candidates; maintainer review of pools open |
 | M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ study incl. lenses, IRT, Delphi, Sybil, collusion ([findings](docs/simulation/README.md)) |
 | M4 | Coordination service (choice sets, leases, exclusion rules, claims, PVV, decisions, delayed honeypot reveal), HTTP API, web client with static infoview, discussion after the decision, public progress page, sign-in via Keycloak/OIDC, evidence checker with kernel replay | ✅ MVP ([ADR 0008](docs/adr/0008-coordination-service.md)); evidence checks not yet wired to claims, pilot open |
-| M5 | Class B, certificate, signed report | planned |
+| M5 | Class B, certificate, signed report | planned; an unsigned report from the audit log exists (`dpc report`, progress page) |
 
 All 60 system requirements live in [`requirements/sr.yaml`](requirements/sr.yaml);
 `pixi run trace` shows which ones are verified by which tests.
