@@ -102,8 +102,11 @@ class Coordinator:
         clock: Callable[[], datetime] = utc_now,
         rng: np.random.Generator | None = None,
         new_id: Callable[[str], str] = _id,
+        read_only: bool = False,
     ) -> None:
         self.log, self.vault, self.blobs = log, vault, blobs
+        #: For reports from a log (``dpc report``): never appends an event.
+        self.read_only = read_only
         self.params = params or CoordParams()
         self.clock, self.new_id = clock, new_id
         self.rng = rng or np.random.default_rng()
@@ -117,6 +120,9 @@ class Coordinator:
 
     # ------------------------------------------------------------ helpers
     def _emit(self, kind: str, payload: BaseModel) -> Entry:
+        if self.read_only:
+            raise CoordError(f"read-only: would append {kind}; for a log written with other "
+                             "parameters, pass the parameters the service runs with")
         entry = self.log.append(kind, payload.model_dump(mode="json"))
         self.state.apply(entry)
         return entry

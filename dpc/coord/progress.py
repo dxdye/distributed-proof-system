@@ -151,6 +151,8 @@ def detail(coord: Coordinator, submission_id: str, viewer: str | None) -> dict[s
     out["units"] = [{
         "declaration": u.declaration, "decl_kind": u.real.view.decl_kind, "tier": u.real.tier,
         "domain": u.real.domain, "state": u.state,
+        # when the last of its tickets was decided: says nothing about which was a copy
+        "decided_at": u.decided_at.isoformat() if u.decided_at else None,
         "discussion": coord.thread_open(submission_id, u.declaration),
     } for u in sorted(us, key=lambda u: (u.declaration != sub.root, u.declaration))]
     # Progress over time: decided declarations, by the day each was decided.

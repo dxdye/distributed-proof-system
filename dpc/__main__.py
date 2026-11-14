@@ -21,7 +21,7 @@ from dpc.analysis import (
     units,
 )
 from dpc.audit import AuditLog
-from dpc.coord import BlobStore, Coordinator, CoordParams, Vault
+from dpc.coord import BlobStore, CoordError, Coordinator, CoordParams, Vault
 from dpc.coord.importer import load_views, ticket_specs
 from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import RoleThresholds
@@ -281,6 +281,38 @@ def cmd_appoint(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    """A submission's report from the audit log alone (SR-17), as of its last
+    entry, so that the same log gives the same report. Appends nothing."""
+    from dpc.audit.log import utc_now
+    from dpc.coord import events as ev
+    from dpc.coord.report import render
+
+    data = Path(args.data)
+    log = AuditLog(Path(args.log) if args.log else data / "audit.sqlite")
+    head = log.head()
+    at = utc_now() if args.now or head is None else ev.parse_ts(head.ts)
+    params = (CoordParams.from_overrides(json.loads(Path(args.params).read_text("utf-8")))
+              if args.params else None)
+    try:
+        coord = Coordinator(log, Vault(data / "vault.sqlite"), params, clock=lambda: at,
+                            read_only=True)
+    except CoordError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    if args.submission not in coord.state.submissions:
+        print(f"no submission {args.submission}; known: {sorted(coord.state.submissions)}",
+              file=sys.stderr)
+        return 2
+    text = render(coord, args.submission)
+    if args.out:
+        Path(args.out).write_text(text, encoding="utf-8", newline="\n")
+    else:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        print(text)
+    return 0
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
@@ -458,6 +490,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cache", default=str(DEFAULT_CACHE))
     coord_args(p)
     p.set_defaults(func=cmd_demo, data="data/demo")
+
+    p = sub.add_parser("report", help="a submission's report from the audit log (SR-17)")
+    p.add_argument("submission")
+    p.add_argument("--out", help="Markdown file (default: standard output)")
+    p.add_argument("--now", action="store_true",
+                   help="as of now instead of the log's last entry")
+    coord_args(p)
+    p.set_defaults(func=cmd_report)
 
     p = sub.add_parser("serve", help="run the web service (M4)")
     p.add_argument("--host", default="127.0.0.1")

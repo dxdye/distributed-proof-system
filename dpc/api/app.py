@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
 from dpc.coord import progress as progress_page
+from dpc.coord import report as report_page
 from dpc.coord.state import LeaseSt, TicketSt
 from dpc.tickets.library import annotate_view, relies_on
 from dpc.tickets.model import AIAssistance
@@ -309,6 +310,17 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             if submission_id not in coord.state.submissions:
                 raise HTTPException(404, "no such submission")
             return progress_page.detail(coord, submission_id, viewer(authorization))
+
+    @app.get("/api/progress/{submission_id}/report", response_class=PlainTextResponse)
+    def progress_report(submission_id: str) -> PlainTextResponse:
+        """The report as of now (SR-42, SR-47): public, from the data of the
+        progress page only; unsigned in the pilot."""
+        with coord.lock:
+            if submission_id not in coord.state.submissions:
+                raise HTTPException(404, "no such submission")
+            text = report_page.render(coord, submission_id)
+        return PlainTextResponse(text, media_type="text/markdown; charset=utf-8", headers={
+            "Content-Disposition": f'inline; filename="report-{submission_id}.md"'})
 
     @app.post("/api/progress/{submission_id}/notes")
     def progress_note(submission_id: str, req: NoteReq, rid: Rid) -> dict[str, str]:
