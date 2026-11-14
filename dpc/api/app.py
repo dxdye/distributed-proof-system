@@ -348,6 +348,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "tiers_open": coord.tiers_open(rid),
                 "reliability": round(person.reliability.rate.mean, 3),
                 "wip_limit": person.reliability.wip_limit("A"),
+                "pvv_waiting": coord.duties_waiting(rid),
                 "leases": [lease_view(lease) for lease in st.active_leases(rid)],
                 "history": history[::-1][:50],
             }

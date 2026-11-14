@@ -434,7 +434,7 @@ def test_honeypots_are_revealed_late_in_batches_and_replace_soft_evidence(tmp_pa
             sources = {e.source for e in st.reviewers[r.reviewer].evidence
                        if e.ticket_id == t.ticket_id}
             assert sources == {Source.HONEYPOT}
-    assert env.coord.stats()["tickets_by_status"]["honeypot"] == 2  # type: ignore[index]
+    assert env.coord.stats()["planted_errors_revealed"] == 2
     finders = {r.reviewer for t in honeypots for r in t.reviews}
     assert all(st.reviewers[f].detections.honeypots_found >= 1 for f in finders)
 
@@ -607,3 +607,21 @@ def test_tiers_are_absolute_not_relative_to_the_submission() -> None:
             GlossaryEntry(name="LT.lt", type="…", origin="core"),
             GlossaryEntry(name="Nat", type="Type", origin="core"))),))
     assert tier_of_view(small) == "easy"
+
+
+@pytest.mark.req("SR-13")
+def test_waiting_re_checks_are_counted_for_the_work_page(env: Env) -> None:
+    env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
+                              tickets=specs("P", 1))
+    admin = env.people(1, "admin")[0]
+    env.coord.appoint_maintainer(admin)
+    rid = env.people(1)[0]
+    assert env.coord.duties_waiting(admin) == 0
+    lease = env.take(rid)
+    env.clock.advance(minutes=20)
+    env.coord.submit_review(rid, lease, verdict="incorrect", failed=["fidelity"],
+                            reason="the paper states a strict inequality, the formal one does not")
+    assert env.coord.duties_waiting(rid) == 0  # not the claimant's own claim, and no PVV role
+    assert env.coord.duties_waiting(admin) == 1
+    assert env.coord.next_duty(admin) is not None
+    assert env.coord.duties_waiting(admin) == 0  # taken

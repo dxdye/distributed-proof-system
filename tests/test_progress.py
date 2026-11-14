@@ -71,9 +71,11 @@ def test_counts_are_by_declaration_and_wait_for_every_ticket(tmp_path: Path) -> 
     planted.status = "error"
     s = progress.summary(env.coord, sid)
     assert s["decided"] == 1 and s["accepted"] == 1 and s["errors"] == 0  # the real verdict
-    # Nothing on the page names a ticket.
+    # Nothing on the page names a ticket, and the public statistics count no
+    # tickets: tickets minus declarations would be the number of planted errors.
     page = json.dumps(progress.detail(env.coord, sid, None))
     assert "ticket" not in page and all(t not in page for t in env.coord.state.tickets)
+    assert not any("ticket" in k for k in env.coord.stats())
     env.log.close()
     env.vault.close()
 

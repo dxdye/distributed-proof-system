@@ -467,6 +467,15 @@ class Coordinator:
                     return self._grant(rid, "pvv", ticket)
             return None
 
+    def duties_waiting(self, rid: str) -> int:
+        """How many PVV duties ``next_duty`` could hand to this reviewer now."""
+        with self.lock:
+            st = self.state
+            claims = sum(1 for c in st.claims.values() if self.why_not_claim(rid, c) is None)
+            checks = sum(1 for t in st.tickets.values()
+                         if t.needs_pvv() and self.why_not(rid, t, "pvv") is None)
+            return claims + checks
+
     def extend(self, rid: str, lease_id: str) -> LeaseSt:
         """Once, by another τ (SR-26)."""
         with self.lock:
@@ -856,16 +865,17 @@ class Coordinator:
         return fit_plackett_luce(choices)
 
     def stats(self) -> dict[str, object]:
-        """Aggregates only (SR-23)."""
+        """Aggregates only (SR-23). No ticket counts: together with the number
+        of declarations on the progress page (C-26) they would give away how
+        many planted errors are still unrevealed."""
         st, now = self.state, self.now()
-        by_status = Counter("honeypot" if t.honeypot else t.status for t in st.tickets.values())
         week = [r for r in st.reviews.values() if now - r.ts < timedelta(seconds=7 * DAY)]
         return {
             "reviewers": len(st.reviewers),
             "reviewers_by_group": dict(sorted(Counter(
                 r.group for r in st.reviewers.values()).items())),
             "submissions": len(st.submissions),
-            "tickets_by_status": dict(sorted(by_status.items())),
+            "planted_errors_revealed": sum(1 for t in st.tickets.values() if t.honeypot),
             "reviews_last_7_days": len(week),
             "open_claims": sum(1 for c in st.claims.values() if c.status == "open"),
             "active_leases": len(st.active_leases()),
