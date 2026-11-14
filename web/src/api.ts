@@ -217,6 +217,25 @@ export type ProgressDetail = ProgressSummary & {
   timeline: { at: string; decided: number }[];
   notes: Post[];
 };
+export type MaintainerDeclaration = {
+  submission_id: string;
+  declaration: string;
+  decl_kind: string;
+  tier: string;
+  domain: string;
+  state: ProgressUnit["state"];
+  decided_at: string | null;
+  paper: string;
+  repo_url: string;
+  commit: string;
+  paper_ref: string | null;
+  paper_passage: PaperPassage | null;
+  view: UnitView;
+  questions: Question[];
+  purpose: string;
+  contested: number;
+  discussion: boolean;
+};
 export type Escalated = {
   ticket_id: string;
   declaration: string;
@@ -342,6 +361,11 @@ export const api = {
     tick: () => request<{ expired: number; revealed: number }>("POST", "/api/admin/tick"),
     submissions: () => request<SubmissionRow[]>("GET", "/api/admin/submissions"),
     escalated: () => request<Escalated[]>("GET", "/api/admin/escalated"),
+    declaration: (sid: string, decl: string) =>
+      request<MaintainerDeclaration>(
+        "GET",
+        `/api/admin/declaration?submission_id=${encodeURIComponent(sid)}&declaration=${encodeURIComponent(decl)}`,
+      ),
     contested: () =>
       request<
         {

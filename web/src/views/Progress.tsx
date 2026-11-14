@@ -280,7 +280,15 @@ function Ladder({ prl }: { prl: number }) {
   );
 }
 
-function Units({ units, sid }: { units: ProgressUnit[]; sid: string }) {
+function Units({
+  units,
+  sid,
+  maintainer,
+}: {
+  units: ProgressUnit[];
+  sid: string;
+  maintainer: boolean;
+}) {
   const [filter, setFilter] = useState<string>("all");
   const [all, setAll] = useState(false);
   const shown = units.filter((u) => filter === "all" || u.state === filter);
@@ -311,7 +319,16 @@ function Units({ units, sid }: { units: ProgressUnit[]; sid: string }) {
           {page.map((u) => (
             <tr key={u.declaration}>
               <td>
-                <code>{u.declaration}</code>
+                {maintainer ? (
+                  <a
+                    href={`${progressHref(sid)}/${encodeURIComponent(u.declaration)}`}
+                    title="Open the ticket as its reviewers see it (maintainers only)"
+                  >
+                    <code>{u.declaration}</code>
+                  </a>
+                ) : (
+                  <code>{u.declaration}</code>
+                )}
               </td>
               <td>{u.decl_kind}</td>
               <td>
@@ -437,7 +454,12 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
 
       <section className="card">
         <h3>Declarations</h3>
-        <Units units={d.units} sid={sid} />
+        {me?.maintainer && (
+          <p className="muted small">
+            As a maintainer you can open each declaration and see the ticket as its reviewers do.
+          </p>
+        )}
+        <Units units={d.units} sid={sid} maintainer={Boolean(me?.maintainer)} />
       </section>
 
       <section className="card">

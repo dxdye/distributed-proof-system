@@ -1144,6 +1144,36 @@ function progressDetail(role: Role | null, sub: SnapSubmission): Json {
   };
 }
 
+// A declaration as its reviewers see it, for maintainers.
+function declarationJson(query: URLSearchParams): Json {
+  const sid = query.get("submission_id") ?? "",
+    decl = query.get("declaration") ?? "";
+  const sub = snap.submissions.find((x) => x.submission_id === sid);
+  const u = sub && unitsOf(sub).find((x) => x.decl === decl);
+  if (!sub || !u) throw new HttpError(404, "no such declaration");
+  const times = u.all.map((t) => state.decided_at[t.ticket_id]).filter(Boolean);
+  const st = unitState(u);
+  return {
+    submission_id: sid,
+    declaration: decl,
+    decl_kind: u.real.decl_kind,
+    tier: u.real.tier,
+    domain: u.real.domain,
+    state: st,
+    decided_at: ["accepted", "error"].includes(st) && times.length ? times.sort().pop() : null,
+    paper: sub.title,
+    repo_url: sub.repo_url,
+    commit: sub.commit,
+    paper_ref: sub.paper_ref,
+    paper_passage: u.real.paper,
+    view: u.real.view,
+    questions: snap.questions[kindOf(u.real.decl_kind)],
+    purpose: snap.purpose[kindOf(u.real.decl_kind)],
+    contested: (state.contests[u.real.ticket_id] ?? []).length,
+    discussion: threadOpen(sid, decl),
+  };
+}
+
 function progress(role: Role | null, sidRaw: string | undefined, notes: boolean, body: Json) {
   if (!sidRaw) return snap.submissions.map(progressSummary);
   const sid = decodeURIComponent(sidRaw);
@@ -1289,6 +1319,7 @@ function handle(
   }
   if (path.startsWith("/api/admin/")) {
     if (!PROFILE[role].maintainer) throw new HttpError(403, "maintainers only");
+    if (path === "/api/admin/declaration") return declarationJson(query);
     return admin(path, method, body);
   }
   throw new HttpError(404, "not found");

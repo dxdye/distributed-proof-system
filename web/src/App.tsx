@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type Me, type Session } from "./api";
 import { loadAuth, signOut, type Provider } from "./auth";
+import { DeclarationView } from "./views/Declaration";
 import { BrandMark, SiteFooter } from "./components/Layout";
 import { StorageNotice } from "./components/StorageNotice";
 import { UserMenu } from "./components/UserMenu";
@@ -59,7 +60,7 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   else if (page === "privacy") body = <Privacy />;
   else if (error) body = <p className="error">{error}</p>;
   // Statistics became part of the progress page; old links still work.
-  else if (page === "progress" || page === "stats")
+  else if ((page === "progress" && !route[2]) || page === "stats")
     body = route[1] ? (
       <ProgressDetailView key={route[1]} sid={decodeURIComponent(route[1])} me={me} />
     ) : (
@@ -71,6 +72,16 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   else if (!me) body = <p className="muted">Loading…</p>;
   else if (page === "lease" && route[1]) body = <LeaseView id={route[1]} reload={reload} />;
   else if (page === "history") body = <History me={me} />;
+  else if (page === "progress" && route[1] && route[2])
+    body = me.maintainer ? (
+      <DeclarationView
+        key={`${route[1]}/${route[2]}`}
+        sid={decodeURIComponent(route[1])}
+        decl={decodeURIComponent(route[2])}
+      />
+    ) : (
+      <p className="muted">Only maintainers see declarations under review.</p>
+    );
   else if (page === "discussions") body = <Discussions />;
   else if (page === "thread" && route[1] && route[2])
     body = (
@@ -84,6 +95,18 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   else body = <Work me={me} reload={reload} />;
 
   const current = (name: string) => (page === name ? "page" : undefined);
+  // Signed out: a way in from every page (the click dummy chooses a role instead).
+  const signInNow = () => {
+    if (import.meta.env.MODE === "demo") {
+      window.location.hash = "#/choose-role";
+      return;
+    }
+    window.location.hash = "#/work";
+    setTimeout(
+      () => document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth" }),
+      80,
+    );
+  };
   return (
     <div className="app">
       <button className="skip" onClick={() => document.getElementById("main")?.focus()}>
@@ -138,6 +161,14 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
                 <a href="#/admin" aria-current={current("admin")}>
                   Maintainers
                 </a>
+              </>
+            )}
+            {session && !session.authenticated && (
+              <>
+                <span className="nav-sep" aria-hidden="true" />
+                <button className="nav-cta" onClick={signInNow}>
+                  Sign in or join
+                </button>
               </>
             )}
           </nav>
