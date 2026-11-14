@@ -216,6 +216,34 @@ export type ProgressDetail = ProgressSummary & {
   units: ProgressUnit[];
   timeline: { at: string; decided: number }[];
   notes: Post[];
+  basis: Basis | null;
+  // null: hidden while a planted error of the submission is unrevealed
+  library_definitions: LibraryDefinition[] | null;
+};
+// What a result relies on (proposal C-29).
+export type Basis = {
+  toolchain: string;
+  axioms: string[];
+  libraries: { name: string; url: string; rev: string }[];
+  hardened_files: number | null;
+  hardened_unchanged: boolean | null;
+  replayed: boolean;
+  modules_replayed: number;
+  constants_replayed: number;
+  replay_failures: number;
+  modules_trusted: number;
+  modules_core: number;
+  libraries_replayed: boolean;
+  second_kernel: boolean;
+};
+export type LibraryDefinition = {
+  name: string;
+  type: string;
+  origin: "library" | "core";
+  doc: string | null;
+  note: string | null;
+  used_by: string[];
+  reviewed: boolean;
 };
 export type MaintainerDeclaration = {
   submission_id: string;

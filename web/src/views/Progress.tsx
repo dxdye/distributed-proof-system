@@ -7,6 +7,7 @@ import {
   type ProgressUnit,
   type Stats,
 } from "../api";
+import { Basis } from "../components/Basis";
 import { Infoview } from "../components/Infoview";
 import { MathText } from "../components/MathText";
 import { ProgressChart } from "../components/ProgressChart";
@@ -437,6 +438,8 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
           </p>
         )}
       </section>
+
+      <Basis d={d} />
 
       <section className="card">
         <h3>Readiness level</h3>

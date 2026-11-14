@@ -2045,6 +2045,82 @@ td.num {
 table.units code {
   word-break: break-word;
 }
+/* What the result relies on (C-29) */
+ul.basis {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+ul.basis > li {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+}
+ul.basis > li:first-child {
+  border-top: 0;
+}
+ul.basis strong {
+  color: var(--ink-strong);
+}
+ul.basis p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.basis-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.basis-checked {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+.basis-trusted {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.basis-open {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+.basis-more summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.88rem;
+  margin-top: 0.3rem;
+}
+.basis-more ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+}
+.basis-defs {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.basis-defs h4 {
+  margin: 0 0 0.3rem;
+}
+@media (max-width: 640px) {
+  ul.basis > li {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
 .note-composer {
   margin-top: 1rem;
   padding-top: 1rem;
