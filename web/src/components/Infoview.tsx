@@ -57,7 +57,7 @@ const ORIGIN_LABELS: Record<string, string> = {
 
 /** Where a constant comes from: Lean, a hardened library, or the submission
  * itself (whose definitions are under review too). */
-function Origin({ origin }: { origin?: string | null }) {
+export function Origin({ origin }: { origin?: string | null }) {
   if (!origin) return null;
   return <span className={`badge origin origin-${origin}`}>{ORIGIN_LABELS[origin] ?? origin}</span>;
 }

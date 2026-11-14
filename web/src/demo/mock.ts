@@ -20,6 +20,8 @@ type SnapTicket = {
   domain: string;
   tier: Tier;
   view: Json;
+  relies_on: Json[]; // what the statement takes from Mathlib (C-27)
+  questions: { id: string; text: string }[]; // the junk-value question names it
   paper: Json | null;
   honeypot: { operator: string; original: string; mutant: string } | null;
 };
@@ -534,7 +536,8 @@ function leaseJson(l: Lease): Json {
       domain: t.domain,
       tier: t.tier,
       view: t.view,
-      questions: snap.questions[kindOf(t.decl_kind)],
+      relies_on: t.relies_on,
+      questions: t.questions ?? snap.questions[kindOf(t.decl_kind)],
       purpose: snap.purpose[kindOf(t.decl_kind)],
       paper_ref: sub.paper_ref,
       paper_passage: t.paper,
@@ -1266,7 +1269,8 @@ function declarationJson(query: URLSearchParams): Json {
     paper_ref: sub.paper_ref,
     paper_passage: u.real.paper,
     view: u.real.view,
-    questions: snap.questions[kindOf(u.real.decl_kind)],
+    relies_on: u.real.relies_on,
+    questions: u.real.questions ?? snap.questions[kindOf(u.real.decl_kind)],
     purpose: snap.purpose[kindOf(u.real.decl_kind)],
     contested: (state.contests[u.real.ticket_id] ?? []).length,
     discussion: threadOpen(sid, decl),

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, type Lease, type ReviewInput } from "../api";
 import { Infoview } from "../components/Infoview";
 import { Reference } from "../components/Reference";
+import { ReliesOn } from "../components/ReliesOn";
 import { TierBadge } from "../components/Tier";
 import { navigate } from "../router";
 
@@ -300,6 +301,7 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
         <section className="lean-panel">
           <h3>Lean says</h3>
           <Infoview view={t.view} />
+          <ReliesOn entries={t.relies_on} />
         </section>
       </section>
       {active && lease.duty === "claim" && <ClaimForm lease={lease} onDone={done} />}

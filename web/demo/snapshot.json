@@ -148,6 +148,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -221,6 +252,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -294,6 +356,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -360,6 +453,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -433,6 +557,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -524,6 +679,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does it define what the paper defines (and what its name suggests)?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+      },
+      {
+       "id": "vacuity",
+       "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -615,6 +801,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does it define what the paper defines (and what its name suggests)?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+      },
+      {
+       "id": "vacuity",
+       "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -706,6 +923,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -786,6 +1034,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -891,6 +1170,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does it define what the paper defines (and what its name suggests)?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+      },
+      {
+       "id": "vacuity",
+       "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -964,6 +1274,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -1034,6 +1375,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -1111,6 +1483,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Mutation fixture (demo paper)",
@@ -1199,6 +1602,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Display rules fixture (demo paper)",
@@ -1260,6 +1694,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Display rules fixture (demo paper)",
@@ -1400,6 +1865,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does it define what the paper defines (and what its name suggests)?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+      },
+      {
+       "id": "vacuity",
+       "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Display rules fixture (demo paper)",
@@ -1491,6 +1987,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does it define what the paper defines (and what its name suggests)?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+      },
+      {
+       "id": "vacuity",
+       "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Display rules fixture (demo paper)",
@@ -1613,6 +2140,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Display rules fixture (demo paper)",
@@ -1686,6 +2244,37 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "Display rules fixture (demo paper)",
@@ -1861,7 +2450,7 @@
           "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
          },
          {
           "name": "ENNReal",
@@ -1976,7 +2565,7 @@
           "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
           "origin": "library",
           "doc": "A function is continuously differentiable up to `n` on `s` if, for any point `x` in `s`, it admits continuous derivatives up to order `n` on a neighborhood of `x` in `s`. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
-          "note": null
+          "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
          },
          {
           "name": "ENNReal",
@@ -2082,6 +2671,107 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "ContDiffOn",
+       "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
+       "origin": "library",
+       "doc": "A function is continuously differentiable up to `n` on `s` if, for any point `x` in `s`, it admits continuous derivatives up to order `n` on a neighborhood of `x` in `s`. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
+       "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
+      },
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "ENat",
+       "type": "Type",
+       "origin": "library",
+       "doc": "Extended natural numbers `ℕ∞ = WithTop ℕ`. ",
+       "note": null
+      },
+      {
+       "name": "Set",
+       "type": "Type u → Type u",
+       "origin": "library",
+       "doc": "A set is a collection of elements of some type `α`.",
+       "note": null
+      },
+      {
+       "name": "Set.Ici",
+       "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+       "origin": "library",
+       "doc": "`Ici a` is the left-closed right-infinite interval $[a, ∞)$. ",
+       "note": null
+      },
+      {
+       "name": "Set.univ",
+       "type": "{α : Type u} → Set α",
+       "origin": "library",
+       "doc": "The universal set on a type `α` is the set containing all elements of `α`.",
+       "note": null
+      },
+      {
+       "name": "Top.top",
+       "type": "{α : Type u_1} → [self : Top α] → α",
+       "origin": "library",
+       "doc": "The top (`⊤`, `\\top`) element ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on ContDiffOn, EuclideanSpace, Fin, Nat, Real, ENNReal and 5 more: check what each of them means, and what it returns where the paper's notion is undefined. Conventions to know are noted for ContDiffOn."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -2449,6 +3139,107 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ContinuousMultilinearMap",
+       "type": "(R : Type u) →\n  {ι : Type v} →\n    (M₁ : ι → Type w₁) →\n      (M₂ : Type w₂) →\n        [inst : Semiring R] →\n          [inst_1 : (i : ι) → AddCommMonoid (M₁ i)] →\n            [inst_2 : AddCommMonoid M₂] →\n              [(i : ι) → Module R (M₁ i)] →\n                [Module R M₂] → [(i : ι) → TopologicalSpace (M₁ i)] → [TopologicalSpace M₂] → Type (max (max v w₁) w₂)",
+       "origin": "library",
+       "doc": "Continuous multilinear maps over the ring `R`, from `∀ i, M₁ i` to `M₂` where `M₁ i` and `M₂` are modules over `R` with a topological structure. In applications, there will be compatibility conditions between the algebraic and the topological structures, but this is not needed for the definition. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "Norm.norm",
+       "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+       "origin": "library",
+       "doc": "the `ℝ`-valued norm function. ",
+       "note": null
+      },
+      {
+       "name": "Set",
+       "type": "Type u → Type u",
+       "origin": "library",
+       "doc": "A set is a collection of elements of some type `α`.",
+       "note": null
+      },
+      {
+       "name": "Set.Ici",
+       "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+       "origin": "library",
+       "doc": "`Ici a` is the left-closed right-infinite interval $[a, ∞)$. ",
+       "note": null
+      },
+      {
+       "name": "Set.univ",
+       "type": "{α : Type u} → Set α",
+       "origin": "library",
+       "doc": "The universal set on a type `α` is the set containing all elements of `α`.",
+       "note": null
+      },
+      {
+       "name": "iteratedFDerivWithin",
+       "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [inst_2 : NormedSpace 𝕜 E] →\n          {F : Type uF} →\n            [inst_3 : NormedAddCommGroup F] → [inst_4 : NormedSpace 𝕜 F] → (n : ℕ) → (E → F) → Set E → E → E [×n]→L[𝕜] F",
+       "origin": "library",
+       "doc": "The `n`-th derivative of a function along a set, defined inductively by saying that the `n+1`-th derivative of `f` is the derivative of the `n`-th derivative of `f` along this set, together with an uncurrying step to see it as a multilinear map in `n+1` variables.. ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on EuclideanSpace, Fin, Nat, Real, ContinuousMultilinearMap, ENNReal and 5 more: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -2539,7 +3330,7 @@
           "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Prop",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
          },
          {
           "name": "ENNReal",
@@ -2626,7 +3417,7 @@
           "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Prop",
           "origin": "library",
           "doc": "A function is continuously differentiable up to `n` if it admits derivatives up to order `n`, which are continuous. Contrary to the case of definitions in domains (where derivatives might not be unique) we do not need to localize the definition in space or time. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
-          "note": null
+          "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
          },
          {
           "name": "ENNReal",
@@ -2697,6 +3488,86 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "ContDiff",
+       "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Prop",
+       "origin": "library",
+       "doc": "A function is continuously differentiable up to `n` if it admits derivatives up to order `n`, which are continuous. Contrary to the case of definitions in domains (where derivatives might not be unique) we do not need to localize the definition in space or time. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
+       "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
+      },
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "ENat",
+       "type": "Type",
+       "origin": "library",
+       "doc": "Extended natural numbers `ℕ∞ = WithTop ℕ`. ",
+       "note": null
+      },
+      {
+       "name": "Top.top",
+       "type": "{α : Type u_1} → [self : Top α] → α",
+       "origin": "library",
+       "doc": "The top (`⊤`, `\\top`) element ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on ContDiff, EuclideanSpace, Fin, Nat, Real, ENNReal and 2 more: check what each of them means, and what it returns where the paper's notion is undefined. Conventions to know are noted for ContDiff."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -2959,6 +3830,86 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ContinuousMultilinearMap",
+       "type": "(R : Type u) →\n  {ι : Type v} →\n    (M₁ : ι → Type w₁) →\n      (M₂ : Type w₂) →\n        [inst : Semiring R] →\n          [inst_1 : (i : ι) → AddCommMonoid (M₁ i)] →\n            [inst_2 : AddCommMonoid M₂] →\n              [(i : ι) → Module R (M₁ i)] →\n                [Module R M₂] → [(i : ι) → TopologicalSpace (M₁ i)] → [TopologicalSpace M₂] → Type (max (max v w₁) w₂)",
+       "origin": "library",
+       "doc": "Continuous multilinear maps over the ring `R`, from `∀ i, M₁ i` to `M₂` where `M₁ i` and `M₂` are modules over `R` with a topological structure. In applications, there will be compatibility conditions between the algebraic and the topological structures, but this is not needed for the definition. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "Norm.norm",
+       "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+       "origin": "library",
+       "doc": "the `ℝ`-valued norm function. ",
+       "note": null
+      },
+      {
+       "name": "iteratedFDeriv",
+       "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [inst_2 : NormedSpace 𝕜 E] →\n          {F : Type uF} →\n            [inst_3 : NormedAddCommGroup F] → [inst_4 : NormedSpace 𝕜 F] → (n : ℕ) → (E → F) → E → E [×n]→L[𝕜] F",
+       "origin": "library",
+       "doc": "The `n`-th derivative of a function, as a multilinear map, defined inductively. ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on EuclideanSpace, Fin, Nat, Real, ContinuousMultilinearMap, ENNReal and 2 more: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -3049,7 +4000,7 @@
           "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
          },
          {
           "name": "ContinuousLinearMap",
@@ -3231,21 +4182,21 @@
           "type": "{𝕜 : Type u} →\n  [inst : NontriviallyNormedField 𝕜] →\n    {F : Type v} → [inst_1 : AddCommGroup F] → [Module 𝕜 F] → [TopologicalSpace F] → (𝕜 → F) → Set 𝕜 → 𝕜 → F",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "derivWithin f s x = 0 where f is not differentiable within s at x (derivWithin_zero_of_not_differentiableWithinAt)."
          },
          {
           "name": "fderiv",
           "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "fderiv 𝕜 f x = 0 where f is not differentiable at x (fderiv_zero_of_not_differentiableAt)."
          },
          {
           "name": "gradient",
           "type": "{𝕜 : Type u_1} →\n  {F : Type u_2} →\n    [inst : RCLike 𝕜] → [inst_1 : NormedAddCommGroup F] → [InnerProductSpace 𝕜 F] → [CompleteSpace F] → (F → 𝕜) → F → F",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "∇ f x = 0 where f is not differentiable at x (gradient_eq_zero_of_not_differentiableAt)."
          }
         ],
         "trusted_text": "∀ {n : ℕ} {nu : ℝ} {u₀ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)}\n  {f v : EuclideanSpace ℝ (Fin n) → ℝ → EuclideanSpace ℝ (Fin n)} {p : EuclideanSpace ℝ (Fin n) → ℝ → ℝ},\n  (∀ (x : EuclideanSpace ℝ (Fin n)),\n      ∀ t ≥ 0,\n        derivWithin (fun (x_1 : ℝ) => v x x_1) (Set.Ici 0) t +\n            (fderiv ℝ (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x) (v x t) =\n          nu • Laplacian.laplacian (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x -\n              gradient (fun (x : EuclideanSpace ℝ (Fin n)) => p x t) x +\n            f x t) →\n    (∀ (x : EuclideanSpace ℝ (Fin n)),\n        ∀ t ≥ 0, NavierStokes.Comparator.divergence (fun (x : EuclideanSpace ℝ (Fin n)) => v x t) x = 0) →\n      (∀ (x : EuclideanSpace ℝ (Fin n)), v x 0 = u₀ x) →\n        ContDiffOn ℝ (↑⊤) (↿v) (Set.univ ×ˢ Set.Ici 0) →\n          ContDiffOn ℝ (↑⊤) (↿p) (Set.univ ×ˢ Set.Ici 0) →\n            NavierStokes.Comparator.NavierStokesExistenceAndSmoothness nu u₀ f v p",
@@ -3255,7 +4206,7 @@
           "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
           "origin": "library",
           "doc": "A function is continuously differentiable up to `n` on `s` if, for any point `x` in `s`, it admits continuous derivatives up to order `n` on a neighborhood of `x` in `s`. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
-          "note": null
+          "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
          },
          {
           "name": "ContinuousLinearMap",
@@ -3388,21 +4339,21 @@
           "type": "{𝕜 : Type u} →\n  [inst : NontriviallyNormedField 𝕜] →\n    {F : Type v} → [inst_1 : AddCommGroup F] → [Module 𝕜 F] → [TopologicalSpace F] → (𝕜 → F) → Set 𝕜 → 𝕜 → F",
           "origin": "library",
           "doc": "Derivative of `f` at the point `x` within the set `s`, if it exists.  Zero otherwise.",
-          "note": null
+          "note": "derivWithin f s x = 0 where f is not differentiable within s at x (derivWithin_zero_of_not_differentiableWithinAt)."
          },
          {
           "name": "fderiv",
           "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
           "origin": "library",
           "doc": "If `f` has a derivative at `x`, then `fderiv 𝕜 f x` is such a derivative. Otherwise, it is set to `0`. ",
-          "note": null
+          "note": "fderiv 𝕜 f x = 0 where f is not differentiable at x (fderiv_zero_of_not_differentiableAt)."
          },
          {
           "name": "gradient",
           "type": "{𝕜 : Type u_1} →\n  {F : Type u_2} →\n    [inst : RCLike 𝕜] → [inst_1 : NormedAddCommGroup F] → [InnerProductSpace 𝕜 F] → [CompleteSpace F] → (F → 𝕜) → F → F",
           "origin": "library",
           "doc": "Gradient of `f` at the point `x`, if it exists.  Zero otherwise. Denoted as `∇` within the Gradient namespace.",
-          "note": null
+          "note": "∇ f x = 0 where f is not differentiable at x (gradient_eq_zero_of_not_differentiableAt)."
          }
         ],
         "latex": "\\forall n \\in \\mathbb{N},\\ \\forall \\mathit{nu} \\in \\mathbb{R},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall v : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall p : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\left(\\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{derivWithin}\\left(\\left(\\mathit{x'} : \\mathbb{R}\\right) \\mapsto v\\left(x, \\mathit{x'}\\right), \\left[0, \\infty\\right), t\\right) + \\operatorname{fderiv}\\left(\\mathbb{R}, \\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right)\\left(v\\left(x, t\\right)\\right) = \\left(\\mathit{nu} \\cdot \\operatorname{Laplacian.laplacian}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right) \\mathbin{-} \\operatorname{gradient}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto p\\left(\\mathit{x'}, t\\right), x\\right)\\right) + f\\left(x, t\\right)\\right) \\implies \\left(\\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{Comparator.divergence}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right) = 0\\right) \\implies \\left(\\forall x : \\mathbb{R}^{n},\\ v\\left(x, 0\\right) = u_{0}\\left(x\\right)\\right) \\implies \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(v\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(p\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{Comparator.NavierStokesExistenceAndSmoothness}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)"
@@ -3410,6 +4361,142 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "ContDiffOn",
+       "type": "(𝕜 : Type u) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type uE} →\n      [inst_1 : NormedAddCommGroup E] →\n        [NormedSpace 𝕜 E] →\n          {F : Type uF} → [inst_3 : NormedAddCommGroup F] → [NormedSpace 𝕜 F] → WithTop ℕ∞ → (E → F) → Set E → Prop",
+       "origin": "library",
+       "doc": "A function is continuously differentiable up to `n` on `s` if, for any point `x` in `s`, it admits continuous derivatives up to order `n` on a neighborhood of `x` in `s`. The parameter `n` belongs to `ℕ∞ω` (accessible in the `ContDiff` scope), i.e. it can be a natural number, `∞`, or `ω`.",
+       "note": "The order n lies in WithTop ℕ∞: ∞ = ↑(⊤ : ℕ∞) means smooth (contDiff_infty), ω = ⊤ means analytic (Mathlib.Analysis.Calculus.ContDiff.Defs). A bare ⊤ here is ω, not ∞."
+      },
+      {
+       "name": "derivWithin",
+       "type": "{𝕜 : Type u} →\n  [inst : NontriviallyNormedField 𝕜] →\n    {F : Type v} → [inst_1 : AddCommGroup F] → [Module 𝕜 F] → [TopologicalSpace F] → (𝕜 → F) → Set 𝕜 → 𝕜 → F",
+       "origin": "library",
+       "doc": "Derivative of `f` at the point `x` within the set `s`, if it exists.  Zero otherwise.",
+       "note": "derivWithin f s x = 0 where f is not differentiable within s at x (derivWithin_zero_of_not_differentiableWithinAt)."
+      },
+      {
+       "name": "fderiv",
+       "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
+       "origin": "library",
+       "doc": "If `f` has a derivative at `x`, then `fderiv 𝕜 f x` is such a derivative. Otherwise, it is set to `0`. ",
+       "note": "fderiv 𝕜 f x = 0 where f is not differentiable at x (fderiv_zero_of_not_differentiableAt)."
+      },
+      {
+       "name": "gradient",
+       "type": "{𝕜 : Type u_1} →\n  {F : Type u_2} →\n    [inst : RCLike 𝕜] → [inst_1 : NormedAddCommGroup F] → [InnerProductSpace 𝕜 F] → [CompleteSpace F] → (F → 𝕜) → F → F",
+       "origin": "library",
+       "doc": "Gradient of `f` at the point `x`, if it exists.  Zero otherwise. Denoted as `∇` within the Gradient namespace.",
+       "note": "∇ f x = 0 where f is not differentiable at x (gradient_eq_zero_of_not_differentiableAt)."
+      },
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ContinuousLinearMap",
+       "type": "{R : Type u_1} →\n  {S : Type u_2} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        (R →+* S) →\n          (M : Type u_3) →\n            [TopologicalSpace M] →\n              [inst_3 : AddCommMonoid M] →\n                (M₂ : Type u_4) →\n                  [TopologicalSpace M₂] →\n                    [inst_5 : AddCommMonoid M₂] → [Module R M] → [Module S M₂] → Type (max u_3 u_4)",
+       "origin": "library",
+       "doc": "Continuous linear maps between modules. We only put the type classes that are necessary for the definition, although in applications `M` and `M₂` will be topological modules over the topological ring `R`. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "ENat",
+       "type": "Type",
+       "origin": "library",
+       "doc": "Extended natural numbers `ℕ∞ = WithTop ℕ`. ",
+       "note": null
+      },
+      {
+       "name": "Laplacian.laplacian",
+       "type": "{E : Type v} → {F : outParam (Type w)} → [self : Laplacian E F] → E → F",
+       "origin": "library",
+       "doc": "`Δ f` is the Laplacian of `f`. The meaning of this notation is type-dependent. ",
+       "note": null
+      },
+      {
+       "name": "Set",
+       "type": "Type u → Type u",
+       "origin": "library",
+       "doc": "A set is a collection of elements of some type `α`.",
+       "note": null
+      },
+      {
+       "name": "Set.Ici",
+       "type": "{α : Type u_1} → [Preorder α] → α → Set α",
+       "origin": "library",
+       "doc": "`Ici a` is the left-closed right-infinite interval $[a, ∞)$. ",
+       "note": null
+      },
+      {
+       "name": "Set.univ",
+       "type": "{α : Type u} → Set α",
+       "origin": "library",
+       "doc": "The universal set on a type `α` is the set containing all elements of `α`.",
+       "note": null
+      },
+      {
+       "name": "Top.top",
+       "type": "{α : Type u_1} → [self : Top α] → α",
+       "origin": "library",
+       "doc": "The top (`⊤`, `\\top`) element ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on ContDiffOn, derivWithin, fderiv, gradient, EuclideanSpace, Fin and 10 more: check what each of them means, and what it returns where the paper's notion is undefined. Conventions to know are noted for ContDiffOn, derivWithin, fderiv, gradient."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -3556,14 +4643,14 @@
           "type": "{α : Type u_1} →\n  {ε : Type u_2} →\n    {m0 : MeasurableSpace α} →\n      [ENorm ε] →\n        [TopologicalSpace ε] →\n          (α → ε) → ENNReal → autoParam (MeasureTheory.Measure α) MeasureTheory.MemLp._auto_1 → Prop",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "For p = 0 it holds for every a.e. strongly measurable f (MeasureTheory.memLp_zero_iff_aestronglyMeasurable)."
          },
          {
           "name": "MeasureTheory.integral",
           "type": "{α : Type u_6} →\n  {G : Type u_7} →\n    [inst : NormedAddCommGroup G] → [NormedSpace ℝ G] → {x : MeasurableSpace α} → MeasureTheory.Measure α → (α → G) → G",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "∫ f = 0 when f is not integrable (MeasureTheory.integral_undef)."
          },
          {
           "name": "Nat",
@@ -3636,14 +4723,14 @@
           "type": "{α : Type u_1} →\n  {ε : Type u_2} →\n    {m0 : MeasurableSpace α} →\n      [ENorm ε] →\n        [TopologicalSpace ε] →\n          (α → ε) → ENNReal → autoParam (MeasureTheory.Measure α) MeasureTheory.MemLp._auto_1 → Prop",
           "origin": "library",
           "doc": "The property that `f : α → E` is a.e. strongly measurable and `(∫ ‖f a‖ ^ p ∂μ) ^ (1/p)` is finite if `p < ∞`, or `essSup ‖f‖ < ∞` if `p = ∞`. ",
-          "note": null
+          "note": "For p = 0 it holds for every a.e. strongly measurable f (MeasureTheory.memLp_zero_iff_aestronglyMeasurable)."
          },
          {
           "name": "MeasureTheory.integral",
           "type": "{α : Type u_6} →\n  {G : Type u_7} →\n    [inst : NormedAddCommGroup G] → [NormedSpace ℝ G] → {x : MeasurableSpace α} → MeasureTheory.Measure α → (α → G) → G",
           "origin": "library",
           "doc": "The Bochner integral ",
-          "note": null
+          "note": "∫ f = 0 when f is not integrable (MeasureTheory.integral_undef)."
          },
          {
           "name": "Nat",
@@ -3679,6 +4766,93 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "MeasureTheory.MemLp",
+       "type": "{α : Type u_1} →\n  {ε : Type u_2} →\n    {m0 : MeasurableSpace α} →\n      [ENorm ε] →\n        [TopologicalSpace ε] →\n          (α → ε) → ENNReal → autoParam (MeasureTheory.Measure α) MeasureTheory.MemLp._auto_1 → Prop",
+       "origin": "library",
+       "doc": "The property that `f : α → E` is a.e. strongly measurable and `(∫ ‖f a‖ ^ p ∂μ) ^ (1/p)` is finite if `p < ∞`, or `essSup ‖f‖ < ∞` if `p = ∞`. ",
+       "note": "For p = 0 it holds for every a.e. strongly measurable f (MeasureTheory.memLp_zero_iff_aestronglyMeasurable)."
+      },
+      {
+       "name": "MeasureTheory.integral",
+       "type": "{α : Type u_6} →\n  {G : Type u_7} →\n    [inst : NormedAddCommGroup G] → [NormedSpace ℝ G] → {x : MeasurableSpace α} → MeasureTheory.Measure α → (α → G) → G",
+       "origin": "library",
+       "doc": "The Bochner integral ",
+       "note": "∫ f = 0 when f is not integrable (MeasureTheory.integral_undef)."
+      },
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "MeasureTheory.MeasureSpace.volume",
+       "type": "{α : Type u_5} → [self : MeasureTheory.MeasureSpace α] → MeasureTheory.Measure α",
+       "origin": "library",
+       "doc": "`volume` is the canonical measure on `α`. ",
+       "note": null
+      },
+      {
+       "name": "Norm.norm",
+       "type": "{E : Type u_4} → [self : Norm E] → E → ℝ",
+       "origin": "library",
+       "doc": "the `ℝ`-valued norm function. ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Are these exactly the conditions (or data) of the paper — none missing, none added, none weakened?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on MeasureTheory.MemLp, MeasureTheory.integral, EuclideanSpace, Fin, Nat, Real and 3 more: check what each of them means, and what it returns where the paper's notion is undefined. Conventions to know are noted for MeasureTheory.MemLp, MeasureTheory.integral."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases handled as in the paper: t = 0, the boundary, dimension, closed or open intervals?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all conditions hold together, so that something satisfies the structure? Otherwise every theorem assuming it is vacuous."
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of the fields right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -3846,7 +5020,7 @@
           "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "fderiv 𝕜 f x = 0 where f is not differentiable at x (fderiv_zero_of_not_differentiableAt)."
          }
         ],
         "trusted_text": "fun {n : ℕ} (v : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n)) (x : EuclideanSpace ℝ (Fin n)) =>\n  (LinearMap.trace ℝ (EuclideanSpace ℝ (Fin n))) ↑(fderiv ℝ v x)",
@@ -3919,7 +5093,7 @@
           "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
           "origin": "library",
           "doc": "If `f` has a derivative at `x`, then `fderiv 𝕜 f x` is such a derivative. Otherwise, it is set to `0`. ",
-          "note": null
+          "note": "fderiv 𝕜 f x = 0 where f is not differentiable at x (fderiv_zero_of_not_differentiableAt)."
          }
         ],
         "latex": "\\left(n : \\mathbb{N}\\right) \\mapsto \\left(v : \\mathbb{R}^{n} \\to \\mathbb{R}^{n}\\right) \\mapsto \\left(x : \\mathbb{R}^{n}\\right) \\mapsto \\operatorname{LinearMap.trace}\\left(\\mathbb{R}, \\mathbb{R}^{n}\\right)\\left(\\operatorname{ContinuousLinearMap.toLinearMap}\\left(\\operatorname{fderiv}\\left(\\mathbb{R}, v, x\\right)\\right)\\right)"
@@ -3927,6 +5101,86 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "fderiv",
+       "type": "(𝕜 : Type u_4) →\n  [inst : NontriviallyNormedField 𝕜] →\n    {E : Type u_5} →\n      [inst_1 : AddCommGroup E] →\n        [inst_2 : Module 𝕜 E] →\n          [inst_3 : TopologicalSpace E] →\n            {F : Type u_6} →\n              [inst_4 : AddCommGroup F] →\n                [inst_5 : Module 𝕜 F] → [inst_6 : TopologicalSpace F] → (E → F) → E → E →L[𝕜] F",
+       "origin": "library",
+       "doc": "If `f` has a derivative at `x`, then `fderiv 𝕜 f x` is such a derivative. Otherwise, it is set to `0`. ",
+       "note": "fderiv 𝕜 f x = 0 where f is not differentiable at x (fderiv_zero_of_not_differentiableAt)."
+      },
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      },
+      {
+       "name": "ENNReal",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The extended nonnegative real numbers. This is usually denoted [0, ∞], and is relevant as the codomain of a measure. ",
+       "note": null
+      },
+      {
+       "name": "LinearMap",
+       "type": "{R : Type u_14} →\n  {S : Type u_15} →\n    [inst : Semiring R] →\n      [inst_1 : Semiring S] →\n        (R →+* S) →\n          (M : Type u_16) →\n            (M₂ : Type u_17) →\n              [inst_2 : AddCommMonoid M] →\n                [inst_3 : AddCommMonoid M₂] → [Module R M] → [Module S M₂] → Type (max u_16 u_17)",
+       "origin": "library",
+       "doc": "A map `f` between an `R`-module and an `S`-module over a ring homomorphism `σ : R →+* S` is semilinear if it satisfies the two properties `f (x + y) = f x + f y` and `f (c • x) = (σ c) • f x`. Elements of `LinearMap σ M M₂` (available under the notation `M →ₛₗ[σ] M₂`) are bundled versions of such maps. For plain linear maps (i.e. for which `σ = RingHom.id R`), the notation `M →ₗ[R] M₂` is availabl …",
+       "note": null
+      },
+      {
+       "name": "LinearMap.trace",
+       "type": "(R : Type u) →\n  [inst : CommSemiring R] → (M : Type v) → [inst_1 : AddCommMonoid M] → [inst_2 : Module R M] → (M →ₗ[R] M) →ₗ[R] R",
+       "origin": "library",
+       "doc": "Trace of an endomorphism independent of basis. ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does it define what the paper defines (and what its name suggests)?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on fderiv, EuclideanSpace, Fin, Nat, Real, ENNReal and 2 more: check what each of them means, and what it returns where the paper's notion is undefined. Conventions to know are noted for fderiv."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Is it right at the edges: zero, empty sets, dimension 0 or 1, boundary points?"
+      },
+      {
+       "id": "vacuity",
+       "text": "If it is a property: can it hold at all, and does it not hold trivially for everything?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are the types right (ℕ, ℤ, ℝ, ℂ; which space), and the order of quantifiers inside it?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     },
@@ -4087,6 +5341,58 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "EuclideanSpace",
+       "type": "Type u_7 → Type u_8 → Type (max u_7 u_8)",
+       "origin": "library",
+       "doc": "The standard real/complex Euclidean space, functions on a finite type. For an `n`-dimensional space use `EuclideanSpace 𝕜 (Fin n)`.",
+       "note": null
+      },
+      {
+       "name": "Fin",
+       "type": "ℕ → Type",
+       "origin": "core",
+       "doc": "Natural numbers less than some upper bound.",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on EuclideanSpace, Fin, Nat, Real: check what each of them means, and what it returns where the paper's notion is undefined."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": null,
      "honeypot": null
     }
@@ -4236,7 +5542,7 @@
           "type": "ℂ → ℂ",
           "origin": null,
           "doc": null,
-          "note": null
+          "note": "Mathlib gives ζ a value at the pole s = 1: riemannZeta 1 = (γ − log(4π)) / 2 (lemma riemannZeta_one)."
          }
         ],
         "trusted_text": "∀ {s : ℂ}, 7 / 8 < s.re → riemannZeta s ≠ 0",
@@ -4282,6 +5588,65 @@
       ],
       "context": []
      },
+     "relies_on": [
+      {
+       "name": "riemannZeta",
+       "type": "ℂ → ℂ",
+       "origin": "library",
+       "doc": "The Riemann zeta function `ζ(s)`. ",
+       "note": "Mathlib gives ζ a value at the pole s = 1: riemannZeta 1 = (γ − log(4π)) / 2 (lemma riemannZeta_one)."
+      },
+      {
+       "name": "Complex",
+       "type": "Type",
+       "origin": "library",
+       "doc": "Complex numbers consist of two `Real`s: a real part `re` and an imaginary part `im`. ",
+       "note": null
+      },
+      {
+       "name": "Complex.re",
+       "type": "ℂ → ℝ",
+       "origin": "library",
+       "doc": "The real part of a complex number. ",
+       "note": null
+      },
+      {
+       "name": "Nat",
+       "type": "Type",
+       "origin": "core",
+       "doc": "The natural numbers, starting at zero.",
+       "note": null
+      },
+      {
+       "name": "Real",
+       "type": "Type",
+       "origin": "library",
+       "doc": "The type `ℝ` of real numbers constructed as equivalence classes of Cauchy sequences of rational numbers. ",
+       "note": null
+      }
+     ],
+     "questions": [
+      {
+       "id": "fidelity",
+       "text": "Does the formal statement say what the paper claims — no more, no less?"
+      },
+      {
+       "id": "junk_values",
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on riemannZeta, Complex, Complex.re, Nat, Real: check what each of them means, and what it returns where the paper's notion is undefined. Conventions to know are noted for riemannZeta."
+      },
+      {
+       "id": "edge_cases",
+       "text": "Are the edge cases (empty sets, zero, dimension 0 or 1) handled as in the paper?"
+      },
+      {
+       "id": "vacuity",
+       "text": "Can all hypotheses be satisfied at the same time, or is the statement vacuous?"
+      },
+      {
+       "id": "quantifiers",
+       "text": "Are quantifiers, their order and the types of bound variables right?"
+      }
+     ],
      "paper": {
       "source": {
        "title": "openai/math: quasi-Riemann hypothesis with exponent 7/8 (preprint in the repository)",

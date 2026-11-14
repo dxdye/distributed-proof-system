@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type MaintainerDeclaration } from "../api";
 import { Infoview } from "../components/Infoview";
+import { ReliesOn } from "../components/ReliesOn";
 import { Reference } from "../components/Reference";
 import { TierBadge } from "../components/Tier";
 import { threadHref } from "./Discussions";
@@ -72,6 +73,7 @@ export function DeclarationView({ sid, decl }: { sid: string; decl: string }) {
         <section className="lean-panel">
           <h3>Lean says</h3>
           <Infoview view={d.view} />
+          <ReliesOn entries={d.relies_on} />
         </section>
       </section>
       <section className="card">

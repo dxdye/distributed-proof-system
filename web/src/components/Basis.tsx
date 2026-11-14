@@ -136,8 +136,10 @@ export function Basis({ d }: { d: ProgressDetail }) {
         ) : (
           <>
             <p className="muted small">
-              The statements mean what these definitions mean. Whether each of them means what the
-              paper means is not reviewed yet; it is next on the list (proposal C-27).
+              The statements mean what these definitions mean. Every ticket lists the ones it uses,
+              with their conventions, and its reviewers check the use. Whether a definition itself
+              is right, that Mathlib's definition is the textbook one, is not reviewed yet (proposal
+              C-27).
             </p>
             <table>
               <thead>

@@ -55,6 +55,8 @@ export type Lease = {
     view: UnitView;
     questions: Question[];
     purpose?: string;
+    /** What the statement takes from Mathlib and Lean, without notation (C-27). */
+    relies_on?: GlossaryEntry[];
     paper_ref: string | null;
     paper_passage: PaperPassage | null;
     mapping_contested_by_me: boolean;
@@ -266,6 +268,7 @@ export type MaintainerDeclaration = {
   view: UnitView;
   questions: Question[];
   purpose: string;
+  relies_on?: GlossaryEntry[];
   contested: number;
   discussion: boolean;
 };

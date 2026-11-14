@@ -196,10 +196,7 @@ export function ProgressList({ me }: { me: Me | null }) {
           )}
           <div className="progress-grid">
             <div>
-              <div className="hero-figure">{pct(s.coverage)}</div>
-              <p className="muted small">
-                of class-A declarations decided ({s.decided} of {s.declarations})
-              </p>
+              <Coverage s={s} />
               <StatusBar s={s} />
             </div>
             <Facts s={s} />
@@ -226,6 +223,24 @@ export function ProgressList({ me }: { me: Me | null }) {
         )}
       </section>
     </div>
+  );
+}
+
+// The share of class A decided. It counts the repository's own statements and
+// definitions only; what they take from Mathlib is said right under it, so
+// that 100 % does not read as "everything checked" (C-27).
+function Coverage({ s }: { s: ProgressSummary }) {
+  return (
+    <>
+      <div className="hero-figure">{pct(s.coverage)}</div>
+      <p className="muted small">
+        of the repository's own statements and definitions decided ({s.decided} of {s.declarations})
+      </p>
+      <p className="muted small coverage-note">
+        Not counted: the Mathlib definitions they use. Every review checks how they are used; the
+        definitions themselves are not reviewed yet.
+      </p>
+    </>
   );
 }
 
@@ -395,10 +410,7 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
         </p>
         <div className="progress-grid">
           <div>
-            <div className="hero-figure">{pct(d.coverage)}</div>
-            <p className="muted small">
-              of class-A declarations decided ({d.decided} of {d.declarations})
-            </p>
+            <Coverage s={d} />
             <StatusBar s={d} />
           </div>
           <Facts s={d} />
