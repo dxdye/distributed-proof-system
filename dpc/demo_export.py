@@ -18,11 +18,14 @@ from pathlib import Path
 from typing import Any
 
 from dpc.api.app import NOTICE
+from dpc.audit import AuditLog
+from dpc.coord import events as ev
 from dpc.coord.params import CoordParams
 from dpc.coord.service import NOTICE_VERSION
 from dpc.coord.tiers import tier_of_view
 from dpc.honeypots.mixing import MutantMismatch, honeypot_view
 from dpc.honeypots.model import MutantSet
+from dpc.ingest.basis import trust_basis
 from dpc.tickets.paper import PaperMap
 from dpc.tickets.questions import PURPOSE, TEXTS
 from dpc.tickets.views import UnitView
@@ -43,6 +46,7 @@ class Source:
     honeypots: int = 0
     paper_ref: str | None = None
     root: str | None = None  # the main theorem
+    workdir: Path | None = None  # ingest outputs: what the result relies on (C-29)
 
 
 def _views(path: Path) -> list[dict[str, Any]]:
@@ -65,7 +69,8 @@ def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
     }
 
 
-def export(sources: list[Source], out: Path) -> dict[str, int]:
+def export(sources: list[Source], out: Path, ingest_log: Path | None = None) -> dict[str, int]:
+    log = AuditLog(ingest_log) if ingest_log is not None and ingest_log.is_file() else None
     submissions = []
     counts = {"tickets": 0, "honeypots": 0}
     for n, src in enumerate(sources, start=1):
@@ -89,10 +94,17 @@ def export(sources: list[Source], out: Path) -> dict[str, int]:
                     "operator": m.operator, "original": m.original, "mutant": m.mutant}))
             counts["honeypots"] += planted
         counts["tickets"] += len(tickets)
+        basis = ev.BasisRecorded(
+            submission_id=f"S-{src.key}", **trust_basis(src.workdir, src.commit, log),
+        ).model_dump(mode="json", exclude={"submission_id"}) \
+            if src.workdir is not None and (src.workdir / "analysis" / "core.jsonl").is_file() \
+            else None
         submissions.append({"submission_id": f"S-{src.key}", "title": src.title,
                             "repo_url": src.repo_url, "commit": src.commit,
-                            "paper_ref": src.paper_ref, "root": src.root,
+                            "paper_ref": src.paper_ref, "root": src.root, "basis": basis,
                             "tickets": tickets})
+    if log is not None:
+        log.close()
     params = CoordParams()
     snapshot = {
         "schema": SCHEMA,
@@ -128,10 +140,12 @@ def default_sources(root: Path, demo_work: Path, case_studies: Path) -> list[Sou
                case_studies / "ns" / "views.jsonl",
                paper_ref="https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/"
                          "navier-stokes.pdf",
-               root="NavierStokes.Comparator.navier_stokes_breakdown_R3"),
+               root="NavierStokes.Comparator.navier_stokes_breakdown_R3",
+               workdir=case_studies / "ns"),
         Source("qrh", "ζ(s) ≠ 0 for Re s > 7/8 (openai/math)", "https://github.com/openai/math",
                "4eaee87548250b2682affda7d05d947c05554bae", "number theory",
                case_studies / "qrh" / "views.jsonl",
                case_studies / "qrh" / "paper.yaml",
-               root="OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re"),
+               root="OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re",
+               workdir=case_studies / "qrh"),
     ]

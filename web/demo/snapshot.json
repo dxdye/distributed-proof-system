@@ -87,6 +87,7 @@
    "commit": "0000000000000000000000000000000000000000",
    "paper_ref": null,
    "root": "Mut.window",
+   "basis": null,
    "tickets": [
     {
      "ticket_id": "A-1000",
@@ -1137,6 +1138,7 @@
    "commit": "0000000000000000000000000000000000000000",
    "paper_ref": null,
    "root": "Display.claim",
+   "basis": null,
    "tickets": [
     {
      "ticket_id": "A-2000",
@@ -1711,6 +1713,66 @@
    "commit": "f9e8bc5b38b6e212696e8a30e3e91517af887bbd",
    "paper_ref": "https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf",
    "root": "NavierStokes.Comparator.navier_stokes_breakdown_R3",
+   "basis": {
+    "toolchain": "4.34.0-rc2",
+    "axioms": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "libraries": [
+     {
+      "name": "mathlib",
+      "url": "https://github.com/leanprover-community/mathlib4.git",
+      "rev": "85e3a25e006c35636f0e53b0e9296caca2685bc0"
+     },
+     {
+      "name": "plausible",
+      "url": "https://github.com/leanprover-community/plausible",
+      "rev": "d9598f07b1bc701f1e3aae163d2681c1fd978793"
+     },
+     {
+      "name": "LeanSearchClient",
+      "url": "https://github.com/leanprover-community/LeanSearchClient",
+      "rev": "ba67e212be1197b84c1f1f6299488a10a3002713"
+     },
+     {
+      "name": "importGraph",
+      "url": "https://github.com/leanprover-community/import-graph",
+      "rev": "d8823026ac7ef130c253089d95685f9877b95323"
+     },
+     {
+      "name": "proofwidgets",
+      "url": "https://github.com/leanprover-community/ProofWidgets4",
+      "rev": "a8acbfd87375ff4abe14ce09db5b7664d383bc7f"
+     },
+     {
+      "name": "aesop",
+      "url": "https://github.com/leanprover-community/aesop",
+      "rev": "18889deb9e83ea7420ef51c160d6f88552e744e3"
+     },
+     {
+      "name": "Qq",
+      "url": "https://github.com/leanprover-community/quote4",
+      "rev": "507746ab8f4b643ccdacb2ec4cdb5853fa9f8ab3"
+     },
+     {
+      "name": "batteries",
+      "url": "https://github.com/leanprover-community/batteries",
+      "rev": "d54dddc581e08be364c278052863524bff7a99a9"
+     }
+    ],
+    "hardened_files": 53371,
+    "hardened_unchanged": true,
+    "replayed": false,
+    "modules_replayed": 0,
+    "constants_replayed": 0,
+    "replay_failures": 0,
+    "modules_trusted": 0,
+    "modules_core": 0,
+    "libraries_replayed": false,
+    "second_kernel": false
+   },
    "tickets": [
     {
      "ticket_id": "A-3000",
@@ -4037,6 +4099,66 @@
    "commit": "4eaee87548250b2682affda7d05d947c05554bae",
    "paper_ref": null,
    "root": "OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re",
+   "basis": {
+    "toolchain": "4.34.1",
+    "axioms": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "libraries": [
+     {
+      "name": "mathlib",
+      "url": "https://github.com/leanprover-community/mathlib4.git",
+      "rev": "d13f23b723b8a846827a245b89c10fc7d3f11612"
+     },
+     {
+      "name": "plausible",
+      "url": "https://github.com/leanprover-community/plausible",
+      "rev": "118aa17ee84656b8bd727fef7c458ee8c833385c"
+     },
+     {
+      "name": "LeanSearchClient",
+      "url": "https://github.com/leanprover-community/LeanSearchClient",
+      "rev": "ddf04cf3949fa556442341e87d47f9f6e6074707"
+     },
+     {
+      "name": "importGraph",
+      "url": "https://github.com/leanprover-community/import-graph",
+      "rev": "e928b72544873815af278d38681b31c0293588e3"
+     },
+     {
+      "name": "proofwidgets",
+      "url": "https://github.com/leanprover-community/ProofWidgets4",
+      "rev": "106ff4fafc74ef4ac99d81dbf3ab399118f497a5"
+     },
+     {
+      "name": "aesop",
+      "url": "https://github.com/leanprover-community/aesop",
+      "rev": "355695d523e41d0554926416cba2a2b3544fbbc9"
+     },
+     {
+      "name": "Qq",
+      "url": "https://github.com/leanprover-community/quote4",
+      "rev": "6a489d9af5d0c47e5b259e2e8bcdfc1811b5a259"
+     },
+     {
+      "name": "batteries",
+      "url": "https://github.com/leanprover-community/batteries",
+      "rev": "f2effa3d803fda822b1f97b806c47cf2adfbcbc2"
+     }
+    ],
+    "hardened_files": 54388,
+    "hardened_unchanged": true,
+    "replayed": true,
+    "modules_replayed": 2943,
+    "constants_replayed": 53394,
+    "replay_failures": 0,
+    "modules_trusted": 4101,
+    "modules_core": 1552,
+    "libraries_replayed": false,
+    "second_kernel": false
+   },
    "tickets": [
     {
      "ticket_id": "A-4000",

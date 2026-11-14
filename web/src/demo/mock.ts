@@ -30,6 +30,7 @@ type SnapSubmission = {
   commit: string;
   paper_ref: string | null;
   root: string | null; // the main theorem
+  basis: Json | null; // what the result relies on (C-29)
   tickets: SnapTicket[];
 };
 type Snapshot = {
@@ -1135,6 +1136,8 @@ function progressDetail(role: Role | null, sub: SnapSubmission): Json {
           Number(a.declaration !== sub.root) - Number(b.declaration !== sub.root) ||
           a.declaration.localeCompare(b.declaration),
       ),
+    basis: sub.basis ?? null,
+    library_definitions: libraryDefinitions(role, sub),
     timeline: [
       { at: OPENED, decided: 0 },
       ...times.map((at, i) => ({ at, decided: i + 1 })),
@@ -1172,6 +1175,41 @@ function declarationJson(query: URLSearchParams): Json {
     contested: (state.contests[u.real.ticket_id] ?? []).length,
     discussion: threadOpen(sid, decl),
   };
+}
+
+// Library definitions the statements use (C-27); hidden while a planted error
+// of the paper is unrevealed, as in the real system.
+type Gloss = { name: string; type: string; origin?: string; doc?: string; note?: string };
+function libraryDefinitions(role: Role | null, sub: SnapSubmission): Json[] | null {
+  const hidden = sub.tickets.some((t) => t.honeypot && !revealed(t.ticket_id));
+  if (hidden && !(role && PROFILE[role].maintainer)) return null;
+  const found = new Map<string, Json & { used_by: string[] }>();
+  for (const u of unitsOf(sub)) {
+    const comps = (u.real.view.components ?? []) as {
+      glossary?: Gloss[];
+      trusted_glossary?: Gloss[];
+    }[];
+    for (const c of comps)
+      for (const g of c.trusted_glossary?.length ? c.trusted_glossary : (c.glossary ?? [])) {
+        if (g.origin !== "library" && g.origin !== "core") continue;
+        const d = found.get(g.name) ?? {
+          name: g.name,
+          type: g.type,
+          origin: g.origin,
+          doc: g.doc ?? null,
+          note: g.note ?? null,
+          used_by: [],
+          reviewed: false,
+        };
+        if (!d.used_by.includes(u.decl)) d.used_by.push(u.decl);
+        found.set(g.name, d);
+      }
+  }
+  return [...found.values()].sort(
+    (a, b) =>
+      Number(a.origin !== "library") - Number(b.origin !== "library") ||
+      String(a.name).localeCompare(String(b.name)),
+  );
 }
 
 function progress(role: Role | null, sidRaw: string | undefined, notes: boolean, body: Json) {
