@@ -278,6 +278,14 @@ intact:
 - **Votes.** Up- and downvotes sort the posts. They never enter trust, roles or
   decisions: trust must not grow from mutual agreement. There is no karma per
   person.
+- **Votes on a thread** (added after the walkthrough, 2026-11-14) say whether
+  the discussion is worth reading and sort the list of discussions. They are
+  not a vote on the decision: an unweighted public poll on a decision would put
+  pressure on maintainers and anchor the reviewers of a reopened declaration.
+  Votes on threads are no side channel for planted errors, because threads
+  open only after every planted error of the submission is revealed.
+- **Reports** can be withdrawn while maintainers have not acted on them; a post
+  that is already hidden stays hidden.
 - **Who.** Posts are anonymous by default ("Reviewer A, B, …" per thread). The
   pseudonym is optional, per thread, because it links the person to all their
   reviews in the published audit log (SR-23). Shown on every post:
@@ -576,9 +584,11 @@ author chooses to show their pseudonym; whether the author is a maintainer,
 and since when they take part, is shown." See C-25.
 
 ### S-22 · New requirement: votes carry no weight · new
-*Proposed:* "Votes on posts shall influence neither trust, roles nor
-decisions. A post can lead to a change of a decision only through a reopen
-request decided by a maintainer." See C-25.
+*Proposed:* "Votes on posts and on threads shall influence neither trust,
+roles nor decisions; they only sort. A vote on a thread says whether the
+discussion is worth reading, not whether the decision is right. A post can
+lead to a change of a decision only through a reopen request decided by a
+maintainer." See C-25.
 
 ### S-23 · SR-42 Interim reports — a public progress page · refine
 *Proposed:* Add to SR-42: "The anytime report of every submission is public
