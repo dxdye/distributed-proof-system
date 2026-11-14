@@ -331,6 +331,110 @@ Rules that keep the page from leaking or anchoring:
 
 *Evidence:* Walkthrough with the project owner (2026-11-14).
 
+### C-27 · §3 question 2, §14 Mathlib hardening — Mathlib in the statement: its use and its definitions · new
+*Current:* Class A covers TCB_new(t) = Dep(t) \ H; Mathlib declarations are
+hardened by assumption. Question 2 of §3 asks about junk values where the
+statement uses them. §14 applies the same system to Mathlib itself (priority 1:
+TCB(t) ∩ M), but does not say how this connects to the review of a submission.
+*Problem:* The more a statement is phrased in Mathlib's vocabulary, the smaller
+class A gets, and the meaning moves into Mathlib. QRH: TCB_new(t) is a single
+declaration, the main theorem. What it says depends on `riemannZeta`,
+`Complex.re` and real division, and none of them is reviewed. Two things can
+go wrong:
+1. *Use.* A Mathlib definition is correct but does not mean here what the paper
+   means: truncated subtraction in ℕ, `x / 0 = 0`, `Real.log` of negative
+   numbers, `deriv` where there is no derivative, `riemannZeta 1`.
+2. *Definition.* A Mathlib definition does not mean what its name suggests
+   (§1, point 2). Rare, but with the largest reach (§13.7).
+
+*Proposed:*
+- **Use: in every class-A ticket, complete.** The ticket lists the Mathlib
+  definitions its statement uses directly, with their definition, docstring
+  and known conventions, and question 2 names them. A catalogue of conventions
+  per Mathlib definition feeds these notes; it grows from Mathlib tickets,
+  findings and discussions (§8.9). Implemented in part: the glossary shows
+  origin and docstring of every constant, and notes on conventions for four
+  functions.
+- **Definitions: by weighted sampling (§14 made concrete).** The Mathlib
+  definitions in TCB(t) ∩ M of submitted results become Mathlib tickets, drawn
+  with weights as in §7.1:
+  - how many class-A statements use them directly (reach);
+  - how close they are to those statements (direct use first);
+  - whether they carry conventions (junk values);
+  - the priority of the submissions that use them (C-28).
+
+  A decision holds for the pair (definition, Mathlib version) and is reused by
+  every submission on that version as long as the definition's hash is
+  unchanged.
+- **Planted errors in Mathlib tickets** can be looked up in Mathlib's sources
+  even more easily than in a repository (§15). Trust earned on Mathlib tickets
+  therefore counts for class A at most capped. Mathlib tickets are measured
+  mainly through the PVV and through definition tests (§5.2).
+- **Findings** go the way of §13.7: confirmed by the PVV, coordinated with
+  Mathlib's maintainers, as an issue or PR with the reach analysis.
+- **Report.** What a result relies on is listed, not hidden (C-29): the
+  Mathlib definitions its statements use, and whether each was reviewed.
+  PRL 3 keeps its meaning (TCB_new complete); "Mathlib definitions used: k of m
+  reviewed" is reported next to it.
+
+*Evidence:* QRH case study (`docs/case-studies/quasi-riemann.md`):
+|TCB_new| = 1, and the meaning of the statement lies entirely in Mathlib.
+Walkthrough with the project owner (2026-11-14).
+
+### C-28 · §1, §10.3 The map, §11, §16 — Breadth first, then depth · new
+*Proposed:* The aim is not only to check the best-known results but many of
+them, as many as capacity allows. §1 counts 722 manuscripts from one model,
+162 of them with a Lean formalization. Full class-A coverage for each of them
+is out of reach, so the review proceeds in stages:
+1. **Ingest, automatic, every submission:** build, axioms, kernel replay, TCB,
+   mutants. Result: PRL 1, without any reviewer.
+2. **Triage, sampled, every submission:** the main theorem, a weighted sample
+   of its class-A declarations, and a sample of the Mathlib definitions its
+   statement uses (C-27). Planted copies as usual. The result is an early
+   signal: findings, and an estimate labelled "sampled", not PRL 2 or 3.
+3. **Depth, by priority:** promising submissions get full class A (PRL 2–3),
+   then the Mathlib definitions they rely on (C-27), then class-B sampling
+   (PRL 4). Priority comes from:
+   - interest ψ (§10.2);
+   - reach: how many results build on it (PRL_eff, §10.1);
+   - triage findings: a finding raises priority, since someone has to decide
+     or fix it;
+   - the map (§10.3): high attention and low PRL first.
+
+   Priority does not come from votes (C-26).
+
+Over time this pushes promising results up the PRL ladder, while the "Halde
+aus der KI-Flut" (§10.3) is at least triaged. A dangerous result is then
+noticed before others build on it.
+
+*Consequences:*
+- Class A keeps its 100 % rule for PRL 3 (§3). Triage reuses the same tickets
+  and the same planted errors; it only changes the order.
+- The order is a weight in the choice-set draw (SR-38): triage tickets of
+  submissions not yet triaged first, then full class A of submissions by
+  priority.
+- The progress page and the reports show the stage of every submission
+  (ingested, triaged, in depth) and label sampled results as such.
+
+*Evidence:* Walkthrough with the project owner (2026-11-14).
+
+### C-29 · §2.2, §15 — Checking the trusted base · refine
+*Current:* The toolchain and the official packages (H) are trusted, and so is
+the kernel. The kernel replay (C-18) covers every other module.
+*Proposed:*
+- **Replay the official packages** through the kernel once per pinned version
+  (Lean's `--fresh` mode). It takes hours, but the result is shared by every
+  submission on that version. Until then the report says: "Mathlib at
+  `<commit>`, from the official cache, trusted as far as Mathlib's CI".
+- **An independent second kernel** (e.g. nanoda, lean4lean) re-checks the
+  replayed modules, as a guard against bugs in Lean's kernel.
+- **Trusted assumptions in the report and on the progress page:** kernel
+  version, library versions and whether they were replayed, and the library
+  definitions the statements use with their review status (C-27).
+
+*Evidence:* ADR 0009, "What the replay does not cover"; QRH: 4 101
+official-package modules were trusted by location, not replayed.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -482,3 +586,27 @@ and live: PRL, class-A coverage, decided declarations, confirmed findings,
 estimated residual error and forecast. It counts declarations, not tickets,
 counts a declaration as decided only when all its tickets are, and shows no
 live verdict tallies." See C-26.
+
+### S-24 · New requirement: Mathlib in class-A statements · new
+*Proposed:* "Every class-A ticket shall list the library definitions its
+statement uses directly, with definition, docstring and known conventions.
+Library definitions used by class-A statements shall be reviewed by weighted
+sampling, once per library version and definition; a decision is reused across
+submissions while the definition is unchanged. Trust earned on library tickets
+counts for class A at most capped." See C-27.
+
+### S-25 · New requirement: triage before depth · new
+*Proposed:* "Every opened submission shall be triaged before it is reviewed in
+full: its main theorem, a weighted sample of its class-A units and a sample of
+the library definitions it uses. Full class-A coverage, library definitions and
+class B follow by priority (interest, reach, triage findings). Reports state
+the stage of every submission and label sampled results as such." Affects
+SR-38 (choice sets) and SR-42 (reports). See C-28.
+
+### S-26 · S-13 Kernel replay — the trusted base · refine
+*Proposed:* Add to S-13: "The official packages of a pinned version should be
+replayed through the kernel once, and the result shared by all submissions on
+that version; an independent kernel should re-check replayed modules. Reports
+list the trusted assumptions: kernel, library versions and whether they were
+replayed, and the library definitions used with their review status." See
+C-29.
