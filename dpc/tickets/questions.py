@@ -12,7 +12,10 @@ evaluation per question do not depend on the kind; only the wording does.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Literal
+
+from dpc.tickets.views import GlossaryEntry
 
 Kind = Literal["theorem", "definition", "structure"]
 
@@ -75,9 +78,37 @@ def kind_of(decl_kind: str) -> Kind:
     return "definition"
 
 
-def questions_for(decl_kind: str) -> list[dict[str, str]]:
+NAMED = 6  # library definitions named in the question; the ticket lists all
+
+
+def _names(names: list[str]) -> str:
+    shown = names[:NAMED]
+    more = len(names) - len(shown)
+    return ", ".join(shown) + (f" and {more} more" if more else "")
+
+
+def junk_values_here(relies_on: Sequence[GlossaryEntry]) -> str:
+    """The part of the junk-value question that names this ticket's library
+    definitions (proposal C-27). Empty if it uses none."""
+    if not relies_on:
+        return ""
+    names = [g.name for g in relies_on]
+    noted = [g.name for g in relies_on if g.note]
+    text = (f" Here it relies on {_names(names)}: check what each of them means, and what it "
+            "returns where the paper's notion is undefined.")
+    if noted:
+        text += f" Conventions to know are noted for {_names(noted)}."
+    return text
+
+
+def questions_for(decl_kind: str,
+                  relies_on: Sequence[GlossaryEntry] = ()) -> list[dict[str, str]]:
+    """The checklist; the junk-value question names the library definitions
+    the declaration relies on (:func:`dpc.tickets.library.relies_on`)."""
     texts = TEXTS[kind_of(decl_kind)]
-    return [{"id": q, "text": texts[q]} for q in QUESTION_IDS]
+    return [{"id": q, "text": texts[q] + (junk_values_here(relies_on) if q == "junk_values"
+                                          else "")}
+            for q in QUESTION_IDS]
 
 
 def purpose_for(decl_kind: str) -> str:

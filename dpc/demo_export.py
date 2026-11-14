@@ -26,8 +26,9 @@ from dpc.coord.tiers import tier_of_view
 from dpc.honeypots.mixing import MutantMismatch, honeypot_view
 from dpc.honeypots.model import MutantSet
 from dpc.ingest.basis import trust_basis
+from dpc.tickets.library import annotate_view, relies_on
 from dpc.tickets.paper import PaperMap
-from dpc.tickets.questions import PURPOSE, TEXTS
+from dpc.tickets.questions import PURPOSE, TEXTS, questions_for
 from dpc.tickets.views import UnitView
 
 SCHEMA = "dpc.click-dummy/1"
@@ -57,6 +58,8 @@ def _views(path: Path) -> list[dict[str, Any]]:
 def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
             honeypot: dict[str, str] | None = None) -> dict[str, Any]:
     passage = paper.passage(view.declaration) if paper else None
+    view = annotate_view(view)
+    relies = relies_on(view)
     return {
         "ticket_id": tid,
         "declaration": view.declaration,
@@ -64,6 +67,9 @@ def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
         "domain": (paper.domain(view.declaration) if paper else None) or domain,
         "tier": tier_of_view(view),
         "view": view.model_dump(mode="json"),
+        # what the statement takes from Mathlib, and the checklist naming it (C-27)
+        "relies_on": [g.model_dump(mode="json") for g in relies],
+        "questions": questions_for(view.decl_kind, relies),
         "paper": passage.model_dump(mode="json") if passage else None,
         "honeypot": honeypot,  # the mock reveals it right after the verdict
     }

@@ -25,8 +25,10 @@ from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
 from dpc.coord import progress as progress_page
 from dpc.coord.state import LeaseSt, TicketSt
+from dpc.tickets.library import annotate_view, relies_on
 from dpc.tickets.model import AIAssistance
 from dpc.tickets.questions import purpose_for, questions_for
+from dpc.tickets.views import UnitView
 
 NOTICE = (
     "Reviews you submit (verdicts, justifications, evidence files) are published "
@@ -39,6 +41,19 @@ NOTICE = (
 
 #: The checklist of theorems (other kinds: dpc.tickets.questions).
 QUESTIONS: dict[str, str] = {q["id"]: q["text"] for q in questions_for("theorem")}
+
+
+def ticket_text(view: UnitView) -> dict[str, Any]:
+    """What a reviewer reads of a ticket: the view with the current notes,
+    the library definitions it relies on and the checklist naming them (C-27)."""
+    view = annotate_view(view)
+    relies = relies_on(view)
+    return {
+        "view": view.model_dump(mode="json"),
+        "relies_on": [g.model_dump(mode="json") for g in relies],
+        "questions": questions_for(view.decl_kind, relies),
+        "purpose": purpose_for(view.decl_kind),
+    }
 
 
 class _Req(BaseModel):
@@ -221,9 +236,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "paper_ref": sub.paper_ref,
                 "paper_passage": ticket.paper.model_dump(mode="json") if ticket.paper else None,
                 "mapping_contested_by_me": any(r == lease.reviewer for r, _ in ticket.contests),
-                "view": ticket.view.model_dump(mode="json"),
-                "questions": questions_for(ticket.view.decl_kind),
-                "purpose": purpose_for(ticket.view.decl_kind),
+                **ticket_text(ticket.view),
             },
         }
         if lease.duty == "claim" and lease.claim_id is not None:
@@ -667,9 +680,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "paper": sub.title, "repo_url": sub.repo_url, "commit": sub.commit,
                 "paper_ref": sub.paper_ref,
                 "paper_passage": real.paper.model_dump(mode="json") if real.paper else None,
-                "view": real.view.model_dump(mode="json"),
-                "questions": questions_for(real.view.decl_kind),
-                "purpose": purpose_for(real.view.decl_kind),
+                **ticket_text(real.view),
                 "contested": len(real.contests),
                 "discussion": coord.thread_open(submission_id, declaration),
             }

@@ -227,7 +227,8 @@ def test_what_the_result_relies_on(env: Env, tmp_path: Path) -> None:
     assert d["basis"]["libraries"][0]["rev"] == "abc"
     assert not d["basis"]["libraries_replayed"] and not d["basis"]["second_kernel"]
     assert d["library_definitions"] == [{
-        "name": "Real.sqrt", "type": "ℝ → ℝ", "origin": "library", "doc": None, "note": None,
+        "name": "Real.sqrt", "type": "ℝ → ℝ", "origin": "library", "doc": None,
+        "note": "√x = 0 for every x ≤ 0 (Real.sqrt_eq_zero_of_nonpos).",  # today's note
         "used_by": ["P.u0"], "reviewed": False}]
 
 

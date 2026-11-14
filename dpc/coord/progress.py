@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from dpc.domain.forecast import completion_weeks
+from dpc.tickets.library import annotate_view, relies_on
 
 if TYPE_CHECKING:
     from dpc.coord.service import Coordinator
@@ -144,7 +145,8 @@ def detail(coord: Coordinator, submission_id: str, viewer: str | None) -> dict[s
     us = units(coord, submission_id)
     root = next((u for u in us if u.declaration == sub.root), None)
     show_root = root is not None and coord.thread_open(submission_id, root.declaration)
-    out["main_view"] = root.real.view.model_dump(mode="json") if root and show_root else None
+    out["main_view"] = (annotate_view(root.real.view).model_dump(mode="json")
+                        if root and show_root else None)
     out["root"] = sub.root
     out["units"] = [{
         "declaration": u.declaration, "decl_kind": u.real.view.decl_kind, "tier": u.real.tier,
@@ -168,8 +170,9 @@ def detail(coord: Coordinator, submission_id: str, viewer: str | None) -> dict[s
 
 def library_definitions(coord: Coordinator, submission_id: str, viewer: str | None
                         ) -> list[dict[str, Any]] | None:
-    """The library and core definitions the class-A statements use directly
-    (C-27), with their review status. Not shown while a planted error of the
+    """The library and core definitions the class-A statements use directly,
+    without notation plumbing (:func:`dpc.tickets.library.relies_on`, C-27),
+    with their review status. Not shown while a planted error of the
     submission is unrevealed: a mutant can use a definition the real
     statements do not, and the list would give it away. Maintainers see it."""
     st = coord.state
@@ -179,14 +182,12 @@ def library_definitions(coord: Coordinator, submission_id: str, viewer: str | No
         return None
     found: dict[str, dict[str, Any]] = {}
     for u in units(coord, submission_id):
-        for comp in u.real.view.components:
-            for g in comp.trusted_glossary or comp.glossary:
-                if g.origin in ("library", "core") and g.name not in found:
-                    found[g.name] = {"name": g.name, "type": g.type, "origin": g.origin,
-                                     "doc": g.doc, "note": g.note, "used_by": set(),
-                                     "reviewed": False}  # library tickets: C-27, not yet
-                if g.name in found:
-                    found[g.name]["used_by"].add(u.declaration)
+        for g in relies_on(u.real.view):
+            if g.name not in found:
+                found[g.name] = {"name": g.name, "type": g.type, "origin": g.origin,
+                                 "doc": g.doc, "note": g.note, "used_by": set(),
+                                 "reviewed": False}  # library tickets: C-27, not yet
+            found[g.name]["used_by"].add(u.declaration)
     return [dict(d, used_by=sorted(d["used_by"]))
             for d in sorted(found.values(), key=lambda d: (d["origin"] != "library", d["name"]))]
 
