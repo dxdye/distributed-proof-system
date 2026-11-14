@@ -75,7 +75,7 @@ export function How() {
         <h2>What a ticket is</h2>
         <p>
           A ticket is one declaration of a formalization: the main theorem, or a definition it
-          depends on. You see three things:
+          depends on. You see four things:
         </p>
         <ul>
           <li>
@@ -89,6 +89,11 @@ export function How() {
           <li>
             <b>The Lean text</b>: the binding version. Hover over a name to see its type, where it
             comes from (Lean, Mathlib or the submission) and known junk values.
+          </li>
+          <li>
+            <b>The definitions it relies on</b>: the Mathlib and Lean definitions the declaration
+            uses, with their docstrings and the conventions to know. The statement means what they
+            mean; checking that they mean what the paper means is part of the review.
           </li>
         </ul>
         <p>

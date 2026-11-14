@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type ChoiceSet, type Me } from "../api";
 import { TIER_HINTS, TIER_LABELS, TierBadge } from "../components/Tier";
+import { Welcome, introDone } from "../components/Welcome";
 import { navigate } from "../router";
 
 const ALL_TIERS = ["easy", "medium", "hard", "excellence"];
@@ -154,9 +155,11 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
   }
 
   const isPvv = Object.values(me.roles).some((r) => r.includes("PVV")) || me.maintainer;
+  const [intro, setIntro] = useState(() => !introDone(me));
 
   return (
     <div>
+      {intro && <Welcome me={me} onClose={() => setIntro(false)} />}
       <section className="card">
         <h2>Your tickets</h2>
         {me.leases.length === 0 && <p className="muted">You hold no ticket right now.</p>}
@@ -175,6 +178,14 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
         <p className="muted small">
           You can hold up to {me.wip_limit} {me.wip_limit === 1 ? "ticket" : "tickets"} at a time.
           Returning a ticket carries no penalty.
+          {!intro && (
+            <>
+              {" "}
+              <button className="link small" onClick={() => setIntro(true)}>
+                How a review goes
+              </button>
+            </>
+          )}
         </p>
       </section>
 

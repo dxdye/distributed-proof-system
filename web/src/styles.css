@@ -2169,3 +2169,26 @@ ul.basis p {
   padding-top: 1rem;
   border-top: 1px solid var(--line);
 }
+
+/* First steps for a new reviewer (OS-2) */
+.welcome {
+  border-left: 3px solid var(--accent);
+}
+.welcome h2 {
+  margin-top: 0.15rem;
+}
+.welcome-steps {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+  padding-left: 1.4rem;
+}
+.welcome-steps p {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+}
+.welcome-actions {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1rem;
+}
