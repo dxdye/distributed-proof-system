@@ -211,6 +211,7 @@ def notes(coord: Coordinator, submission_id: str, viewer: str | None) -> list[di
             "reviewed_here": False, "at": p.at.isoformat(), "score": p.score,
             "my_vote": p.votes.get(viewer, 0) if viewer else 0, "ai_used": p.ai_used,
             "hidden": p.hidden, "text": "" if p.hidden else p.text,
+            "reported_by_me": viewer is not None and any(r == viewer for r, _ in p.reports),
         })
     out.sort(key=lambda x: (-int(x["score"]), str(x["at"])))
     return out

@@ -98,6 +98,10 @@ class ShareReq(ThreadReq):
     show_pseudonym: bool = False
 
 
+class ThreadVoteReq(ThreadReq):
+    value: Literal[-1, 0, 1]
+
+
 class ReopenReq(ThreadReq):
     reason: str
     post_id: str | None = None
@@ -455,7 +459,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "member_since": person.registered.strftime("%Y-%m"),
                 "reviewed_here": p.author in reviewed, "at": p.at.isoformat(),
                 "score": p.score, "my_vote": p.votes.get(rid, 0), "ai_used": p.ai_used,
-                "hidden": p.hidden,
+                "hidden": p.hidden, "reported_by_me": any(r == rid for r, _ in p.reports),
                 "text": "" if p.hidden else p.text,
             }
             if p.kind == "review" and p.review_seq is not None and not p.hidden:
@@ -477,6 +481,8 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                    "reviewed_here": rid in reviewed},
             "reopen_pending": any(q.ticket_id == real.ticket_id and q.status == "open"
                                   for q in st.reopens.values()),
+            "score": sum(st.thread_votes[thread].values()),
+            "my_vote": st.thread_votes[thread].get(rid, 0),
             "posts": posts,
         }
 
@@ -496,8 +502,11 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                     "domain": real.domain, "outcome": real.status, "posts": len(visible),
                     "last_activity": max((p.at for p in visible), default=real.decided_at
                                          or real.created).isoformat(),
-                    "can_share": coord.shareable_review(rid, sid, decl) is not None})
-            out.sort(key=lambda x: str(x["last_activity"]), reverse=True)
+                    "can_share": coord.shareable_review(rid, sid, decl) is not None,
+                    "score": sum(st.thread_votes[(sid, decl)].values()),
+                    "my_vote": st.thread_votes[(sid, decl)].get(rid, 0)})
+            # Worth reading first, then the most recent.
+            out.sort(key=lambda x: (int(x["score"]), str(x["last_activity"])), reverse=True)
             return out
 
     @app.get("/api/thread")
@@ -527,6 +536,11 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                    post_id=req.post_id)
         return {"request_id": qid}
 
+    @app.post("/api/thread/vote")
+    def thread_vote(req: ThreadVoteReq, rid: Rid) -> dict[str, bool]:
+        call(coord.vote_thread, rid, req.submission_id, req.declaration, req.value)
+        return {"ok": True}
+
     @app.post("/api/posts/{post_id}/vote")
     def vote(post_id: str, req: VoteReq, rid: Rid) -> dict[str, bool]:
         call(coord.vote, rid, post_id, req.value)
@@ -535,6 +549,11 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
     @app.post("/api/posts/{post_id}/report")
     def report(post_id: str, req: ReasonReq, rid: Rid) -> dict[str, bool]:
         call(coord.report_post, rid, post_id, req.reason)
+        return {"ok": True}
+
+    @app.delete("/api/posts/{post_id}/report")
+    def withdraw_report(post_id: str, rid: Rid) -> dict[str, bool]:
+        call(coord.withdraw_report, rid, post_id)
         return {"ok": True}
 
     @app.post("/api/leases/{lease_id}/contest-mapping")

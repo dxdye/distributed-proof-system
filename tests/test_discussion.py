@@ -168,3 +168,61 @@ def test_reported_posts_can_be_hidden_by_maintainers(env: Env) -> None:
         env.coord.hide_post(other, pid, "no")
     env.coord.hide_post(admin, pid, "rude")
     assert env.coord.state.posts[pid].hidden == "rude"
+
+
+@pytest.mark.req("SR-12")
+def test_votes_on_a_thread_sort_the_list_and_say_nothing_about_the_decision(env: Env) -> None:
+    sid = env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
+                                    tickets=specs("P", 2))
+    admin = env.people(1, "admin")[0]
+    env.coord.appoint_maintainer(admin)
+    first, second = env.people(2)
+    voter = env.people(1, "voter")[0]
+    with pytest.raises(Forbidden, match="opens once"):
+        env.coord.vote_thread(voter, sid, "P.u0", 1)
+    decide_error(env, admin, first)
+    decide_error(env, admin, second)
+    assert len(env.coord.open_threads()) == 2
+    domain = env.coord.state.tickets[env.coord.state.submissions[sid].tickets[0]].domain
+    before = env.coord.state.trust(first, domain, env.coord.now())
+    env.coord.vote_thread(voter, sid, "P.u1", 1)
+    assert env.coord.state.trust(first, domain, env.coord.now()) == before
+    with pytest.raises(CoordError):
+        env.coord.vote_thread(voter, sid, "P.u1", 2)
+    client = TestClient(create_app(env.coord, tick_seconds=None))
+    _, token = env.coord.register("reader", notice_acknowledged=True)
+    auth = {"Authorization": f"Bearer {token}"}
+    listing = client.get("/api/discussions", headers=auth).json()
+    assert [t["declaration"] for t in listing] == ["P.u1", "P.u0"]  # worth reading first
+    assert listing[0]["score"] == 1 and listing[0]["my_vote"] == 0
+    assert client.post("/api/thread/vote", headers=auth, json={
+        "submission_id": sid, "declaration": "P.u0", "value": -1}).json()["ok"]
+    thread = client.get("/api/thread", params={"submission_id": sid, "declaration": "P.u0"},
+                        headers=auth).json()
+    assert thread["score"] == -1 and thread["my_vote"] == -1
+    assert env.coord.state.tickets[env.coord.real_ticket(sid, "P.u0").ticket_id].status \
+        == "error"  # type: ignore[union-attr]
+
+
+def test_a_report_can_be_withdrawn(env: Env) -> None:
+    sid, decl, admin, rid = setup(env)
+    decide_error(env, admin, rid)
+    other = env.people(1, "other")[0]
+    pid = env.coord.post(other, sid, decl, "A comment someone may find rude.")
+    env.coord.report_post(rid, pid, "rude")
+    with pytest.raises(Conflict, match="already reported"):
+        env.coord.report_post(rid, pid, "still rude")
+    client = TestClient(create_app(env.coord, tick_seconds=None))
+    _, token = env.coord.register("reporter", notice_acknowledged=True)
+    auth = {"Authorization": f"Bearer {token}"}
+    assert client.post(f"/api/posts/{pid}/report", headers=auth,
+                       json={"reason": "off topic"}).json()["ok"]
+    params = {"submission_id": sid, "declaration": decl}
+    post = client.get("/api/thread", params=params, headers=auth).json()["posts"][0]
+    assert post["reported_by_me"] is True
+    assert client.delete(f"/api/posts/{pid}/report", headers=auth).json()["ok"]
+    post = client.get("/api/thread", params=params, headers=auth).json()["posts"][0]
+    assert post["reported_by_me"] is False
+    assert client.delete(f"/api/posts/{pid}/report", headers=auth).status_code == 404
+    env.coord.withdraw_report(rid, pid)
+    assert env.coord.state.posts[pid].reports == []

@@ -668,15 +668,40 @@ class Coordinator:
             self._emit("discussion.voted", ev.DiscussionVoted(
                 post_id=post_id, voter=rid, value=value))
 
+    def vote_thread(self, rid: str, submission_id: str, declaration: str, value: int) -> None:
+        """Is the discussion worth reading? Sorts the list of discussions; it
+        is not a vote on the decision and never enters trust or decisions."""
+        if value not in (-1, 0, 1):
+            raise CoordError("a vote is -1, 0 or 1")
+        with self.lock:
+            self._reviewer(rid)
+            self._thread(submission_id, declaration)
+            self._emit("discussion.thread_voted", ev.ThreadVoted(
+                submission_id=submission_id, declaration=declaration, voter=rid, value=value))
+
     def report_post(self, rid: str, post_id: str, reason: str) -> None:
         with self.lock:
             self._reviewer(rid)
-            if post_id not in self.state.posts:
+            post = self.state.posts.get(post_id)
+            if post is None:
                 raise NotFound("no such post")
             if not reason.strip():
                 raise CoordError("say why you report the post")
+            if any(r == rid for r, _ in post.reports):
+                raise Conflict("you have already reported this post")
             self._emit("discussion.reported", ev.DiscussionReported(
                 post_id=post_id, reporter=rid, reason=reason.strip()))
+
+    def withdraw_report(self, rid: str, post_id: str) -> None:
+        """A report can be taken back while maintainers have not acted on it.
+        A post already hidden stays hidden: that was the maintainers' decision."""
+        with self.lock:
+            self._reviewer(rid)
+            post = self.state.posts.get(post_id)
+            if post is None or not any(r == rid for r, _ in post.reports):
+                raise NotFound("you have not reported this post")
+            self._emit("discussion.report_withdrawn", ev.ReportWithdrawn(
+                post_id=post_id, reporter=rid))
 
     def hide_post(self, rid: str, post_id: str, reason: str) -> None:
         with self.lock:

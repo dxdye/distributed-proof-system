@@ -133,10 +133,26 @@ class DiscussionVoted(_P):
     value: Literal[-1, 0, 1]
 
 
+class ThreadVoted(_P):
+    """Whether a discussion is worth reading: sorts the list of discussions.
+    It says nothing about the decision and never enters trust, roles or
+    decisions (S-22)."""
+
+    submission_id: str
+    declaration: str
+    voter: str
+    value: Literal[-1, 0, 1]
+
+
 class DiscussionReported(_P):
     post_id: str
     reporter: str
     reason: str
+
+
+class ReportWithdrawn(_P):
+    post_id: str
+    reporter: str
 
 
 class DiscussionHidden(_P):
@@ -313,6 +329,8 @@ PAYLOADS: dict[str, type[_P]] = {
     "discussion.posted": DiscussionPosted,
     "discussion.voted": DiscussionVoted,
     "discussion.reported": DiscussionReported,
+    "discussion.report_withdrawn": ReportWithdrawn,
+    "discussion.thread_voted": ThreadVoted,
     "discussion.hidden": DiscussionHidden,
     "ticket.reopen_requested": ReopenRequested,
     "ticket.reopen_resolved": ReopenResolved,

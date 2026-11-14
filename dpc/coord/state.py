@@ -214,6 +214,8 @@ class State:
         self.posts: dict[str, PostSt] = {}
         self.threads: dict[tuple[str, str], list[str]] = defaultdict(list)
         self.named: dict[tuple[str, str], set[str]] = defaultdict(set)  # pseudonym shown
+        # votes on a thread: whether it is worth reading (sorting only)
+        self.thread_votes: dict[tuple[str, str], dict[str, int]] = defaultdict(dict)
         self.reopens: dict[str, ReopenSt] = {}
         self.seq = -1
 
@@ -339,6 +341,18 @@ class State:
     def _on_discussion_reported(self, p: ev.DiscussionReported, at: datetime,
                                 _: Entry) -> None:
         self.posts[p.post_id].reports.append((p.reporter, p.reason))
+
+    def _on_discussion_report_withdrawn(self, p: ev.ReportWithdrawn, at: datetime,
+                                        _: Entry) -> None:
+        post = self.posts[p.post_id]
+        post.reports = [(r, why) for r, why in post.reports if r != p.reporter]
+
+    def _on_discussion_thread_voted(self, p: ev.ThreadVoted, at: datetime, _: Entry) -> None:
+        votes = self.thread_votes[(p.submission_id, p.declaration)]
+        if p.value:
+            votes[p.voter] = p.value
+        else:
+            votes.pop(p.voter, None)
 
     def _on_discussion_hidden(self, p: ev.DiscussionHidden, at: datetime, _: Entry) -> None:
         self.posts[p.post_id].hidden = p.reason
