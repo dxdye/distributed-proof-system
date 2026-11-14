@@ -628,6 +628,33 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                                 "reasons": [reason for _, reason in t.contests]})
             return out
 
+    @app.get("/api/admin/declaration")
+    def admin_declaration(submission_id: str, declaration: str, _: Admin) -> dict[str, Any]:
+        """A declaration as its reviewers see it, for maintainers (progress page).
+        Not public: the real statement next to a planted copy would give it away."""
+        with coord.lock:
+            if submission_id not in coord.state.submissions:
+                raise HTTPException(404, "no such submission")
+            unit = next((u for u in progress_page.units(coord, submission_id)
+                         if u.declaration == declaration), None)
+            if unit is None:
+                raise HTTPException(404, "no such declaration")
+            sub, real = coord.state.submissions[submission_id], unit.real
+            return {
+                "submission_id": submission_id, "declaration": declaration,
+                "decl_kind": real.view.decl_kind, "tier": real.tier, "domain": real.domain,
+                "state": unit.state,
+                "decided_at": unit.decided_at.isoformat() if unit.decided_at else None,
+                "paper": sub.title, "repo_url": sub.repo_url, "commit": sub.commit,
+                "paper_ref": sub.paper_ref,
+                "paper_passage": real.paper.model_dump(mode="json") if real.paper else None,
+                "view": real.view.model_dump(mode="json"),
+                "questions": questions_for(real.view.decl_kind),
+                "purpose": purpose_for(real.view.decl_kind),
+                "contested": len(real.contests),
+                "discussion": coord.thread_open(submission_id, declaration),
+            }
+
     @app.get("/api/admin/submissions")
     def submissions(_: Admin) -> list[dict[str, Any]]:
         with coord.lock:

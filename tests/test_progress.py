@@ -150,3 +150,23 @@ def test_anyone_reads_the_page_and_only_maintainers_write_notes(env: Env) -> Non
     assert public[0]["my_vote"] == 0 and public[0]["text"] == note["text"]
     # Notes are not a discussion of a declaration.
     assert client.get("/api/discussions", headers=reader).json() == []
+
+
+@pytest.mark.req("SR-06")
+def test_maintainers_see_the_declaration_as_its_reviewers_do(env: Env) -> None:
+    sid = open_paper(env, 2)
+    admin, admin_token = env.coord.register("admin", notice_acknowledged=True)
+    env.coord.appoint_maintainer(admin)
+    _, token = env.coord.register("reader", notice_acknowledged=True)
+    client = TestClient(create_app(env.coord, tick_seconds=None))
+    query = {"submission_id": sid, "declaration": "P.u0"}
+    assert client.get("/api/admin/declaration", params=query).status_code == 401
+    reader = {"Authorization": f"Bearer {token}"}
+    assert client.get("/api/admin/declaration", params=query, headers=reader).status_code == 403
+    maint = {"Authorization": f"Bearer {admin_token}"}
+    d = client.get("/api/admin/declaration", params=query, headers=maint).json()
+    assert d["view"]["declaration"] == "P.u0" and d["state"] == "not started"
+    assert d["paper_passage"]["statement"] == PASSAGE.statement
+    assert d["questions"][0]["id"] == "fidelity"
+    missing = {"submission_id": sid, "declaration": "P.nope"}
+    assert client.get("/api/admin/declaration", params=missing, headers=maint).status_code == 404
