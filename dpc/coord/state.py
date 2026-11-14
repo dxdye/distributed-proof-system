@@ -145,6 +145,7 @@ class SubmissionSt:
     closed: bool = False
     tickets: list[str] = field(default_factory=list)
     paper_ref: str | None = None
+    root: str | None = None
 
 
 @dataclass
@@ -303,7 +304,7 @@ class State:
     def _on_submission_opened(self, p: ev.SubmissionOpened, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id] = SubmissionSt(
             p.submission_id, p.title, p.repo_url, p.commit, p.lab_tag, p.authors, at,
-            paper_ref=p.paper_ref)
+            paper_ref=p.paper_ref, root=p.root)
 
     def _on_submission_closed(self, p: ev.SubmissionClosed, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id].closed = True

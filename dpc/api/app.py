@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
 from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
+from dpc.coord import progress as progress_page
 from dpc.coord.state import LeaseSt, TicketSt
 from dpc.tickets.model import AIAssistance
 from dpc.tickets.questions import purpose_for, questions_for
@@ -100,6 +101,11 @@ class ShareReq(ThreadReq):
 class ReopenReq(ThreadReq):
     reason: str
     post_id: str | None = None
+
+
+class NoteReq(_Req):
+    text: str
+    show_pseudonym: bool = False
 
 
 class VoteReq(_Req):
@@ -263,6 +269,35 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             return {"authenticated": False, "error": exc.detail}
         return {"authenticated": True, "provider": ident.provider,
                 "registered": account(ident) is not None}
+
+    # ------------------------------------------ public progress page (C-26)
+    def viewer(authorization: str | None) -> str | None:
+        """The signed-in reviewer, if any; the page is public either way."""
+        if not authorization:
+            return None
+        try:
+            return account(authenticator.identify(authorization.removeprefix("Bearer ").strip()))
+        except AuthError:
+            return None
+
+    @app.get("/api/progress")
+    def progress_overview() -> list[dict[str, Any]]:
+        with coord.lock:
+            return progress_page.overview(coord)
+
+    @app.get("/api/progress/{submission_id}")
+    def progress_detail(submission_id: str,
+                        authorization: Annotated[str | None, Header()] = None) -> dict[str, Any]:
+        with coord.lock:
+            if submission_id not in coord.state.submissions:
+                raise HTTPException(404, "no such submission")
+            return progress_page.detail(coord, submission_id, viewer(authorization))
+
+    @app.post("/api/progress/{submission_id}/notes")
+    def progress_note(submission_id: str, req: NoteReq, rid: Rid) -> dict[str, str]:
+        pid = call(coord.post, rid, submission_id, "", req.text,
+                   show_pseudonym=req.show_pseudonym)
+        return {"post_id": pid}
 
     @app.post("/api/register")
     def register(req: RegisterReq,

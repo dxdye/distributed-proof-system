@@ -234,7 +234,7 @@ def cmd_open_submission(args: argparse.Namespace) -> int:
     sid = coord.open_submission(
         title=args.title or submission.root, repo_url=submission.repo_url,
         commit=submission.commit, tickets=specs, pool=pool, share=args.share, lab=args.lab,
-        paper_ref=submission.paper_ref,
+        paper_ref=submission.paper_ref, root=submission.root,
         authors=authors)
     _print({"submission_id": sid, "units": len(specs),
             "tickets": len(coord.state.submissions[sid].tickets)})

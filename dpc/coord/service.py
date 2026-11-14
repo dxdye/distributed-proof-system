@@ -232,7 +232,7 @@ class Coordinator:
         self, *, title: str, repo_url: str, commit: str, tickets: Sequence[TicketSpec],
         pool: HoneypotPool | None = None, share: float | None = None, lab: str | None = None,
         authors: Sequence[str] = (), artifact_key: str | None = None,
-        paper_ref: str | None = None,
+        paper_ref: str | None = None, root: str | None = None,
     ) -> str:
         """Create the class-A tickets (SR-05) with honeypots mixed in (SR-06)."""
         share = self.params.honeypot_share if share is None else share
@@ -246,7 +246,7 @@ class Coordinator:
             self._emit("submission.opened", ev.SubmissionOpened(
                 submission_id=sid, title=title, repo_url=repo_url, commit=commit,
                 artifact_key=artifact_key, lab_tag=self.vault.tag(lab) if lab else None,
-                authors=tuple(authors), paper_ref=paper_ref))
+                authors=tuple(authors), paper_ref=paper_ref, root=root))
             for slot in slots:
                 spec = specs[slot.view.declaration]
                 tid = self.new_id("A")
@@ -598,7 +598,13 @@ class Coordinator:
             raise CoordError("declared AI use must name the provider (SR-48)")
         with self.lock:
             self._reviewer(rid)
-            self._thread(submission_id, declaration)
+            if declaration == "":
+                # Notes on the whole submission (progress page, C-26): maintainers only.
+                self._maintainer(rid)
+                if submission_id not in self.state.submissions:
+                    raise NotFound("no such submission")
+            else:
+                self._thread(submission_id, declaration)
             post_id = self.new_id("P")
             self._emit("discussion.posted", ev.DiscussionPosted(
                 post_id=post_id, submission_id=submission_id, declaration=declaration,

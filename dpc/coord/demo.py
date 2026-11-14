@@ -38,16 +38,19 @@ class DemoSubmission:
     title: str
     domain: str
     decls: tuple[str, ...]
+    main: str | None = None  # stands in for the main theorem (progress page)
 
 
 MUTATION = DemoSubmission(
     "mutation", "Mutation", "Mutation fixture (demo)", "arithmetic",
     ("Mut.pos_le", "Mut.total", "Mut.redundant", "Mut.exists_gt", "Mut.succ_pos'",
-     "Mut.double", "Mut.plusZero", "Mut.Bounded", "Mut.window", "Mut.positive"))
+     "Mut.double", "Mut.plusZero", "Mut.Bounded", "Mut.window", "Mut.positive"),
+    main="Mut.window")
 DISPLAY = DemoSubmission(
     "display", "Display", "Display rules fixture (demo)", "arithmetic",
     ("Display.claim", "Display.Point", "Display.Point.sum", "Display.double",
-     "Display.sum_comm"))
+     "Display.sum_comm"),
+    main="Display.claim")
 DECLS = MUTATION.decls  # kept for callers of the single-submission demo
 
 
@@ -96,7 +99,8 @@ def seed_submission(coord: Coordinator, workdir: Path, executor: HostExecutor,
     pool = HoneypotPool([MutantFileSource(mutants_file, Origin.OWN_REPOSITORY, demo.fixture)],
                         np.random.default_rng())
     sid = coord.open_submission(title=demo.title, repo_url=f"https://example.org/{demo.fixture}",
-                                commit="0" * 40, tickets=specs, pool=pool, share=share)
+                                commit="0" * 40, tickets=specs, pool=pool, share=share,
+                                root=demo.main)
     return {"submission_id": sid, "units": len(specs),
             "tickets": len(coord.state.submissions[sid].tickets),
             "usable_mutants": len(MutantSet.load(mutants_file).usable)}

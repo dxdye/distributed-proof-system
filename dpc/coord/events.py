@@ -92,6 +92,7 @@ class SubmissionOpened(_P):
     lab_tag: Hex64 | None = None
     authors: tuple[str, ...] = ()  # reviewer ids of the authors (SR-08)
     paper_ref: str | None = None  # the submission's reference to its paper
+    root: str | None = None  # the main theorem (progress page, PRL 2)
 
 
 class TicketCreated(_P):
