@@ -23,6 +23,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 
 from scipy.stats import beta as beta_dist
 
@@ -59,7 +60,13 @@ class BetaRate:
 
     def lower_bound(self, q: float = 0.05) -> float:
         """The q-quantile of the posterior (``LB_0.05`` in concept §6.3)."""
-        return float(beta_dist.ppf(q, self.alpha, self.beta))
+        return _beta_ppf(q, self.alpha, self.beta)
+
+
+@lru_cache(maxsize=4096)
+def _beta_ppf(q: float, alpha: float, beta: float) -> float:
+    """The Beta quantile; pure, and costly enough in scipy to remember."""
+    return float(beta_dist.ppf(q, alpha, beta))
 
 
 class Source(Enum):

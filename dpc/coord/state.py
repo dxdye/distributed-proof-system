@@ -218,6 +218,10 @@ class State:
         self.thread_votes: dict[tuple[str, str], dict[str, int]] = defaultdict(dict)
         self.reopens: dict[str, ReopenSt] = {}
         self.seq = -1
+        # Roles per (reviewer, domain, time), valid until the next event: a
+        # choice set asks for them once per ticket (SR-22).
+        self._roles: dict[tuple[str, str, datetime], frozenset[str]] = {}
+        self._roles_seq = -1
 
     # ------------------------------------------------------------- queries
     def trust(self, rid: str, domain: str, at: datetime) -> TrustState:
@@ -238,11 +242,19 @@ class State:
         return state
 
     def roles(self, rid: str, domain: str, at: datetime) -> frozenset[str]:
+        if self._roles_seq != self.seq:
+            self._roles.clear()
+            self._roles_seq = self.seq
+        key = (rid, domain, at)
+        cached = self._roles.get(key)
+        if cached is not None:
+            return cached
         reviewer = self.reviewers[rid]
         roles = set(self.params.roles.roles(self.trust(rid, domain, at)))
         if reviewer.maintainer:
             roles |= {"PV", "PVV", "maintainer"}
-        return frozenset(roles)
+        self._roles[key] = frozenset(roles)
+        return self._roles[key]
 
     def active_leases(self, rid: str | None = None, ticket_id: str | None = None
                       ) -> list[LeaseSt]:
