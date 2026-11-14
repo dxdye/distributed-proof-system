@@ -27,7 +27,7 @@ makes the reliability of that judgement measurable:
 | M1 | Lean analysis: axioms, TCB, ticket units, graph diff, sandboxed build, kernel replay of the submission's own modules | ✅ measured on [Navier–Stokes](docs/case-studies/navier-stokes.md) (8 class-A units) and [ζ(s) ≠ 0 for Re s > 7/8](docs/case-studies/quasi-riemann.md) (1 class-A unit) |
 | M2 | Mutation generator, local and component equivalence filter, auto-detection filter, honeypot source registry and mixing | ✅ 47 + 7 honeypot candidates; maintainer review of pools open |
 | M3 | Trust model, decision rule, Dawid–Skene, sampling, lenses, PRL, priority, attention, forecast; agent-based simulation, parameter study | ✅ study incl. lenses, IRT, Delphi, Sybil, collusion ([findings](docs/simulation/README.md)) |
-| M4 | Coordination service (choice sets, leases, exclusion rules, claims, PVV, decisions, delayed honeypot reveal), HTTP API, web client with static infoview, sign-in via Keycloak/OIDC, evidence checker with kernel replay | ✅ MVP ([ADR 0008](docs/adr/0008-coordination-service.md)); evidence checks not yet wired to claims, pilot open |
+| M4 | Coordination service (choice sets, leases, exclusion rules, claims, PVV, decisions, delayed honeypot reveal), HTTP API, web client with static infoview, discussion after the decision, public progress page, sign-in via Keycloak/OIDC, evidence checker with kernel replay | ✅ MVP ([ADR 0008](docs/adr/0008-coordination-service.md)); evidence checks not yet wired to claims, pilot open |
 | M5 | Class B, certificate, signed report | planned |
 
 All 60 system requirements live in [`requirements/sr.yaml`](requirements/sr.yaml);

@@ -175,6 +175,31 @@ export function How() {
         </ul>
       </section>
 
+      <section className="card">
+        <h2>Where every paper stands</h2>
+        <p>
+          The <a href="#/progress">progress page</a> is public, also without signing in. For every
+          paper it shows the proof readiness level (PRL), how many of its declarations are decided,
+          the confirmed findings, how likely it is that an accepted declaration is wrong after all,
+          and a forecast once the pace of the reviews has been measured. Maintainers comment on the
+          state there; signed-in reviewers can vote on their notes.
+        </p>
+        <ul>
+          <li>
+            It counts declarations, not tickets, and a declaration counts as decided only when every
+            ticket about it is. So the page never tells you which of your tickets is a planted
+            error.
+          </li>
+          <li>
+            Open work shows no verdicts: nobody sees how others voted before giving their own.
+          </li>
+          <li>
+            The formal statement of the main theorem appears once it is decided and the planted
+            errors of its paper are revealed; until then, the paper's statement is shown.
+          </li>
+        </ul>
+      </section>
+
       <div className="columns">
         <section className="card">
           <h2>Taking tickets</h2>

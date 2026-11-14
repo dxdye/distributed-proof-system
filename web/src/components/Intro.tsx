@@ -62,8 +62,9 @@ export function Intro() {
           every reviewer is, so that the result is not a show of hands but a figure: how likely it
           is that an error went unnoticed. Every report is published, including negative ones.
         </p>
-        <p>
+        <p className="intro-links">
           <a href="#/how">How a review works →</a>
+          <a href="#/progress">Where every paper stands →</a>
         </p>
       </section>
     </>

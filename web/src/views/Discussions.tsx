@@ -12,11 +12,17 @@ import { QUESTION_LABELS } from "./LeaseView";
 export const threadHref = (sid: string, decl: string) =>
   `#/thread/${encodeURIComponent(sid)}/${encodeURIComponent(decl)}`;
 
-const OUTCOMES: Record<string, string> = { accepted: "accepted", error: "error found" };
+const OUTCOMES: Record<string, string> = {
+  accepted: "accepted",
+  error: "error found",
+};
 
 function since(month: string): string {
   const [y, m] = month.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en", { month: "short", year: "numeric" });
+  return new Date(y, m - 1, 1).toLocaleDateString("en", {
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function Discussions() {
@@ -59,10 +65,19 @@ export function Discussions() {
   );
 }
 
-function PostCard({ post, onChange }: { post: Post; onChange: () => void }) {
+export function PostCard({
+  post,
+  onChange,
+  signedIn = true,
+}: {
+  post: Post;
+  onChange: () => void;
+  signedIn?: boolean;
+}) {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
   const vote = (v: number) => api.vote(post.post_id, post.my_vote === v ? 0 : v).then(onChange);
+  const noVote = post.is_me ? "Your own post" : signedIn ? null : "Sign in to vote";
   if (post.hidden) {
     return (
       <article className="post hidden-post">
@@ -75,8 +90,8 @@ function PostCard({ post, onChange }: { post: Post; onChange: () => void }) {
       <div className="votes" aria-label="Votes">
         <button
           className={post.my_vote === 1 ? "vote on" : "vote"}
-          disabled={post.is_me}
-          title={post.is_me ? "Your own post" : "Useful"}
+          disabled={noVote !== null}
+          title={noVote ?? "Useful"}
           onClick={() => vote(1)}
         >
           ▲
@@ -84,8 +99,8 @@ function PostCard({ post, onChange }: { post: Post; onChange: () => void }) {
         <span className="score">{post.score}</span>
         <button
           className={post.my_vote === -1 ? "vote on" : "vote"}
-          disabled={post.is_me}
-          title={post.is_me ? "Your own post" : "Not useful"}
+          disabled={noVote !== null}
+          title={noVote ?? "Not useful"}
           onClick={() => vote(-1)}
         >
           ▼
@@ -115,7 +130,7 @@ function PostCard({ post, onChange }: { post: Post; onChange: () => void }) {
         <p className="post-text">
           {post.kind === "review" ? post.reason || "(no justification)" : post.text}
         </p>
-        {!post.is_me && (
+        {!post.is_me && signedIn && (
           <div className="post-actions">
             {reporting ? (
               <span className="report">

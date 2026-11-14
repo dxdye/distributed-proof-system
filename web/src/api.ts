@@ -27,7 +27,12 @@ export type UnitView = {
 };
 export type Question = { id: string; text: string };
 export type PaperPassage = {
-  source: { title: string; arxiv: string | null; version: string | null; url: string | null };
+  source: {
+    title: string;
+    arxiv: string | null;
+    version: string | null;
+    url: string | null;
+  };
   locator: string;
   statement: string;
   mapped_by: string;
@@ -161,9 +166,55 @@ export type Thread = {
   decided_at: string | null;
   view: UnitView;
   paper_passage: PaperPassage | null;
-  me: { label: string | null; named: boolean; can_share: boolean; reviewed_here: boolean };
+  me: {
+    label: string | null;
+    named: boolean;
+    can_share: boolean;
+    reviewed_here: boolean;
+  };
   reopen_pending: boolean;
   posts: Post[];
+};
+// The public progress page (proposal C-26): counts are by declaration, never
+// by ticket; no verdict tallies of open work.
+export type ProgressSummary = {
+  submission_id: string;
+  title: string;
+  repo_url: string;
+  commit: string;
+  paper_ref: string | null;
+  paper_url: string | null;
+  opened: string;
+  closed: boolean;
+  prl: number;
+  prl_meaning: string;
+  declarations: number;
+  decided: number;
+  accepted: number;
+  errors: number;
+  in_review: number;
+  not_started: number;
+  coverage: number;
+  residual_error: number | null;
+  forecast: { p50_weeks: number; p85_weeks: number } | null;
+  interest: number | null;
+  main_statement: string | null;
+  main_locator: string | null;
+};
+export type ProgressUnit = {
+  declaration: string;
+  decl_kind: string;
+  tier: string;
+  domain: string;
+  state: "accepted" | "error" | "in review" | "not started";
+  discussion: boolean;
+};
+export type ProgressDetail = ProgressSummary & {
+  root: string | null;
+  main_view: UnitView | null;
+  units: ProgressUnit[];
+  timeline: { at: string; decided: number }[];
+  notes: Post[];
 };
 export type Escalated = {
   ticket_id: string;
@@ -268,10 +319,22 @@ export const api = {
       show_pseudonym: showPseudonym,
     }),
   requestReopen: (sid: string, decl: string, reason: string) =>
-    request("POST", "/api/thread/reopen", { submission_id: sid, declaration: decl, reason }),
+    request("POST", "/api/thread/reopen", {
+      submission_id: sid,
+      declaration: decl,
+      reason,
+    }),
   vote: (postId: string, value: number) => request("POST", `/api/posts/${postId}/vote`, { value }),
   report: (postId: string, reason: string) =>
     request("POST", `/api/posts/${postId}/report`, { reason }),
+  progress: () => request<ProgressSummary[]>("GET", "/api/progress"),
+  progressDetail: (sid: string) =>
+    request<ProgressDetail>("GET", `/api/progress/${encodeURIComponent(sid)}`),
+  note: (sid: string, text: string, showPseudonym: boolean) =>
+    request<{ post_id: string }>("POST", `/api/progress/${encodeURIComponent(sid)}/notes`, {
+      text,
+      show_pseudonym: showPseudonym,
+    }),
   stats: () => request<Stats>("GET", "/api/stats"),
   attention: () => request<Record<string, number>>("GET", "/api/attention"),
   admin: {

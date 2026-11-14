@@ -95,7 +95,8 @@ function ComponentBox({ component, kind }: { component: Component; kind: string 
       {glossary.length > 0 && (
         <div className="glossary">
           <button className="link" onClick={() => setOpen(!open)}>
-            {open ? "Hide" : "Show"} the {glossary.length} constants used
+            {open ? "Hide" : "Show"}{" "}
+            {glossary.length === 1 ? "the constant" : `the ${glossary.length} constants`} used
           </button>
           {open && (
             <table>

@@ -9,6 +9,7 @@ import { Admin } from "./views/Admin";
 import { Discussions, ThreadView } from "./views/Discussions";
 import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
+import { ProgressDetailView, ProgressList } from "./views/Progress";
 import { How } from "./views/How";
 import { Imprint, Privacy } from "./views/Legal";
 import { JoinForm, SignIn } from "./views/Register";
@@ -57,6 +58,12 @@ export function App() {
   else if (page === "privacy") body = <Privacy />;
   else if (error) body = <p className="error">{error}</p>;
   else if (page === "stats") body = <StatsView />;
+  else if (page === "progress")
+    body = route[1] ? (
+      <ProgressDetailView key={route[1]} sid={decodeURIComponent(route[1])} me={me} />
+    ) : (
+      <ProgressList me={me} />
+    );
   else if (!providers || !session) body = <p className="muted">Loading…</p>;
   else if (!session.authenticated) body = <SignIn providers={providers} onSignedIn={refresh} />;
   else if (!session.registered) body = <JoinForm onDone={refresh} title="Choose your pseudonym" />;
@@ -116,6 +123,9 @@ export function App() {
                 Discussions
               </a>
             )}
+            <a href="#/progress" aria-current={current("progress")}>
+              Progress
+            </a>
             <a href="#/how" aria-current={current("how")}>
               How it works
             </a>
