@@ -9,11 +9,11 @@ import { applyTheme } from "./theme";
 
 applyTheme();
 
-function render(demoBar?: JSX.Element) {
+function render(demoBar?: JSX.Element, routes?: Record<string, JSX.Element>) {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       {demoBar}
-      <App />
+      <App routes={routes} />
     </StrictMode>,
   );
 }
@@ -23,7 +23,7 @@ function render(demoBar?: JSX.Element) {
 if (import.meta.env.MODE === "demo") {
   Promise.all([import("./demo/mock"), import("./demo/DemoBar")]).then(([mock, bar]) => {
     mock.installMock();
-    render(<bar.DemoBar />);
+    render(<bar.DemoBar />, { "choose-role": <bar.ChooseRole /> });
   });
 } else {
   render();

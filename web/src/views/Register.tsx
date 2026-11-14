@@ -17,6 +17,8 @@ export function SignIn({
   const local = providers.some((p) => p.kind === "local");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // The click dummy has no sign-in: you choose a role instead.
+  const demo = import.meta.env.MODE === "demo";
 
   return (
     <>
@@ -31,7 +33,9 @@ export function SignIn({
         <div className="hero-actions">
           <button
             onClick={() =>
-              document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth" })
+              demo
+                ? (window.location.hash = "#/choose-role")
+                : document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth" })
             }
           >
             Sign in or join
@@ -64,7 +68,15 @@ export function SignIn({
         </li>
       </ol>
       <div id="sign-in" />
-      {oidc.length > 0 ? (
+      {demo ? (
+        <section className="card">
+          <h2>Sign in</h2>
+          <p className="muted">
+            This click dummy has no sign-in. Choose the role you want to see the platform from.
+          </p>
+          <button onClick={() => (window.location.hash = "#/choose-role")}>Choose your role</button>
+        </section>
+      ) : oidc.length > 0 ? (
         <>
           <div className="columns">
             <div className="card">

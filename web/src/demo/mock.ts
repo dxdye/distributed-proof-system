@@ -405,9 +405,9 @@ function load(): State {
 let state = load();
 const save = () => sessionStorage.setItem(KEY, JSON.stringify(state));
 
-export function currentRole(): Role {
+export function currentRole(): Role | null {
   const t = localStorage.getItem(TOKEN);
-  return (ROLES.find((r) => r.role === t)?.role ?? "newcomer") as Role;
+  return (ROLES.find((r) => r.role === t)?.role ?? null) as Role | null;
 }
 export function switchRole(role: Role): void {
   localStorage.setItem(TOKEN, role);
@@ -416,8 +416,8 @@ export function switchRole(role: Role): void {
 }
 export function resetDemo(): void {
   sessionStorage.removeItem(KEY);
-  localStorage.setItem(TOKEN, "newcomer");
-  window.location.hash = "#/how";
+  localStorage.removeItem(TOKEN); // signed out: the front page
+  window.location.hash = "#/";
   window.location.reload();
 }
 
@@ -563,6 +563,16 @@ function me(role: Role): Json {
     roles: Object.fromEntries(domains.map((d) => [d, prof.roles])),
     reliability: role === "newcomer" ? 0.5 : 0.9,
     wip_limit: prof.wip,
+    pvv_waiting: prof.roles.includes("PVV")
+      ? state.claims.filter(
+          (c) =>
+            c.status === "open" &&
+            c.by !== role &&
+            !Object.values(state.leases).some(
+              (l) => l.claim_id === c.claim_id && l.status === "active",
+            ),
+        ).length
+      : 0,
     preferences: p.prefs,
     tiers_open: prof.tiers,
     leases: activeLeases(role).map(leaseJson),
@@ -1181,16 +1191,13 @@ function handle(
     return { reviewer_id: "R-demo-newcomer", token: "newcomer" };
   }
   if (path === "/api/stats") {
-    const counts: Record<string, number> = {};
-    for (const tid of tickets.keys()) {
-      const k = tickets.get(tid)!.t.honeypot && revealed(tid) ? "honeypot" : statusOf(tid);
-      counts[k] = (counts[k] ?? 0) + 1;
-    }
+    // No ticket counts (see Coordinator.stats).
+    const planted = [...tickets.keys()].filter((t) => tickets.get(t)!.t.honeypot && revealed(t));
     return {
       reviewers: 4,
       reviewers_by_group: { student: 1, doctoral: 1, expert: 2 },
       submissions: snap.submissions.length,
-      tickets_by_status: counts,
+      planted_errors_revealed: planted.length,
       reviews_last_7_days: Object.values(state.people).reduce((n, p) => n + p.history.length, 0),
       open_claims: state.claims.filter((c) => c.status === "open").length,
       active_leases: Object.values(state.leases).filter((l) => l.status === "active").length,
@@ -1289,7 +1296,6 @@ function handle(
 
 /** Answer /api/* requests in the browser; everything else goes out as usual. */
 export function installMock(): void {
-  if (!localStorage.getItem(TOKEN)) localStorage.setItem(TOKEN, "newcomer");
   const realFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
