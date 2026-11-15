@@ -44,7 +44,7 @@ from dpc.coord.state import (
     TicketSt,
     difficulty_bucket,
 )
-from dpc.coord.tiers import TIERS, Tier, tier_of_view, tier_open
+from dpc.coord.tiers import TIERS, Tier, tier_of_unfolded, tier_open
 from dpc.coord.vault import BlobStore, Vault
 from dpc.domain.attention import Choice, fit_plackett_luce
 from dpc.domain.decision import Vote, decide, posterior_error
@@ -311,6 +311,7 @@ class Coordinator:
                 submission_id=sid, title=title, repo_url=repo_url, commit=commit,
                 artifact_key=artifact_key, lab_tag=self.vault.tag(lab) if lab else None,
                 authors=tuple(authors), paper_ref=paper_ref, root=root))
+            views = {d: sp.view for d, sp in specs.items()}  # for the unfolded tier
             for slot in slots:
                 spec = specs[slot.view.declaration]
                 tid = self.new_id("A")
@@ -325,7 +326,8 @@ class Coordinator:
                     domain=spec.domain, difficulty=ev.dec(spec.difficulty),
                     slots=self.params.parallel,
                     commitment=self.vault.put_opening(sid, opening), paper=spec.paper,
-                    tier=tier_of_view(spec.view)))  # the original's view, also for honeypots
+                    # the original's view, also for honeypots; unfolded (C-39)
+                    tier=tier_of_unfolded(spec.view, views)))
             return sid
 
     def record_basis(self, basis: ev.BasisRecorded) -> None:

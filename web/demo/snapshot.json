@@ -3255,7 +3255,7 @@
      "declaration": "NavierStokes.Comparator.InitialVelocityCondition",
      "decl_kind": "inductive",
      "domain": "analysis",
-     "tier": "hard",
+     "tier": "excellence",
      "view": {
       "declaration": "NavierStokes.Comparator.InitialVelocityCondition",
       "decl_kind": "inductive",
@@ -3585,7 +3585,7 @@
      "declaration": "NavierStokes.Comparator.InitialVelocityConditionDecay",
      "decl_kind": "inductive",
      "domain": "analysis",
-     "tier": "hard",
+     "tier": "excellence",
      "view": {
       "declaration": "NavierStokes.Comparator.InitialVelocityConditionDecay",
       "decl_kind": "inductive",
@@ -5204,7 +5204,7 @@
      "declaration": "NavierStokes.Comparator.navier_stokes_breakdown_R3",
      "decl_kind": "theorem",
      "domain": "analysis",
-     "tier": "hard",
+     "tier": "excellence",
      "view": {
       "declaration": "NavierStokes.Comparator.navier_stokes_breakdown_R3",
       "decl_kind": "theorem",

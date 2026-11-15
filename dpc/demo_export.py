@@ -22,7 +22,7 @@ from dpc.audit import AuditLog
 from dpc.coord import events as ev
 from dpc.coord.params import CoordParams
 from dpc.coord.service import NOTICE_VERSION
-from dpc.coord.tiers import tier_of_view
+from dpc.coord.tiers import tier_of_unfolded
 from dpc.honeypots.mixing import MutantMismatch, honeypot_view
 from dpc.honeypots.model import MutantSet
 from dpc.ingest.basis import trust_basis
@@ -68,7 +68,8 @@ def _with_context(views: dict[str, UnitView]) -> dict[str, UnitView]:
 
 
 def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
-            honeypot: dict[str, str] | None = None) -> dict[str, Any]:
+            honeypot: dict[str, str] | None = None,
+            views: dict[str, UnitView] | None = None) -> dict[str, Any]:
     passage = paper.passage(view.declaration) if paper else None
     view = annotate_view(view)
     relies = relies_on(view)
@@ -77,7 +78,7 @@ def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
         "declaration": view.declaration,
         "decl_kind": view.decl_kind,
         "domain": (paper.domain(view.declaration) if paper else None) or domain,
-        "tier": tier_of_view(view),
+        "tier": tier_of_unfolded(view, views or {}),  # what is read unfolded (C-39)
         "view": view.model_dump(mode="json"),
         # what the statement takes from Mathlib, and the checklist naming it (C-27)
         "relies_on": [g.model_dump(mode="json") for g in relies],
@@ -94,7 +95,7 @@ def export(sources: list[Source], out: Path, ingest_log: Path | None = None) -> 
     for n, src in enumerate(sources, start=1):
         paper = PaperMap.load(src.paper) if src.paper and src.paper.is_file() else None
         views = _with_context({r["decl"]: UnitView.from_render(r) for r in _views(src.views)})
-        tickets = [_ticket(f"A-{n}{i:03d}", v, src.domain, paper)
+        tickets = [_ticket(f"A-{n}{i:03d}", v, src.domain, paper, views=views)
                    for i, v in enumerate(views.values())]
         if src.mutants is not None and src.honeypots:
             planted = 0
@@ -109,7 +110,8 @@ def export(sources: list[Source], out: Path, ingest_log: Path | None = None) -> 
                 used.add(m.decl)
                 planted += 1
                 tickets.append(_ticket(f"A-{n}{len(tickets):03d}", hp, src.domain, paper, {
-                    "operator": m.operator, "original": m.original, "mutant": m.mutant}))
+                    "operator": m.operator, "original": m.original, "mutant": m.mutant},
+                    views=views))
             counts["honeypots"] += planted
         counts["tickets"] += len(tickets)
         basis = ev.BasisRecorded(

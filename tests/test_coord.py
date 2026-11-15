@@ -688,6 +688,29 @@ def test_maintainers_are_not_limited_in_rerolling(tmp_path: Path) -> None:
         env.clock.advance(seconds=env.params.choice_set_ttl_s + 1)
 
 
+def test_a_statement_that_is_a_single_name_is_measured_unfolded() -> None:
+    """C-39: the Erdős 970 theorem states only `JacobsthalQuadratic`; what a
+    reviewer reads is that definition and the one below it."""
+    from dpc.coord.tiers import TIERS, tier_of_unfolded, tier_of_view
+
+    sub = GlossaryEntry(name="P.Q", type="Prop", origin="submission")
+    main = UnitView(declaration="P.main", decl_kind="theorem", context=("P.Q",),
+                    components=(Component(target="type", text="P.Q", glossary=(sub,)),))
+    q = UnitView(declaration="P.Q", decl_kind="def", context=("P.B",), components=(
+        Component(target="value",
+                  text="∃ C, 0 < C ∧ ∀ (k : ℕ), 0 < k → ∃ m, P.B k m ∧ m ≤ C * k ^ 2",
+                  glossary=(GlossaryEntry(name="P.B", type="…", origin="submission"),)),))
+    b = UnitView(declaration="P.B", decl_kind="def", components=(
+        Component(target="value", text="fun k m => ∀ (n : ℕ), 0 < n → n.primeFactors.card ≤ k → "
+                  "∀ (a : ℤ), ∃ i < m, (a + ↑i).natAbs.Coprime n",
+                  glossary=tuple(GlossaryEntry(name=n, type="…", origin="library")
+                                 for n in ("Nat.primeFactors", "Finset.card", "Int.natAbs",
+                                           "Nat.Coprime"))),))
+    views = {"P.main": main, "P.Q": q, "P.B": b}
+    assert tier_of_view(main) == "easy"
+    assert TIERS.index(tier_of_unfolded(main, views)) >= TIERS.index("medium")
+
+
 def test_tiers_are_absolute_not_relative_to_the_submission() -> None:
     """A short lemma about natural numbers is easy in every submission; the
     relative difficulty b_i would call the average ticket of any paper medium."""

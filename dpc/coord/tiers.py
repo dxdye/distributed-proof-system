@@ -6,7 +6,9 @@ structure over Mathlib's analysis is "excellence" wherever it appears. (The
 estimated difficulty b_i of concept §8.1 is standardised per submission. It
 drives lease lengths, but is relative and hence unfit as a label.)
 
-The score is computed from the ticket view, i.e. from what the reviewer sees:
+The score is computed from the ticket view unfolded, i.e. from what the
+reviewer has to read: the statement and the declarations of the submission it
+builds on (C-39):
 
 * how much text there is (logarithmic);
 * how many constants it uses, and how many of them come from libraries
@@ -29,7 +31,7 @@ ticket starves (SR-05).
 from __future__ import annotations
 
 import math
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from itertools import pairwise
 from typing import Literal
 
@@ -56,6 +58,25 @@ def score(view: UnitView) -> float:
     text = " ".join(texts)
     return (math.log2(1 + len(text) / 60) + 0.08 * len(glossary) + 0.25 * library
             + 0.4 * own + 0.6 * alternations(text))
+
+
+def unfolded(view: UnitView, views: Mapping[str, UnitView]) -> UnitView:
+    """The view with every declaration of the submission it builds on,
+    transitively: what a reviewer has to read once it is unfolded (C-39). A
+    theorem whose statement is a single name is not easy."""
+    seen, parts, stack = {view.declaration}, [view], list(view.context)
+    while stack:
+        decl = stack.pop()
+        if decl in seen or decl not in views:
+            continue
+        seen.add(decl)
+        parts.append(views[decl])
+        stack.extend(views[decl].context)
+    return view.model_copy(update={"components": tuple(c for v in parts for c in v.components)})
+
+
+def tier_of_unfolded(view: UnitView, views: Mapping[str, UnitView]) -> Tier:
+    return tier_of_view(unfolded(view, views))
 
 
 def tier_of_score(value: float) -> Tier:
