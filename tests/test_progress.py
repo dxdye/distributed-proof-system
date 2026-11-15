@@ -122,7 +122,8 @@ def test_the_lean_statement_waits_for_the_decision(env: Env) -> None:
     d = progress.detail(env.coord, sid, None)
     assert d["main_view"]["declaration"] == "P.u0"
     assert d["units"][0] == {"declaration": "P.u0", "decl_kind": "theorem", "tier": "easy",
-                             "domain": "analysis", "state": "error", "discussion": True}
+                             "domain": "analysis", "state": "error", "discussion": True,
+                             "decided_at": env.coord.now().isoformat()}
     assert [p["decided"] for p in d["timeline"]] == [0, 1, 1]
 
 
