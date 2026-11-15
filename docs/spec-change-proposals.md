@@ -83,8 +83,11 @@ teaching material show only a declaration that is decided and whose paper has
 no unrevealed planted error. An example under review tells every reviewer what
 to look for in exactly that ticket, and its risks can resemble its planted
 copies (QRH: "Re(s) > 1" next to the candidates `8 / 8 < s.re`, `7 / 7 < s.re`):
-a side channel like the lookup above. The QRH example meets the rule in the
-test system; check it again before any launch.
+a side channel like the lookup above. The front page now shows Navier–Stokes
+(the regularity condition of its definition of a smooth solution, 2026-11-15):
+it shows the work of many tickets better than QRH, whose meaning lies in a
+single line. In the test system that paper is not fully decided, so the
+example does not meet the rule yet; it must before any launch.
 *Evidence:* ADR 0006, `docs/simulation/README.md`.
 
 ### C-08 · §5.1 Honeypots and automatic lints · new
