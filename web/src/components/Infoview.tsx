@@ -23,31 +23,45 @@ function lookupTable(glossary: GlossaryEntry[]): Map<string, GlossaryEntry[]> {
   return table;
 }
 
+/** A name with its type, origin, docstring and convention on hover and focus. */
+function Const({ text, hits }: { text: string; hits?: GlossaryEntry[] }) {
+  if (!hits) return <>{text}</>;
+  return (
+    <span className="const" tabIndex={0}>
+      {text}
+      <span className="hover" role="tooltip">
+        {hits.map((h) => (
+          <span key={h.name} className="hover-line">
+            <b>{h.name}</b> : {h.type} <Origin origin={h.origin} />
+            {h.doc && <span className="hover-doc">{h.doc}</span>}
+            {h.note && <span className="hover-note">{h.note}</span>}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
 export function Term({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
   const table = useMemo(() => lookupTable(glossary), [glossary]);
   const pieces = text.split(IDENT);
   return (
     <pre className="term">
       {pieces.map((piece, i) => {
-        // `s.re` is generalized field notation: look up the field, `re`.
-        const hits =
-          i % 2 === 1
-            ? (table.get(piece) ??
-              (piece.includes(".") ? table.get(piece.split(".").pop() ?? "") : undefined))
-            : undefined;
-        if (!hits) return <span key={i}>{piece}</span>;
+        if (i % 2 === 0) return <span key={i}>{piece}</span>;
+        const whole = table.get(piece);
+        if (whole || !piece.includes(".")) return <Const key={i} text={piece} hits={whole} />;
+        // Generalized field notation, possibly chained: `n.primeFactors.card`,
+        // `(a + i).natAbs.Coprime n`. Look up every link on its own.
+        const links = piece.split(".");
         return (
-          <span key={i} className="const" tabIndex={0}>
-            {piece}
-            <span className="hover" role="tooltip">
-              {hits.map((h) => (
-                <span key={h.name} className="hover-line">
-                  <b>{h.name}</b> : {h.type} <Origin origin={h.origin} />
-                  {h.doc && <span className="hover-doc">{h.doc}</span>}
-                  {h.note && <span className="hover-note">{h.note}</span>}
-                </span>
-              ))}
-            </span>
+          <span key={i}>
+            {links.map((link, j) => (
+              <span key={j}>
+                {j > 0 && "."}
+                <Const text={link} hits={table.get(link)} />
+              </span>
+            ))}
           </span>
         );
       })}
@@ -128,7 +142,8 @@ function ComponentBox({ component, kind }: { component: Component; kind: string 
   );
 }
 
-export function Infoview({ view }: { view: UnitView }) {
+/** ``hideContext``: where the neighbours are shown unfoldable instead (TicketContext). */
+export function Infoview({ view, hideContext }: { view: UnitView; hideContext?: boolean }) {
   const differing = view.components.filter(displayDiffers).length;
   return (
     <div className="infoview">
@@ -149,7 +164,7 @@ export function Infoview({ view }: { view: UnitView }) {
       {view.components.map((c) => (
         <ComponentBox key={`${c.target}:${c.label}`} component={c} kind={view.decl_kind} />
       ))}
-      {view.context.length > 0 && (
+      {!hideContext && view.context.length > 0 && (
         <p className="muted small">
           Builds on (also under review):{" "}
           {view.context.map((c) => (

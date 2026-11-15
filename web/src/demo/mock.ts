@@ -565,6 +565,69 @@ function eligible(role: Role, tid: string): boolean {
   return !unitsInWork.includes(t.declaration);
 }
 
+// Context of a ticket (C-39): the class-A units of its submission, and
+// unfolding with one version per person: the version of one's own ticket (a
+// planted copy included), otherwise the original, after which that unit is not
+// offered to this role any more.
+function contextUnits(sub: SnapSubmission): Map<string, SnapTicket> {
+  const byDecl = new Map<string, SnapTicket>();
+  for (const t of sub.tickets) if (!t.honeypot) byDecl.set(t.declaration, t);
+  for (const t of sub.tickets) if (!byDecl.has(t.declaration)) byDecl.set(t.declaration, t);
+  return byDecl;
+}
+const contextOf = (t: SnapTicket, units: Map<string, SnapTicket>): string[] =>
+  ((t.view as { context?: string[] }).context ?? []).filter((d) => units.has(d));
+
+function contextJson(role: Role, l: Lease): Json {
+  const { t: own, sub } = tickets.get(l.ticket_id)!;
+  const units = contextUnits(sub);
+  const p = state.people[role];
+  const held = (decl: string) =>
+    Object.values(state.leases).some((x) => {
+      const h = tickets.get(x.ticket_id)!;
+      return x.role === role && h.sub === sub && h.t.declaration === decl;
+    });
+  return {
+    root: sub.root,
+    own: own.declaration,
+    units: [...units.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([decl, t]) => ({
+        declaration: decl,
+        decl_kind: t.decl_kind,
+        depends_on: contextOf(t, units),
+        used_by: [...units.entries()]
+          .filter(([, o]) => contextOf(o, units).includes(decl))
+          .map(([d]) => d)
+          .sort(),
+        own: decl === own.declaration,
+        seen: held(decl) || p.seen.includes(`unit:${sub.submission_id}:${decl}`),
+      })),
+  };
+}
+
+function unfoldJson(role: Role, l: Lease, decl: string): Json {
+  const { t: own, sub } = tickets.get(l.ticket_id)!;
+  if (decl === own.declaration) return { view: own.view, relies_on: own.relies_on };
+  const ids = sub.tickets.filter((t) => t.declaration === decl).map((t) => t.ticket_id);
+  if (!ids.length) throw new HttpError(404, `${decl} is not a declaration of this submission`);
+  const mine = Object.values(state.leases).find(
+    (x) => x.role === role && ids.includes(x.ticket_id),
+  );
+  if (mine) {
+    const t = tickets.get(mine.ticket_id)!.t;
+    return { view: t.view, relies_on: t.relies_on };
+  }
+  const p = state.people[role];
+  const key = `unit:${sub.submission_id}:${decl}`;
+  if (!p.seen.includes(key)) {
+    p.seen.push(key, ...ids); // never offered as a ticket from now on
+    save();
+  }
+  const real = contextUnits(sub).get(decl)!;
+  return { view: real.view, relies_on: real.relies_on };
+}
+
 function drawSet(role: Role): Json {
   const p = state.people[role];
   if (p.set && p.set.tickets.some((tid) => eligible(role, tid))) return setJson(p.set);
@@ -1438,6 +1501,8 @@ function handle(
       l.status = "returned";
       return { ok: true };
     }
+    if (action === "context") return contextJson(role, l);
+    if (action === "unfold") return unfoldJson(role, l, String(body.declaration ?? ""));
     if (action === "review") return review(role, l, body);
     if (action === "claim") return resolveClaim(role, l, body);
     if (action === "contest-mapping") {

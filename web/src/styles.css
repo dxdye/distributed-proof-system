@@ -1443,6 +1443,69 @@ button.small {
 .relies-on p {
   margin: 0.2rem 0 0;
 }
+/* Context of a ticket (C-39): neighbours, unfolded level by level */
+.ticket-context {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+.ticket-context h4 {
+  margin: 0.75rem 0 0.25rem;
+}
+.ctx-list {
+  list-style: none;
+  margin: 0.25rem 0;
+  padding: 0;
+}
+.ctx-list .ctx-list {
+  margin-left: 1.1rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--line);
+}
+.ctx-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  min-height: 0;
+  margin: 0.15rem 0;
+  padding: 0.3rem 0.2rem;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  font-weight: 500;
+  text-align: left;
+}
+.ctx-toggle:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--ink);
+}
+.ctx-toggle code {
+  background: none;
+  padding: 0;
+  overflow-wrap: break-word;
+}
+.ctx-ns {
+  color: var(--muted);
+}
+.ctx-caret {
+  width: 0.8rem;
+  color: var(--muted);
+}
+.badge.ctx-main {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.ctx-body {
+  margin: 0.25rem 0 0.75rem 1.25rem;
+}
+.ctx-map {
+  margin: 0.75rem 0 0.5rem;
+}
+.ctx-map summary {
+  cursor: pointer;
+  font-weight: 600;
+}
 .hover-doc,
 .hover-note {
   display: block;

@@ -15,9 +15,32 @@ function docText(doc: string) {
   return doc.split("`").map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part));
 }
 
-export function ReliesOn({ entries }: { entries?: GlossaryEntry[] }) {
+/** ``conventionsOnly``: inside an unfolded declaration, only the conventions to
+ * know; the rest is on hover. */
+export function ReliesOn({
+  entries: given,
+  conventionsOnly,
+}: {
+  entries?: GlossaryEntry[];
+  conventionsOnly?: boolean;
+}) {
   const [all, setAll] = useState(false);
+  const entries = conventionsOnly ? given?.filter((g) => g.note) : given;
   if (!entries || entries.length === 0) return null;
+  if (conventionsOnly)
+    return (
+      <section className="relies-on conventions-only" aria-label="Conventions to know">
+        <h4>Conventions to know</h4>
+        <ul>
+          {entries.map((g) => (
+            <li key={g.name}>
+              <code>{g.name}</code>
+              <p className="small glossary-note">{g.note}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
   const shown = all ? entries : entries.slice(0, FOLD);
   const noted = entries.filter((g) => g.note).length;
   return (

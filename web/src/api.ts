@@ -77,6 +77,16 @@ export type Card = {
   paper: string;
   expected_minutes: number | null;
 };
+/** The class-A units around a ticket (C-39): names and kinds only. */
+export type ContextUnit = {
+  declaration: string;
+  decl_kind: string;
+  depends_on: string[];
+  used_by: string[];
+  own: boolean;
+  seen: boolean;
+};
+export type LeaseContext = { root: string | null; own: string; units: ContextUnit[] };
 export type ChoiceSet = {
   set_id: string | null;
   tickets: Card[];
@@ -350,6 +360,11 @@ export const api = {
   take: (set_id: string, ticket_id: string) =>
     request<Lease>("POST", "/api/leases", { set_id, ticket_id }),
   lease: (id: string) => request<Lease>("GET", `/api/leases/${id}`),
+  leaseContext: (id: string) => request<LeaseContext>("GET", `/api/leases/${id}/context`),
+  unfold: (id: string, declaration: string) =>
+    request<{ view: UnitView; relies_on: GlossaryEntry[] }>("POST", `/api/leases/${id}/unfold`, {
+      declaration,
+    }),
   extend: (id: string) => request<Lease>("POST", `/api/leases/${id}/extend`),
   giveBack: (id: string) => request("POST", `/api/leases/${id}/return`),
   review: (id: string, body: ReviewInput) => request("POST", `/api/leases/${id}/review`, body),

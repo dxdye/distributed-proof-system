@@ -4,6 +4,7 @@ import { domainLabel } from "../kinds";
 import { Infoview } from "../components/Infoview";
 import { Reference } from "../components/Reference";
 import { ReliesOn } from "../components/ReliesOn";
+import { TicketContext } from "../components/TicketContext";
 import { TierBadge } from "../components/Tier";
 import { navigate } from "../router";
 
@@ -258,8 +259,9 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
           <div>
             <h2>{t.paper}</h2>
             <p className="muted small">
-              <TierBadge tier={t.tier} /> {domainLabel(t.domain)} ·{" "}
-              <a href={t.repo_url}>{t.repo_url}</a> @ <code>{t.commit.slice(0, 12)}</code>
+              {/* No link to the repository here: the platform should not invite a
+                  comparison with the source (C-39); the submission page has it. */}
+              <TierBadge tier={t.tier} /> {domainLabel(t.domain)}
             </p>
           </div>
           {active && (
@@ -301,8 +303,9 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
         />
         <section className="lean-panel">
           <h3>Lean says</h3>
-          <Infoview view={t.view} />
+          <Infoview view={t.view} hideContext />
           <ReliesOn entries={t.relies_on} />
+          <TicketContext leaseId={lease.lease_id} />
         </section>
       </section>
       {active && lease.duty === "claim" && <ClaimForm lease={lease} onDone={done} />}
