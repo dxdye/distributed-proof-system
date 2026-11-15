@@ -113,3 +113,16 @@ def test_claim_duty_shows_the_finding_to_the_pvv(env: Env, client: TestClient) -
     assert r.status_code == 200
     history = client.get("/api/me", headers=finder).json()["history"]
     assert history[0]["outcome"] == "error"
+
+
+@pytest.mark.req("SR-32")
+def test_preferences_can_be_given_at_sign_up(env: Env, client: TestClient) -> None:
+    """Optional, and never a qualification (C-32); the domains are public."""
+    env.coord.open_submission(title="Paper", repo_url="https://x/p", commit="c" * 40,
+                              tickets=specs("P", 2))
+    assert client.get("/api/domains").json() == ["analysis"]
+    r = client.post("/api/register", json={"pseudonym": "dora", "notice_acknowledged": True,
+                                           "domains": ["analysis"]})
+    assert r.status_code == 200, r.text
+    me = client.get("/api/me", headers={"Authorization": f"Bearer {r.json()['token']}"}).json()
+    assert me["preferences"] == {"domains": ["analysis"], "tiers": []}

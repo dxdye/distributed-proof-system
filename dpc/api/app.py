@@ -66,6 +66,9 @@ class RegisterReq(_Req):
     group: Literal["expert", "doctoral", "student", "other"] = "other"
     affiliations: list[str] = []
     notice_acknowledged: bool = False
+    #: Optional preferences at sign-up (C-32): raise the chance only, never a
+    #: qualification. Difficulty is chosen later, once tiers open.
+    domains: list[str] = []
 
 
 class AffiliationReq(_Req):
@@ -342,11 +345,15 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                           identity=(ident.provider, ident.subject))
             if ident.maintainer:
                 coord.sync_maintainer(rid, True)
+            if req.domains:
+                call(coord.set_preferences, rid, domains=req.domains)
             return {"reviewer_id": rid}
         if not authenticator.local_tokens:
             raise HTTPException(401, "sign in with an identity provider first")
         rid, token = call(coord.register, req.pseudonym, req.group, req.affiliations,
                           notice_acknowledged=req.notice_acknowledged)
+        if req.domains:
+            call(coord.set_preferences, rid, domains=req.domains)
         return {"reviewer_id": rid, "token": token}
 
     # ------------------------------------------------------------ reviewer
@@ -388,8 +395,9 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         return {"ok": True}
 
     @app.get("/api/domains")
-    def domains(_: Rid) -> list[str]:
-        """Domains of the open class-A tickets (names only, no counts)."""
+    def domains() -> list[str]:
+        """Domains of the open class-A tickets (names only, no counts). Public:
+        the progress page shows them too, and sign-up offers them (C-32)."""
         with coord.lock:
             st = coord.state
             return sorted({t.domain for t in st.tickets.values()

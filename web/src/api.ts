@@ -333,6 +333,8 @@ export const api = {
     group: string;
     affiliations: string[];
     notice_acknowledged: boolean;
+    /** Optional preferences at sign-up (C-32); never a qualification. */
+    domains?: string[];
   }) => request<{ reviewer_id: string; token?: string }>("POST", "/api/register", body),
   me: () => request<Me>("GET", "/api/me"),
   declareAffiliation: (lab: string) => request("POST", "/api/me/affiliations", { lab }),

@@ -54,7 +54,8 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
       <p className="muted small">
         Up to half of the offered tickets match your choice, the rest is drawn at random, so that
         nobody can steer towards a particular paper. Domain and difficulty must both match. Nothing
-        selected means: anything.
+        selected means: anything. Each change draws a new set, so preferences can be changed three
+        times a day.
       </p>
       <div className="chip-row">
         <span className="chip-label">Domain</span>

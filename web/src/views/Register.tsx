@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { signInWith, signInWithToken, type OidcProvider, type Provider } from "../auth";
 import { Intro } from "../components/Intro";
+import { domainLabel } from "../kinds";
 
 // Sign-in with an identity provider or an API token (docs/adr/0010), and the
 // pseudonymous registration (SR-23) with the notice on review data (SR-49).
@@ -168,12 +169,18 @@ export function JoinForm({
   const [ack, setAck] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setNewToken] = useState<string | null>(null);
+  const [known, setKnown] = useState<string[]>([]);
+  const [domains, setDomains] = useState<string[]>([]);
 
   useEffect(() => {
     api
       .notice()
       .then(setNotice)
       .catch((e) => setError(String(e.message)));
+    api
+      .domains()
+      .then(setKnown)
+      .catch(() => {});
   }, []);
 
   async function submit() {
@@ -187,6 +194,7 @@ export function JoinForm({
           .map((a) => a.trim())
           .filter(Boolean),
         notice_acknowledged: ack,
+        domains,
       });
       if (res.token) setNewToken(res.token);
       else onDone();
@@ -235,6 +243,31 @@ export function JoinForm({
         Employment or commissions by labs (comma separated, optional)
         <input value={affiliations} onChange={(e) => setAffiliations(e.target.value)} />
       </label>
+      {known.length > 0 && (
+        <fieldset className="join-prefs">
+          <legend>What would you like to work on? (optional)</legend>
+          <div className="chip-row">
+            {known.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className="chip"
+                aria-pressed={domains.includes(d)}
+                onClick={() =>
+                  setDomains(domains.includes(d) ? domains.filter((x) => x !== d) : [...domains, d])
+                }
+              >
+                {domainLabel(d)}
+              </button>
+            ))}
+          </div>
+          <p className="muted small">
+            A preference is not a qualification. It only raises the chance that such tickets are
+            offered; the rest stays random. Trust comes from the work itself, and harder tickets
+            open with experience. Nothing selected means: anything. You can change it later.
+          </p>
+        </fieldset>
+      )}
       {notice && (
         <div className="notice">
           <p className="small">{notice.text}</p>
