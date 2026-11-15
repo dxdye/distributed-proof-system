@@ -448,6 +448,11 @@ the kernel. The kernel replay (C-18) covers every other module.
 
 *Evidence:* ADR 0009, "What the replay does not cover"; QRH: 4 101
 official-package modules were trusted by location, not replayed.
+*Implemented in part (2026-11-15):* the same principle for a repository's own
+modules. `dpc ingest-batch` ingests several main theorems of one commit with
+one fetch, one snapshot and one kernel replay over all their import closures;
+build and analysis run per theorem, and each theorem records the part of the
+shared replay its declarations live in.
 
 ## SE document
 
