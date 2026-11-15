@@ -421,7 +421,7 @@ class Coordinator:
             expires = now + timedelta(seconds=self.params.choice_set_ttl_s)
             self._emit("choice_set.drawn", ev.ChoiceSetDrawn(
                 set_id=set_id, reviewer=rid, tickets=tuple(t.ticket_id for t in picked),
-                expires_at=ev.ts(expires)))
+                expires_at=ev.ts(expires), preferences_applied=bool(preferred)))
             return st.choice_sets[set_id]
 
     # -------------------------------------------------------------- leases

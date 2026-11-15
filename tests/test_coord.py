@@ -577,7 +577,7 @@ def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
     rid = env.people(1)[0]
     env.coord.set_preferences(rid, domains=["algebra"])  # two papers: applies
     cs = env.coord.choice_set(rid)
-    assert cs is not None and len(cs.tickets) == 4
+    assert cs is not None and len(cs.tickets) == 4 and cs.preferences_applied
     domains = [env.coord.state.tickets[t].domain for t in cs.tickets]
     assert domains.count("algebra") >= 2  # raised: at random, 2 of 5 papers are algebra
     assert env.events("reviewer.preferences_set")[0]["domains"] == ["algebra"]
@@ -592,6 +592,9 @@ def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
     env.coord.set_preferences(rid, domains=["analysis"])  # one paper only: ignored
     again = env.coord.choice_set(rid)
     assert again is not None and again.set_id != cs.set_id
+    # The reviewer learns that the preferences could not be used, not why (C-22).
+    assert not again.preferences_applied
+    assert env.events("choice_set.drawn")[-1]["preferences_applied"] is False
     analysis = [t for t in again.tickets if env.coord.state.tickets[t].domain == "analysis"]
     assert len(analysis) <= 1  # one per paper, as without preferences
     with pytest.raises(CoordError, match="unknown tiers"):

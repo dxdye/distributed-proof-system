@@ -405,9 +405,11 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         with coord.lock:
             cs = call(coord.choice_set, rid)
             if cs is None:
-                return {"set_id": None, "tickets": []}
+                return {"set_id": None, "tickets": [], "preferences_applied": False}
+            # Whether the preferences could be used, never why not (C-22).
             return {"set_id": cs.set_id,
-                    "tickets": [ticket_card(coord.state.tickets[t]) for t in cs.tickets]}
+                    "tickets": [ticket_card(coord.state.tickets[t]) for t in cs.tickets],
+                    "preferences_applied": cs.preferences_applied}
 
     @app.post("/api/leases")
     def take(req: LeaseReq, rid: Rid) -> dict[str, Any]:

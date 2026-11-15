@@ -157,6 +157,7 @@ class ChoiceSetSt:
     drawn: datetime
     expires: datetime
     consumed: bool = False
+    preferences_applied: bool = False
 
 
 def _days(a: datetime, b: datetime) -> float:
@@ -387,7 +388,8 @@ class State:
 
     def _on_choice_set_drawn(self, p: ev.ChoiceSetDrawn, at: datetime, _: Entry) -> None:
         self.choice_sets[p.set_id] = ChoiceSetSt(p.set_id, p.reviewer, p.tickets, at,
-                                                 ev.parse_ts(p.expires_at))
+                                                 ev.parse_ts(p.expires_at),
+                                                 preferences_applied=p.preferences_applied)
         self.latest_set[p.reviewer] = p.set_id
         self.sets_drawn[p.reviewer].append(at)
 

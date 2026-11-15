@@ -192,6 +192,9 @@ class ChoiceSetDrawn(_P):
     reviewer: str
     tickets: tuple[str, ...]
     expires_at: Ts
+    #: The reviewer's preferences could be used for this set (C-22). Never
+    #: why not: that would tell which papers have such tickets.
+    preferences_applied: bool = False
 
 
 class LeaseGranted(_P):
