@@ -2627,3 +2627,13 @@ code,
     padding: 0;
   }
 }
+
+/* Submissions closed and opened again: listed once, earlier versions folded */
+details.card.replaced summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+details.card.replaced ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}

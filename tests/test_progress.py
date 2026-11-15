@@ -107,6 +107,26 @@ def test_prl_and_the_residual_error(env: Env) -> None:
     assert not math.isnan(s["coverage"])
 
 
+@pytest.mark.req("SR-42")
+def test_a_submission_opened_again_replaces_the_closed_one(env: Env) -> None:
+    """A paper map cannot change on an open submission; a maintainer closes it
+    and opens it again. The page then shows the new one as current."""
+    old = open_paper(env, 2)
+    env.clock.advance(minutes=5)
+    other = env.coord.open_submission(title="Q", repo_url="https://x/q", commit="c" * 40,
+                                      tickets=specs("Q", 2), root="Q.u0")
+    assert progress.summary(env.coord, old)["replaced_by"] is None  # still open
+    admin = env.people(1, "admin")[0]
+    env.coord.appoint_maintainer(admin)
+    env.coord.close_submission(admin, old)
+    assert progress.summary(env.coord, old)["replaced_by"] is None  # closed, not reopened
+    env.clock.advance(minutes=5)
+    new = open_paper(env, 2)
+    assert progress.summary(env.coord, old)["replaced_by"] == new
+    assert progress.summary(env.coord, new)["replaced_by"] is None
+    assert progress.summary(env.coord, other)["replaced_by"] is None  # another theorem
+
+
 @pytest.mark.req("SR-06")
 def test_the_lean_statement_waits_for_the_decision(env: Env) -> None:
     sid = open_paper(env, 1)

@@ -144,15 +144,18 @@ function Facts({ s }: { s: ProgressSummary }) {
 }
 
 export function ProgressList({ me }: { me: Me | null }) {
-  const [list, setList] = useState<ProgressSummary[] | null>(null);
+  const [all, setAll] = useState<ProgressSummary[] | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    api.progress().then(setList, (e) => setError((e as Error).message));
+    api.progress().then(setAll, (e) => setError((e as Error).message));
     api.stats().then(setStats, () => setStats(null));
   }, []);
   if (error) return <p className="error">{error}</p>;
-  if (!list) return <p className="muted">Loading…</p>;
+  if (!all) return <p className="muted">Loading…</p>;
+  // A submission closed and opened again is listed once, as its current one.
+  const list = all.filter((s) => !s.replaced_by);
+  const replaced = all.filter((s) => s.replaced_by);
   const decls = list.reduce((n, s) => n + s.declarations, 0);
   const decided = list.reduce((n, s) => n + s.decided, 0);
   const found = list.reduce((n, s) => n + s.errors, 0);
@@ -207,6 +210,29 @@ export function ProgressList({ me }: { me: Me | null }) {
           </p>
         </section>
       ))}
+      {replaced.length > 0 && (
+        <details className="card replaced">
+          <summary>
+            Closed and opened again: {replaced.length}{" "}
+            {replaced.length === 1 ? "earlier version" : "earlier versions"}
+          </summary>
+          <p className="muted small">
+            A paper map cannot change while a submission is open. Maintainers close it and open it
+            again; the record of the earlier version stays here.
+          </p>
+          <ul>
+            {replaced.map((s) => (
+              <li key={s.submission_id}>
+                <a href={progressHref(s.submission_id)}>{s.title}</a>{" "}
+                <span className="muted small">
+                  opened {new Date(s.opened).toLocaleDateString("en", { dateStyle: "medium" })} ·{" "}
+                  <a href={progressHref(s.replaced_by ?? "")}>current version</a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       <section className="card">
         <h3>What is counted</h3>
         <p className="muted small">
@@ -400,6 +426,12 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
           <PrlBadge s={d} />
           {d.closed && <span className="badge">closed</span>}
         </div>
+        {d.replaced_by && (
+          <p className="maintainer-note small">
+            This submission was closed and opened again; this page keeps the record of the earlier
+            version. <a href={progressHref(d.replaced_by)}>The current version →</a>
+          </p>
+        )}
         <p className="muted small">
           {d.paper_url && (
             <>

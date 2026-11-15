@@ -228,6 +228,8 @@ export type ProgressSummary = {
   interest: number | null;
   main_statement: string | null;
   main_locator: string | null;
+  /** Closed and opened again (same repository, commit, main theorem): the current one. */
+  replaced_by?: string | null;
 };
 export type ProgressUnit = {
   declaration: string;

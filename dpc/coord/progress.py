@@ -93,6 +93,21 @@ def _weekly_throughput(coord: Coordinator, weeks: int = 8) -> list[float]:
     return counts
 
 
+def replaced_by(coord: Coordinator, submission_id: str) -> str | None:
+    """The submission that replaces a closed one: opened later for the same
+    repository, commit and main theorem (e.g. with a corrected paper map, which
+    cannot be changed on an open submission). The newest such one; None if the
+    submission is open or was not opened again."""
+    subs = coord.state.submissions
+    sub = subs[submission_id]
+    if not sub.closed or sub.root is None:
+        return None
+    key = (sub.repo_url, sub.commit, sub.root)
+    later = [s for s in subs.values()
+             if s.opened > sub.opened and (s.repo_url, s.commit, s.root) == key]
+    return max(later, key=lambda s: s.opened).submission_id if later else None
+
+
 def summary(coord: Coordinator, submission_id: str) -> dict[str, Any]:
     st = coord.state
     sub = st.submissions[submission_id]
@@ -135,6 +150,7 @@ def summary(coord: Coordinator, submission_id: str) -> dict[str, Any]:
         "interest": round(psi, 3) if psi is not None else None,
         "main_statement": paper.statement if paper else None,
         "main_locator": paper.locator if paper else None,
+        "replaced_by": replaced_by(coord, submission_id),
     }
 
 
