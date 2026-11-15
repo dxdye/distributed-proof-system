@@ -22,6 +22,13 @@ Reviewer behaviours:
 * ``colluder`` — like ``sybil``; in addition, as PVV of another colluder it
   confirms the PV's verdict unseen (collusion PV ↔ PVV).
 
+Steering (C-32): an attacker who rerolls choice sets, or narrows preferences,
+sees its target items more often than chance. ``steer`` (τ) is the factor by
+which an attacking account is more likely than an honest one to be drawn for a
+target item; τ = 1 is the uniform draw. ``weak_identity_weight`` shrinks the
+attackers' estimated rates towards 0.5 in the decision rule, as a graded start
+for accounts with a weak identity would (C-34).
+
 Process per item (concept §4, §6, §8): reviewers with the PV role are drawn at
 random (optionally each with a lens chosen greedily), a honeypot is mixed into
 a reviewer's stream with probability ``h``; votes enter the decision rule with
@@ -48,6 +55,7 @@ from dpc.domain.review import detection_probability, recheck_probability
 from dpc.domain.trust import RoleThresholds, Source, TrustState, record
 
 Behaviour = Literal["honest", "clicker", "lookup", "sybil", "colluder"]
+ATTACKERS: frozenset[str] = frozenset({"sybil", "colluder"})
 DetectionModel = Literal["beta", "irt"]
 
 #: Error classes of concept §8.4 with provisional frequencies.
@@ -103,6 +111,10 @@ class SimConfig:
     delphi: bool = False
     target_share: float = 0.0  # share of erroneous items an attacker wants accepted
     pair_window: int = 0  # SR-08: no (PV, PVV) pair repetition within the last n checks
+    #: τ: how much more likely an attacking account is drawn for its targets (C-32).
+    steer: float = 1.0
+    #: Weight of attacking accounts in the decision rule (1 = full, C-34).
+    weak_identity_weight: float = 1.0
     seed: int = 0
 
 
@@ -258,15 +270,29 @@ class _Sim:
         )
 
     # -------------------------------------------------------------- process
-    def draw(self, exclude: set[int], n: int, role: str) -> list[Reviewer]:
+    def draw(self, exclude: set[int], n: int, role: str,
+             target: bool = False) -> list[Reviewer]:
         th = self.cfg.roles.theta_pv if role == "PV" else self.cfg.roles.theta_pvv
         pool = [r for r in self.reviewers if r.id not in exclude and r.kappa >= th]
         if len(pool) < n:  # not enough qualified people: fall back to the most trusted
             rest = sorted((r for r in self.reviewers if r.id not in exclude and r not in pool),
                           key=lambda r: -r.kappa)
             pool += rest[: n - len(pool)]
-        idx = self.rng.choice(len(pool), size=min(n, len(pool)), replace=False)
+        size = min(n, len(pool))
+        if target and self.cfg.steer != 1.0:  # attackers reach their targets τ times as often
+            w = np.array([self.cfg.steer if r.behaviour in ATTACKERS else 1.0 for r in pool])
+            idx = self.rng.choice(len(pool), size=size, replace=False, p=w / w.sum())
+        else:
+            idx = self.rng.choice(len(pool), size=size, replace=False)
         return [pool[i] for i in idx]
+
+    def estimates(self, r: Reviewer) -> tuple[float, float]:
+        """The rates the decision rule uses; attackers' shrunk by identity (C-34)."""
+        s_hat, c_hat = r.trust.point_estimates()
+        w = self.cfg.weak_identity_weight
+        if r.behaviour in ATTACKERS and w != 1.0:
+            s_hat, c_hat = 0.5 + w * (s_hat - 0.5), 0.5 + w * (c_hat - 0.5)
+        return s_hat, c_hat
 
     def pvv_check(self, pv: Reviewer, said: bool, item: Item, exclude: set[int]) -> None:
         if self.rng.random() >= recheck_probability(pv.kappa, incorrect=said, ticket_class="A"):
@@ -320,7 +346,7 @@ class _Sim:
         rounds = 0
         while True:
             rounds += 1
-            drawn = self.draw(used, params.k_min if rounds == 1 else 1, "PV")
+            drawn = self.draw(used, params.k_min if rounds == 1 else 1, "PV", target=item.target)
             lenses = self.lenses_for(len(drawn)) if rounds == 1 else [None] * len(drawn)
             for r, lens in zip(drawn, lenses, strict=True):
                 used.add(r.id)
@@ -329,7 +355,7 @@ class _Sim:
                 said = self.verdict(r, item, lens=lens)
                 self.reviews += 1
                 r.reviews += 1
-                s_hat, c_hat = r.trust.point_estimates()
+                s_hat, c_hat = self.estimates(r)
                 votes.append(Vote(str(r.id), said, s_hat, c_hat, justified=said))
                 voters.append((r, said))
                 self.pvv_check(r, said, item, used)

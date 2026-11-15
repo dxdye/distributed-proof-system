@@ -362,6 +362,18 @@ def cmd_mutate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_steering_study(args: argparse.Namespace) -> int:
+    """Target success of fake accounts by steering factor τ and identity weight (C-32)."""
+    from dpc.sim.study import SteeringGrid, render_steering, run_steering
+
+    grid = SteeringGrid(seeds=tuple(range(args.seeds)))
+    text = render_steering(run_steering(grid), grid)
+    if args.out:
+        Path(args.out).write_text(text, encoding="utf-8", newline="\n")
+    print(text)
+    return 0
+
+
 def cmd_simulate(args: argparse.Namespace) -> int:
     """Agent-based simulation of class-A review (M3)."""
     reviewers = [ReviewerType("honest", args.honest)]
@@ -441,6 +453,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--memory", default=Limits.memory)
     p.add_argument("--timeout-h", type=float, default=Limits.timeout_s / 3600)
     p.set_defaults(func=cmd_ingest_batch)
+
+    p = sub.add_parser("steering-study", help="fake accounts against τ and identity (C-32)")
+    p.add_argument("--seeds", type=int, default=5)
+    p.add_argument("--out", help="Markdown file, e.g. docs/simulation/steering.md")
+    p.set_defaults(func=cmd_steering_study)
 
     p = sub.add_parser("summary", help="summarise an analysis file")
     p.add_argument("file")

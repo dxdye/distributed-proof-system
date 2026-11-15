@@ -133,3 +133,33 @@ def test_pair_window_prevents_repeated_pv_pvv_pairs() -> None:
     open_pairs = sum(r.repeated_pairs for r in _runs(base))
     windowed = sum(r.repeated_pairs for r in _runs(replace(base, pair_window=50)))
     assert windowed < 0.2 * open_pairs
+
+
+@pytest.mark.req("SR-38", "SR-41")
+def test_steering_helps_fake_accounts_and_identity_weight_stops_it() -> None:
+    """C-32: an attacker who sees its targets more often (τ) passes more of
+    them; shrinking the weight of weakly identified accounts stops that."""
+    from dpc.domain.decision import DecisionParams
+    from dpc.sim.model import ReviewerType, SimConfig, simulate
+
+    def success(steer: float, weight: float = 1.0) -> float:
+        cfg = SimConfig(items=300, error_rate=0.1, target_share=0.5,
+                        reviewers=(ReviewerType("honest", 40),
+                                   ReviewerType("sybil", 10, behaviour="sybil")),
+                        decision=DecisionParams(prior_error=0.1, delta_a=1e-3, k_min=3,
+                                                max_rounds=4),
+                        steer=steer, weak_identity_weight=weight)
+        runs = [simulate(replace(cfg, seed=s)) for s in (0, 1)]
+        return sum(r.targets_accepted for r in runs) / sum(r.targets for r in runs)
+
+    assert success(26.0) > success(1.0) + 0.3
+    assert success(26.0, weight=0.5) < 0.15
+
+
+def test_choosing_alone_is_a_lever() -> None:
+    """τ = N·(1 − (1 − n/N)^m): one set per take gives τ = n."""
+    from dpc.sim.study import steering_factor
+
+    assert steering_factor(200, 4, 1) == pytest.approx(4.0)
+    assert steering_factor(200, 4, 7) == pytest.approx(26.4, abs=0.1)
+    assert steering_factor(200, 4, 25) > 75

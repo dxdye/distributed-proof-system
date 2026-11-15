@@ -50,6 +50,46 @@ Reproduce, e.g.: `pixi run dpc simulate --items 400 --error-rate 0.1 --blind-sha
 (switches: `--irt --honeypot-shift`, `--delphi`, `--sybils/--colluders --target-share`,
 `--pair-window`). Tests: `tests/test_simulation.py` (marked `slow`).
 
+## Steering by choosing and rerolling (C-32, 2026-11-15)
+
+Full table: [`steering.md`](steering.md), from `pixi run dpc steering-study`
+(600 items, error rate 0.1, 40 honest reviewers, one attacker whose accounts
+gain trust by looking up planted errors and pass the attacker's targets, half
+of the erroneous items; 5 seeds pooled).
+
+How much more often an attacking account reaches a target than an honest one
+(τ) follows from the coordinator's limits: τ = N·(1 − (1 − n/N)^m) for N open
+tickets, sets of n and m sets seen per ticket taken
+(`dpc.sim.study.steering_factor`). Choosing alone gives τ = n = 4: an attacker
+takes its target whenever a set shows it. With 24 sets a day and one ticket
+taken (before C-32) τ ≈ 79 for N = 200; with at most 6 unused sets a day,
+τ ≈ 26 for one ticket a day and ≈ 8 if every ticket taken costs one unused set.
+
+| accounts | τ = 1 | τ = 4 | τ = 8 | τ = 26 | τ = 79 |
+|---|---|---|---|---|---|
+| 5, full weight | 4 % | 8 % | 13 % | 22 % | 45 % |
+| 10, full weight | 9 % | 30 % | 55 % | 82 % | 94 % |
+| 10, identity weight 0.5 | 3 % | 1 % | 5 % | 4 % | 3 % |
+
+Share of target errors accepted; the other erroneous items are missed in about
+1 % of cases. Identity weight 0.5: the attacking accounts' estimated rates are
+shrunk halfway towards 0.5 in the decision rule; it costs 0.2–0.8 more reviews
+per item (3.4–3.7 → 3.8–4.3).
+
+Consequences:
+- Limits on rerolling lower τ but cannot bring it near 1, since choosing is
+  itself a lever. They are worth having (79 → 26), not sufficient.
+- What stops the attack is the weight of the accounts: they earn it here by
+  looking planted errors up (C-07), and lose most of it with a graded start by
+  identity (C-34). Both levers, private planted errors and identity, matter
+  more than any parameter of the draw.
+- A bound τ_max on preferences of 2–3 is small next to the τ of choosing and
+  rerolling; it keeps preferences from adding to it.
+- The model shrinks only the attackers' weight. If every weakly identified
+  account, honest or not, starts with less weight, the cost in reviews is
+  higher; to be measured in the pilot.
+
 ## Not yet modelled
 
-Leases and aborts, paired review, choice sets with attention, payouts.
+Leases and aborts, paired review, payouts. Choice sets are modelled only through
+the steering factor τ, not as sets of tickets with attention ψ.
