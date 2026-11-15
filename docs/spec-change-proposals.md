@@ -249,9 +249,27 @@ quasi-Riemann: medium; fixtures: easy.
 - Preferences are ignored when the matching tickets come from fewer than two
   submissions. Otherwise a domain with one paper would deliver that paper's
   tickets on request, which is the steering SR-38 prevents.
+- Domain and difficulty must both match. Difficulty is chosen as an upper
+  bound, "up to Hard": every tier up to and including it. That matches "not
+  harder than", and more tickets match. Locked tiers stay locked.
+- The reviewer learns when the preferences could not be used for a set, never
+  why: "only one paper has such tickets" would tell which paper has them.
+  Which tickets of a set match stays invisible too; the order is random.
+- Set size stays at 4 in the pilot: with few open papers, "one ticket per paper
+  first" cannot be met for 6, and exclusions often leave fewer tickets. Before
+  going to 6 (at least six open papers), measure how often planted copies are
+  chosen from a set compared with real tickets of the same sets, from
+  `choice_set.drawn`, `lease.granted` and the revealed planted errors. If they
+  are chosen clearly less often, reviewers avoid them and the set is too large.
+  The measure is a health check of the choice mechanism at any size. For
+  targeting: the limit of 24 sets a day weighs more than the set size (a
+  given ticket among 200: about 38 % a day with 4, 52 % with 6).
+- Limits on rerolling, preferences at sign-up and a bound τ_max: C-32.
 
 *Evidence:* `Coordinator.choice_set`,
-`test_preferences_raise_the_chance_but_cannot_steer`.
+`test_preferences_raise_the_chance_but_cannot_steer`; walkthrough with the
+project owner (2026-11-15): "analysis, up to Hard" brought no matching ticket
+and no explanation.
 
 ### C-23 · §5, §8.5 — An "incorrect" verdict names the failing question · refine
 *Proposed:* A claim names which of the five checklist questions fails and gives
@@ -464,6 +482,276 @@ one fetch, one snapshot and one kernel replay over all their import closures;
 build and analysis run per theorem, and each theorem records the part of the
 shared replay its declarations live in.
 
+### C-30 · §3 question 2, C-27 — Conventions that depend on the instance · refine
+*Current:* C-27 notes conventions per library constant (`dpc/tickets/notes.py`).
+The glossary leaves instances out (`lean/analyzer/DpcAnalyzer/Render.lean`,
+`isInstance`), and the rendering hides instance arguments.
+*Problem:* Some meanings are fixed not by the constant but by the instance that
+elaboration resolves. `‖x‖` is `Norm.norm` either way, but on `Fin 3 → ℝ` and on
+`ℝ × ℝ` Mathlib's norm is the sup norm, on `EuclideanSpace ℝ (Fin 3)` the
+Euclidean one. The same holds for the distance, and for the order on products
+and functions (componentwise). All of this is Mathlib, so it lies outside
+TCB_new, and neither the glossary nor the notes show it. A reviewer who does
+not know the convention reads `‖u x‖` as the Euclidean norm.
+*Proposed:*
+- For constants whose meaning depends on an instance (norm, distance, inner
+  product, order, measure, topology), the ticket names the type the instance
+  was resolved on, and the convention where one is known, e.g. "‖·‖ on
+  `Fin 3 → ℝ`: sup norm", with the Mathlib lemma that states it.
+- The convention catalogue of C-27 is keyed by constant *and* carrier type,
+  not by constant alone.
+- A mutation operator that swaps the carrier (`EuclideanSpace ℝ (Fin n)` ↔
+  `Fin n → ℝ`) measures whether reviewers notice.
+
+*Evidence:* `Render.lean` skips instances; `notes.py` is keyed by name.
+Whether the Navier–Stokes case study is affected depends on the carrier type
+of its velocity field; not checked yet. Walkthrough with the project owner
+(2026-11-15).
+
+### C-31 · §2, §8.8 / OS-3, §11 — The choice of T and the claims of the paper · new
+*Current:* Everything is computed from the main theorem T, and the submission
+names T. Class A checks that T says what its mapped passage says (ADR 0012).
+*Problem:* If the repository formalizes only part of the paper (a special
+case, a lemma instead of the main theorem, one of three main results),
+TCB_new is computed correctly from T, every ticket can be decided correct, and
+the paper's main claim is still unchecked. The fidelity review catches this
+only if T is mapped to the main claim: T mapped to Lemma 3 is reviewed against
+Lemma 3. ADR 0012 has no rule for claims of the paper without a counterpart in
+Lean.
+*Proposed:*
+- **The claims of the paper come first.** When a submission is opened, a
+  maintainer (later a mapping ticket, OS-3) lists the main claims of the paper,
+  each with its passage: the theorems and corollaries the abstract or
+  introduction states. Each claim is mapped to a declaration or marked "not
+  formalized".
+- **A claim without a counterpart is a finding,** not an omission. The report
+  states "claims formalized: k of m" next to the PRL and names the missing
+  ones. PRL 3 applies to the formalized claims and says so.
+- **The mapping can be contested** as in ADR 0012, with a new reason: "this is
+  not the claim of the paper" (T is a special case, or the main claim is
+  elsewhere).
+- Several main theorems per submission are already possible
+  (`dpc ingest-batch`, C-29).
+
+*Evidence:* `dpc/analysis/tcb.py` computes everything from T; ADR 0012 has no
+rule for unmapped claims. Walkthrough with the project owner (2026-11-15).
+
+### C-32 · §10.2, §9.4, SR-38, C-22 — Fit and motivation without opening the draw to steering · new
+*Aim (project owner, 2026-11-15):* reviewers should find tickets that suit
+them, and should neither despair, feel lost nor be bored. Nobody masters every
+field. This must not weaken what makes the platform sound.
+
+*Fixed, not negotiable:*
+- No assignment of persons to tickets, no free choice of a paper or ticket,
+  no catalogue to pick from (§9.4, §10.2, SR-38).
+- Round 1 is blind; a chain counts as one vote (§8.6, §9.4).
+- Planted errors are spread over all tiers and revealed late (§8.2, §8.9).
+- Interest ψ never decides whether class A is reviewed (§10.5).
+- **The rule behind everything below:** the draw may only use features a
+  planted copy inherits from its original: paper, domain, tier. Then the
+  estimates of trust, the decision rule and ψ stay unbiased.
+
+*Problem: rerolling is steering.* Let τ be the factor by which an account is
+offered a given ticket more often than under a uniform draw. Before this
+proposal a set stayed valid for an hour, up to 24 sets a day could be drawn,
+and every change of preferences discarded the current set at once
+(`State._on_reviewer_preferences_set`). An account could burn its 24 draws
+within minutes and see about 96 tickets a day. Taking a ticket and returning
+it gave a further set that no limit counted. τ follows from the limits:
+τ = N·(1 − (1 − n/N)^m) for N open tickets, sets of n and m sets seen per
+ticket taken. Choosing alone gives τ = n = 4, since an attacker takes its
+target whenever a set shows it; with 24 sets a day and one ticket taken,
+τ ≈ 79 (N = 200). Narrow preferences multiply τ further.
+
+Why τ matters, as an illustration: a wrong result passes only if every one of
+the k_min + 1 = 4 parallel slots of a ticket is held by the attacker, since
+one honest finding blocks. With s attacking accounts among H honest ones,
+P(captured) ≈ (τ·s / (τ·s + H))⁴. For s = 5, H = 40: τ = 1 gives 0.015 %,
+τ ≈ 6 gives about 3 %, τ ≈ 25 about 33 %. The simulation agrees for τ = 1
+(5 against 40: 0 %; 40 against 10: 71 %). The formula leaves out three things
+that change the numbers: new accounts carry no weight in the decision rule
+(ŝ = ĉ = 0.5) until planted errors reveal them; honest reviewers also miss
+errors; and PVV samples and claims intervene. Accounts gain weight cheaply
+where planted errors can be looked up (C-07), so identity is the actual
+defence (C-34), and the parameters below must come from the simulation.
+
+*Implemented (2026-11-15), safe without the simulation:*
+- **Unused sets are limited, reviewing is not.** At most 6 sets per 24 hours
+  may lead to no review: expired or discarded by a change of preferences
+  without a ticket taken, or whose ticket was given back or lapsed (taking and
+  returning would otherwise be an uncounted reroll; this limits looks, not
+  trust). Sets drawn while the reviewer holds as many tickets as allowed do
+  not count; nothing could be taken from them (`choice_set.drawn` records
+  `at_limit`). The cap of 24 sets in all stays. A plain cut from 24 to 6 sets
+  would stop diligent reviewers: every ticket taken uses up a set. Parameters
+  `max_unused_sets_per_day`, `max_choice_sets_per_day`. With these limits τ
+  is at most about 26 (6 unused sets, one ticket a day) and about 8 when every
+  ticket taken costs one unused set.
+- **Preferences can change 3 times a day** (`max_preference_changes_per_day`),
+  since each change is a reroll. Saving unchanged preferences changes nothing
+  and draws no new set.
+- **Preferences at sign-up, optional,** for domains. The form says that a
+  preference is not a qualification: it only raises the chance, trust comes
+  from the work, harder tiers open with experience. Nothing selected means
+  anything. Difficulty is chosen later, once tiers open.
+- Earlier the same day: difficulty as an upper bound and the notice when
+  preferences could not be used (C-22).
+
+*Simulation (2026-11-15, `docs/simulation/steering.md`):* 40 honest
+reviewers, one attacker whose accounts gain trust by looking up planted
+errors; share of the attacker's target errors accepted (other errors: about
+1 % missed):
+
+| accounts | τ = 1 | τ = 4 | τ = 8 | τ = 26 | τ = 79 |
+|---|---|---|---|---|---|
+| 5, full weight | 4 % | 8 % | 13 % | 22 % | 45 % |
+| 10, full weight | 9 % | 30 % | 55 % | 82 % | 94 % |
+| 10, identity weight 0.5 | 3 % | 1 % | 5 % | 4 % | 3 % |
+
+Findings: the limits on rerolling lower τ (79 → at most 26) but cannot bring
+it near 1, because choosing is itself a lever. What stops the attack is the
+accounts' weight: shrinking it halfway for weakly identified accounts keeps
+target success at or below 5 % for every τ, at 0.2–0.8 more reviews per item.
+So the decisive levers are identity (C-34) and planted errors that cannot be
+looked up (C-07), not parameters of the draw. A bound τ_max of 2–3 on
+preferences is small next to the τ of choosing; it keeps preferences from
+adding to it. The model shrinks only the attackers' weight; if every weakly
+identified account starts with less weight, the cost in reviews is higher.
+
+*Proposed, after the simulation (D below):*
+- **A bound τ_max instead of `pref_min_papers = 2`.** Preferences may raise
+  how often one paper is offered to a person by at most τ_max (about 2–3)
+  over the uniform draw; the minimum number of matching papers follows from
+  it. If too few papers match, the preference widens: first only the domain,
+  then none. Within the bound, up to 3 of 4 slots may match; at least one
+  slot stays random.
+- **Preferences for everyone, newcomers included.** Newcomers are those who
+  most need a fitting start, and their verdicts carry no weight yet. A trust
+  threshold for preferences protects little; the bound τ_max and identity
+  (C-34) do. Weight, not preference, depends on identity.
+- **Preferences never filter.** Hard limits come only from the exclusion
+  rules and locked tiers (SR-32).
+
+*Not now, decide:* "staying with a paper". The next set may hold one or two
+further tickets of the paper someone just reviewed, capped at about 25 % of
+the paper's class-A declarations per person. It saves the costly switch of
+context, but one person's misreadings then repeat across tickets. Decide
+after the simulation shows how much such correlated errors weigh.
+
+*D. Order:* (1) the safe limits above — done; (2) extend the simulation
+(`dpc/sim`: steering factor τ, weight by identity) and run a grid over the
+number of accounts, τ and the weight — done, see above; (3) next, by the
+result: a graded start by identity (C-34), then τ_max, domain per paper
+(C-37), rerouting (C-33); (4) partial votes, implicit preferences with consent
+and platform metrics (C-36), preferences and choice data in the vault (C-35).
+The full simulation of choice sets with preferences, rather than through τ,
+is still to do; it is needed to fix τ_max.
+
+*Evidence:* `Coordinator.choice_set`, `Coordinator.unused_sets`,
+`Coordinator.set_preferences`; tests
+`test_sets_left_unused_are_limited_taking_tickets_is_not`,
+`test_sets_drawn_at_the_work_in_progress_limit_never_count`,
+`test_preference_changes_are_limited_because_each_one_rerolls`,
+`test_preferences_can_be_given_at_sign_up`; `docs/simulation/README.md`
+(Sybil rows). Conversation with the project owner, 2026-11-15.
+
+### C-33 · §9.4, SR-31 — Rerouting in the pilot; partial votes later · refine
+*Current:* hand-overs (§9.4, SR-31) are planned for M6. A ticket is done whole
+or not at all.
+*Problem:* that is the main source of feeling lost. Someone who can check the
+junk values but not the function space has only "return".
+*Proposed:*
+- **Rerouting (hand-over type 3) in the pilot:** "needs PDE" returns the
+  ticket with a domain suggestion. Several such suggestions, or a
+  maintainer, correct the ticket's domain (C-37). It is a return with
+  information, cheap to build, and needs no change to the decision rule.
+- **Partial votes (type 2) later:** "junk values checked, the function space
+  needs someone else" as a vote on some questions only. Verdicts are already
+  recorded per question (C-23), but the decision rule decides per ticket:
+  a ticket would be decided only once every question has enough weight. Model
+  and simulate this first.
+- Lenses (§8.4) stay later.
+
+*Evidence:* `failed` per question in `review.submitted` (C-23); SR-31 in
+`requirements/sr.yaml`.
+
+### C-34 · §6.5, SR-41, FMEA R6 — Identity is the defence against fake accounts · refine
+*Problem:* the simulation's finding is "the Sybil defence is identity, not
+statistics". Steering by rerolling (C-32) and cheap trust by lookup (C-07)
+make fake accounts worth more.
+*Proposed:*
+- One person, one account (SR-41). Prefer university sign-in through
+  Keycloak brokering to Shibboleth (DFN-AAI, eduGAIN), and linked profiles
+  (ORCID, GitHub, MathOverflow), each linkable once (C-24).
+- E-mail alone is nearly worthless. A phone number only as a keyed hash
+  (HMAC with a secret key in the vault), never the number and never a plain
+  hash: with about 10¹⁰ possible numbers a plain hash is reversed in minutes.
+  Better none.
+- **Graded start by identity strength:** a strong identity starts normally;
+  e-mail only gets more entry planted errors, less initial weight (cap a_max
+  of §6.5) and slower growth of weight.
+- **Monitoring** (maintainers, aggregated): how often an account is offered
+  and takes a paper compared with expectation; accounts created in a burst
+  with identical preferences; pairs with conspicuous agreement
+  (`dpc/domain/anomaly.py`).
+
+*Evidence:* `docs/simulation/README.md` (Sybil rows); C-24.
+
+### C-35 · §12.8, SR-17 — Preferences and choice data: public log or vault · decide
+*Current:* `reviewer.preferences_set`, `choice_set.drawn` and `lease.granted`
+stand in the public audit log under the random id.
+*Problem:* combinations such as "number theory + excellence + expert" can
+identify a person, and from sets and choices implicit preferences can be
+computed (profiling, GDPR). On the other hand, the log is how anyone checks
+that the draw was fair and that ψ is right (SR-17).
+*Proposed:*
+- Preferences into the vault (the state reads them from there, as it reads
+  pseudonyms).
+- For sets and choices, one of: (a) only aggregated ψ public, details in the
+  vault; (b) public commitments (hashes) of each draw and choice, the plain
+  data in the vault, opened for an audit; (c) as today. (b) keeps the
+  fairness check possible without publishing profiles.
+- To be decided together with the open question whether choice data fall
+  under the open licence of the reviews (§12.8).
+
+*Evidence:* `dpc/coord/events.py` (`PreferencesSet`, `ChoiceSetDrawn`);
+ADR 0008 (the log is published with the report).
+
+### C-36 · §10.2, §10.4 — Explicit and implicit preferences; platform metrics · new
+*Proposed:*
+- **Explicit** is what a person states; it may raise chances (C-32).
+- **Implicit** follows from Plackett–Luce per person (conditioned on the sets
+  offered), from returns and from trust per domain. It is profiling: shown
+  only to the person, only if they switch it on, as the talent signal of
+  §10.4. Use: suggestions ("add combinatorics?") and a warning of overload
+  (asks for Hard, returns most of it).
+- **Implicit preferences never steer the draw:** that would be a filter bubble
+  and a hidden way to target papers.
+- **Platform metrics, aggregated only:** how often a choice matches the
+  chooser's preferences; how often tickets are returned inside and outside
+  them; how both develop over time; and the health check of C-22, how often
+  planted copies are chosen compared with real tickets of the same sets.
+
+### C-37 · §9.2, SR-04 — Domain per paper, in names mathematicians know · refine
+*Current:* a heuristic per declaration from the Mathlib areas a statement
+uses. It put a paper on Jacobsthal's function under "algebra" and left the
+Seymour paper "general".
+*Proposed:*
+- The domain is set per paper, from its arXiv category or MSC class, and
+  shown in MSC terms ("Partial differential equations", not "analysis").
+  A maintainer can correct it per declaration (SR-04), also after the
+  submission is open; today there is no event for that.
+- Rerouting (C-33) feeds corrections back.
+*Implemented in part (2026-11-15):* where a repository files its modules by
+area (`OAI.Combinatorics.…`, `OAI.NumberTheory.…`), that area now comes before
+the Mathlib areas (`dpc/analysis/domains.py`, source "module"). For openai/math
+this is in effect one domain per paper.
+
+### C-38 · §8.10 — Recognition grows with difficulty · refine
+*Proposed:* acknowledgement and bonuses grow with the tier of a ticket.
+Otherwise hard tickets are avoided once preferences make easy ones easy to
+find, and the hardest tickets wait longest.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -578,7 +866,9 @@ such an aid." See C-20.
 ### S-17 · SR-32, SR-38 Preferences · refine
 *Proposed:* Add to SR-38: "Preferences of the reviewer fill at most half of a
 choice set and apply only where the matching tickets come from at least two
-submissions." See C-22.
+submissions. Domain and difficulty must both match; difficulty is an upper
+bound. The reviewer is told when the preferences could not be used for a set,
+without the reason." See C-22; limits on rerolling in S-29.
 
 ### S-18 · SR-09 Justification · refine
 *Proposed:* "An 'incorrect' verdict names the failing checklist question and
@@ -641,3 +931,45 @@ that version; an independent kernel should re-check replayed modules. Reports
 list the trusted assumptions: kernel, library versions and whether they were
 replayed, and the library definitions used with their review status." See
 C-29.
+
+### S-27 · SR-21 Infoview — conventions that depend on the instance · refine
+*Proposed:* Add to SR-21: "For norm, distance, inner product, order, measure
+and topology, the ticket shall name the type the instance was resolved on, and
+its convention where one is known." See C-30.
+
+### S-28 · New requirement: the claims of the paper and their coverage · new
+*Proposed:* "Before class A, the main claims of the paper shall be listed with
+their passages, and each mapped to a declaration or marked as not formalized.
+Reports state how many claims are formalized and name the missing ones; a
+missing claim is a finding." Affects SR-24 (paper mapping) and SR-42
+(reports). See C-31.
+
+### S-29 · SR-38, SR-39 Choice sets — limits on rerolling · refine
+*Proposed:* Add to SR-38: "Per reviewer and 24 hours, at most N_unused choice
+sets may be left unused (expired or discarded without a ticket taken; sets
+drawn at the work-in-progress limit excluded), and at most N_sets drawn in
+all. Preferences may change at most N_pref times a day. Preferences may raise
+how often a paper is offered to a person by at most τ_max over the uniform
+draw." Values for the pilot: N_unused = 6, N_sets = 24, N_pref = 3; τ_max from
+the simulation. See C-32.
+
+### S-30 · SR-31 Hand-overs — rerouting in the pilot · refine
+*Proposed:* Move hand-over type 3 (rerouting to another domain) from M6 to the
+pilot; type 2 (partial votes) stays in M6 until the decision rule is extended
+per question. See C-33.
+
+### S-31 · SR-41 Identity · refine
+*Proposed:* Add: "Identity strength grades the start: university sign-in or
+linked profiles start normally; e-mail only starts with more entry planted
+errors and less initial weight. Phone numbers, if used to detect duplicate
+accounts, are stored only as keyed hashes." See C-34.
+
+### S-32 · OS-2 Onboarding — preferences at sign-up · refine
+*Proposed:* Add to OS-2: "At sign-up, a person may state preferred domains;
+the form states that a preference is not a qualification. Entry tickets come
+from the preferred domains where possible." See C-32.
+
+### S-33 · §12.8 Data — preferences and choice data · decide
+*Proposed:* Decide whether preferences, choice sets and choices stay in the
+public audit log, move to the vault, or are published as commitments only.
+See C-35.
