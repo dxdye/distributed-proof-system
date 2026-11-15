@@ -96,7 +96,7 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
       />
     );
   else if (page === "admin" && me.maintainer) body = <Admin />;
-  else body = <Work me={me} reload={reload} />;
+  else body = <Work me={me} reload={reload} openPreferences={route[1] === "preferences"} />;
 
   const current = (name: string) => (page === name ? "page" : undefined);
   // Signed out: a way in from every page (the click dummy chooses a role instead).

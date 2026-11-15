@@ -16,7 +16,17 @@ const tiersUpTo = (upTo: string | null): string[] =>
 const upToOf = (tiers: string[]): string | null =>
   [...ALL_TIERS].reverse().find((t) => tiers.includes(t)) ?? null;
 
-function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
+/** One line saying what the reviewer asked for, or "anything". */
+function prefsSummary(domains: string[], tiers: string[]): string {
+  const upTo = upToOf(tiers);
+  const parts = [
+    domains.length ? domains.map(domainLabel).join(", ") : "",
+    upTo ? `up to ${TIER_LABELS[upTo]}` : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "anything";
+}
+
+function Preferences({ me, onSaved, open }: { me: Me; onSaved: () => void; open?: boolean }) {
   const [domains, setDomains] = useState<string[]>(me.preferences.domains);
   const [upTo, setUpTo] = useState<string | null>(upToOf(me.preferences.tiers));
   const tiers = tiersUpTo(upTo);
@@ -49,8 +59,14 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
   }
 
   return (
-    <details className="prefs" open={anySet}>
-      <summary>What would you like to work on?</summary>
+    <details className="prefs" open={anySet || open}>
+      <summary>
+        Your preferences:{" "}
+        <span className="prefs-summary">
+          {prefsSummary(me.preferences.domains, me.preferences.tiers)}
+        </span>
+      </summary>
+      <p className="prefs-question">What would you like to work on?</p>
       <p className="muted small">
         Up to half of the offered tickets match your choice, the rest is drawn at random, so that
         nobody can steer towards a particular paper. Domain and difficulty must both match. Nothing
@@ -132,7 +148,15 @@ function duration(minutes: number | null): string {
 // Choice set (SR-38): a few tickets from different papers, random order, no
 // popularity. Taking one is binding; it becomes a lease (SR-26). Only the expected
 // duration is shown, never a countdown (SR-30).
-export function Work({ me, reload }: { me: Me; reload: () => void }) {
+export function Work({
+  me,
+  reload,
+  openPreferences,
+}: {
+  me: Me;
+  reload: () => void;
+  openPreferences?: boolean;
+}) {
   const [set, setSet] = useState<ChoiceSet | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -260,6 +284,7 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
         <h2>Choose your next ticket</h2>
         <Preferences
           me={me}
+          open={openPreferences}
           onSaved={() => {
             reload();
             void draw();

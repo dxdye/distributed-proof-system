@@ -858,6 +858,14 @@ button.choice:hover:not(:disabled) {
 .join-prefs p {
   margin: 0.5rem 0 0;
 }
+.prefs-summary {
+  font-weight: 400;
+  color: var(--muted);
+}
+.prefs-question {
+  margin: 0.75rem 0 0.25rem;
+  font-weight: 600;
+}
 .prefs-saved {
   margin: 0.5rem 0 0;
 }

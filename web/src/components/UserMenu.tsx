@@ -62,6 +62,9 @@ export function UserMenu({ me, onSignOut }: { me: Me | null; onSignOut: () => vo
           <a role="menuitem" href="#/history">
             My reviews
           </a>
+          <a role="menuitem" href="#/work/preferences">
+            Preferences
+          </a>
           {me?.maintainer && (
             <a role="menuitem" href="#/admin">
               Maintainers
