@@ -1863,7 +1863,9 @@
         "latex": "\\left(p : \\operatorname{Display.Point}\\right) \\mapsto \\operatorname{Point.x}\\left(p\\right) + \\operatorname{Point.y}\\left(p\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "Display.Point"
+      ]
      },
      "relies_on": [
       {
@@ -2138,7 +2140,10 @@
         "latex": "\\forall p : \\operatorname{Display.Point},\\ \\operatorname{Point.sum}\\left(p\\right) = \\operatorname{Point.y}\\left(p\\right) + \\operatorname{Point.x}\\left(p\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "Display.Point",
+       "Display.Point.sum"
+      ]
      },
      "relies_on": [
       {
@@ -3137,7 +3142,9 @@
         "latex": "\\forall n \\in \\mathbb{N},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\operatorname{Comparator.ForceCondition}\\left(f\\right) \\implies \\left(\\forall m \\in \\mathbb{N},\\ \\forall K \\in \\mathbb{R},\\ \\exists C \\in \\mathbb{R},\\ \\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\left\\lVert \\operatorname{iteratedFDerivWithin}\\left(\\mathbb{R}, m, \\operatorname{HasUncurry.uncurry}\\left(f\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right), \\operatorname{Prod.mk}\\left(x, t\\right)\\right)\\right\\rVert \\le \\frac{C}{\\left(\\left(1 + \\left\\lVert x\\right\\rVert\\right) + t\\right)^{K}}\\right) \\implies \\operatorname{Comparator.ForceConditionDecay}\\left(f\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "NavierStokes.Comparator.ForceCondition"
+      ]
      },
      "relies_on": [
       {
@@ -3486,7 +3493,9 @@
         "latex": "\\forall n \\in \\mathbb{N},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\left(\\forall x : \\mathbb{R}^{n},\\ \\operatorname{Comparator.divergence}\\left(u_{0}, x\\right) = 0\\right) \\implies \\operatorname{ContDiff}\\left(\\mathbb{R}, {\\uparrow}\\top, u_{0}\\right) \\implies \\operatorname{Comparator.InitialVelocityCondition}\\left(u_{0}\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "NavierStokes.Comparator.divergence"
+      ]
      },
      "relies_on": [
       {
@@ -3828,7 +3837,9 @@
         "latex": "\\forall n \\in \\mathbb{N},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\operatorname{Comparator.InitialVelocityCondition}\\left(u_{0}\\right) \\implies \\left(\\forall m \\in \\mathbb{N},\\ \\forall K \\in \\mathbb{R},\\ \\exists C \\in \\mathbb{R},\\ \\forall x : \\mathbb{R}^{n},\\ \\left\\lVert \\operatorname{iteratedFDeriv}\\left(\\mathbb{R}, m, u_{0}, x\\right)\\right\\rVert \\le \\frac{C}{\\left(1 + \\left\\lVert x\\right\\rVert\\right)^{K}}\\right) \\implies \\operatorname{Comparator.InitialVelocityConditionDecay}\\left(u_{0}\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "NavierStokes.Comparator.InitialVelocityCondition"
+      ]
      },
      "relies_on": [
       {
@@ -4359,7 +4370,9 @@
         "latex": "\\forall n \\in \\mathbb{N},\\ \\forall \\mathit{nu} \\in \\mathbb{R},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall v : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall p : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\left(\\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{derivWithin}\\left(\\left(\\mathit{x'} : \\mathbb{R}\\right) \\mapsto v\\left(x, \\mathit{x'}\\right), \\left[0, \\infty\\right), t\\right) + \\operatorname{fderiv}\\left(\\mathbb{R}, \\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right)\\left(v\\left(x, t\\right)\\right) = \\left(\\mathit{nu} \\cdot \\operatorname{Laplacian.laplacian}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right) \\mathbin{-} \\operatorname{gradient}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto p\\left(\\mathit{x'}, t\\right), x\\right)\\right) + f\\left(x, t\\right)\\right) \\implies \\left(\\forall x : \\mathbb{R}^{n},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{Comparator.divergence}\\left(\\left(\\mathit{x'} : \\mathbb{R}^{n}\\right) \\mapsto v\\left(\\mathit{x'}, t\\right), x\\right) = 0\\right) \\implies \\left(\\forall x : \\mathbb{R}^{n},\\ v\\left(x, 0\\right) = u_{0}\\left(x\\right)\\right) \\implies \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(v\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{ContDiffOn}\\left(\\mathbb{R}, {\\uparrow}\\top, \\operatorname{HasUncurry.uncurry}\\left(p\\right), \\mathrm{univ} \\times \\left[0, \\infty\\right)\\right) \\implies \\operatorname{Comparator.NavierStokesExistenceAndSmoothness}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "NavierStokes.Comparator.divergence"
+      ]
      },
      "relies_on": [
       {
@@ -4764,7 +4777,9 @@
         "latex": "\\forall n \\in \\mathbb{N},\\ \\forall \\mathit{nu} \\in \\mathbb{R},\\ \\forall u_{0} : \\mathbb{R}^{n} \\to \\mathbb{R}^{n},\\ \\forall f : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall v : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R}^{n},\\ \\forall p : \\mathbb{R}^{n} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\operatorname{Comparator.NavierStokesExistenceAndSmoothness}\\left(\\mathit{nu}, u_{0}, f, v, p\\right) \\implies \\left(\\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{MeasureTheory.MemLp}\\left(\\left(x : \\mathbb{R}^{n}\\right) \\mapsto \\left\\lVert v\\left(x, t\\right)\\right\\rVert, 2, \\operatorname{MeasureSpace.volume}\\right)\\right) \\implies \\left(\\exists E \\in \\mathbb{R},\\ \\forall t \\in \\mathbb{R},\\ t \\ge 0 \\implies \\operatorname{MeasureTheory.integral}\\left(\\operatorname{MeasureSpace.volume}, \\left(x : \\mathbb{R}^{n}\\right) \\mapsto \\left\\lVert v\\left(x, t\\right)\\right\\rVert^{2}\\right) < E\\right) \\implies \\operatorname{Comparator.NavierStokesExistenceAndSmoothnessRn}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "NavierStokes.Comparator.NavierStokesExistenceAndSmoothness"
+      ]
      },
      "relies_on": [
       {
@@ -5339,7 +5354,11 @@
         "latex": "\\forall \\mathit{nu} \\in \\mathbb{R},\\ \\mathit{nu} > 0 \\implies \\left(\\exists u_{0} : \\mathbb{R}^{3} \\to \\mathbb{R}^{3},\\ \\exists f : \\mathbb{R}^{3} \\to \\mathbb{R} \\to \\mathbb{R}^{3},\\ \\operatorname{Comparator.InitialVelocityConditionDecay}\\left(u_{0}\\right) \\land \\operatorname{Comparator.ForceConditionDecay}\\left(f\\right) \\land \\neg \\left(\\exists v : \\mathbb{R}^{3} \\to \\mathbb{R} \\to \\mathbb{R}^{3},\\ \\exists p : \\mathbb{R}^{3} \\to \\mathbb{R} \\to \\mathbb{R},\\ \\operatorname{Comparator.NavierStokesExistenceAndSmoothnessRn}\\left(\\mathit{nu}, u_{0}, f, v, p\\right)\\right)\\right)"
        }
       ],
-      "context": []
+      "context": [
+       "NavierStokes.Comparator.ForceConditionDecay",
+       "NavierStokes.Comparator.InitialVelocityConditionDecay",
+       "NavierStokes.Comparator.NavierStokesExistenceAndSmoothnessRn"
+      ]
      },
      "relies_on": [
       {

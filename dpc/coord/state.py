@@ -401,6 +401,9 @@ class State:
         self.sets_drawn[p.reviewer].append(at)
         self.sets_of[p.reviewer].append(p.set_id)
 
+    def _on_unit_shown(self, p: ev.UnitShown, at: datetime, _: Entry) -> None:
+        self.seen_units[p.reviewer].add((p.submission_id, p.declaration))
+
     def _on_lease_granted(self, p: ev.LeaseGranted, at: datetime, _: Entry) -> None:
         lease = LeaseSt(p.lease_id, p.reviewer, p.duty, p.ticket_id, p.claim_id, p.set_id, at,
                         ev.parse_ts(p.expires_at), p.expected_s)

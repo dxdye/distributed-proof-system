@@ -647,6 +647,60 @@ class Coordinator:
                 ticket_id=ticket.ticket_id, reviewer=rid, reason=reason.strip()))
 
     # ---------------------------------------------- discussion (C-25, S-21, S-22)
+    # ------------------------------------------------- context of a ticket
+    def context_map(self, rid: str, lease_id: str) -> dict[str, object]:
+        """The class-A units of the lease's submission with their dependencies
+        in both directions (concept §3, SR-21, C-39): names and kinds only.
+        Only units of TCB_new appear, definitions, structures and the main
+        theorem's statement; no proven lemma that mentions a unit."""
+        with self.lock:
+            lease = self._own_lease(rid, lease_id)
+            st = self.state
+            own = st.tickets[lease.ticket_id]
+            sub = st.submissions[own.submission_id]
+            views: dict[str, TicketSt] = {}
+            for tid in sub.tickets:
+                t = st.tickets[tid]
+                if t.ticket_class == "A":
+                    views.setdefault(t.view.declaration, t)
+            units = []
+            for decl, t in sorted(views.items()):
+                deps = [d for d in t.view.context if d in views]
+                units.append({
+                    "declaration": decl, "decl_kind": t.view.decl_kind, "depends_on": deps,
+                    "used_by": sorted(u for u, o in views.items() if decl in o.view.context),
+                    "own": decl == own.view.declaration,
+                    "seen": (sub.submission_id, decl) in st.seen_units[rid],
+                })
+            return {"root": sub.root, "own": own.view.declaration, "units": units}
+
+    def unfold(self, rid: str, lease_id: str, declaration: str) -> UnitView:
+        """Another class-A unit of the lease's submission, unfolded (concept
+        §8.8, C-39). Every person sees every unit in one version only: the one of
+        their own ticket if they had one, a planted copy included; otherwise the
+        original, and from then on that unit is not offered to them."""
+        with self.lock:
+            lease = self._own_lease(rid, lease_id)
+            st = self.state
+            own = st.tickets[lease.ticket_id]
+            sid = own.submission_id
+            if declaration == own.view.declaration:
+                return own.view
+            tickets = [t for t in self.unit_tickets(sid, declaration) if t.ticket_class == "A"]
+            if not tickets:
+                raise NotFound(f"{declaration} is not a class-A declaration of this submission")
+            ids = {t.ticket_id for t in tickets}
+            mine = [st.tickets[x.ticket_id] for x in st.leases.values()
+                    if x.reviewer == rid and x.ticket_id in ids]
+            if mine:
+                return mine[0].view
+            real = next((t for t in tickets if not self.vault.is_honeypot(t.ticket_id)),
+                        tickets[0])
+            if (sid, declaration) not in st.seen_units[rid]:
+                self._emit("unit.shown", ev.UnitShown(reviewer=rid, submission_id=sid,
+                                                      declaration=declaration))
+            return real.view
+
     def unit_tickets(self, submission_id: str, declaration: str) -> list[TicketSt]:
         sub = self.state.submissions.get(submission_id)
         if sub is None:

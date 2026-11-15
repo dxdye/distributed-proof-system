@@ -55,6 +55,18 @@ def _views(path: Path) -> list[dict[str, Any]]:
     return [r for r in lines[1:] if r.get("kind") == "view"]
 
 
+def _with_context(views: dict[str, UnitView]) -> dict[str, UnitView]:
+    """The class-A units each view uses directly, from the names in its
+    glossaries: the edges for unfolding (C-39). The service takes them from the
+    analysis; the renderings alone are what the snapshot has."""
+    out = {}
+    for decl, view in views.items():
+        used = {g.name for c in view.components for g in (*c.glossary, *c.trusted_glossary)}
+        out[decl] = view.model_copy(
+            update={"context": tuple(sorted(d for d in used & set(views) if d != decl))})
+    return out
+
+
 def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
             honeypot: dict[str, str] | None = None) -> dict[str, Any]:
     passage = paper.passage(view.declaration) if paper else None
@@ -81,7 +93,7 @@ def export(sources: list[Source], out: Path, ingest_log: Path | None = None) -> 
     counts = {"tickets": 0, "honeypots": 0}
     for n, src in enumerate(sources, start=1):
         paper = PaperMap.load(src.paper) if src.paper and src.paper.is_file() else None
-        views = {r["decl"]: UnitView.from_render(r) for r in _views(src.views)}
+        views = _with_context({r["decl"]: UnitView.from_render(r) for r in _views(src.views)})
         tickets = [_ticket(f"A-{n}{i:03d}", v, src.domain, paper)
                    for i, v in enumerate(views.values())]
         if src.mutants is not None and src.honeypots:

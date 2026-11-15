@@ -244,3 +244,31 @@ def test_library_definitions_wait_for_the_planted_errors(tmp_path: Path) -> None
     assert progress.detail(env.coord, sid, admin)["library_definitions"] == []
     env.log.close()
     env.vault.close()
+
+
+@pytest.mark.req("SR-06", "SR-21")
+def test_whoever_holds_a_planted_copy_unfolds_it_as_the_copy(tmp_path: Path) -> None:
+    """C-39: unfolding never shows the original next to one's own planted copy,
+    which would reveal the copy before the batch reveal."""
+    env = planted_env(tmp_path)
+    planted = next(t for t in env.coord.state.tickets.values()
+                   if env.vault.is_honeypot(t.ticket_id))
+    held: list[str] = []
+    for rid in env.people(20):  # someone is offered the planted copy; take it and one other
+        cs = env.coord.choice_set(rid)
+        if cs is None or planted.ticket_id not in cs.tickets:
+            continue
+        held.append(env.coord.lease(rid, cs.set_id, planted.ticket_id).lease_id)
+        env.coord.return_lease(rid, held[0])  # one version per person, held or not
+        nxt = env.coord.choice_set(rid)
+        assert nxt is not None
+        held.append(env.coord.lease(rid, nxt.set_id, nxt.tickets[0]).lease_id)
+        break
+    assert len(held) == 2, "the planted copy was never offered"
+    other_lease = held[1]
+    shown = env.coord.unfold(rid, other_lease, planted.view.declaration)
+    assert shown == planted.view  # the copy, as this person saw it
+    assert "mutated" in shown.components[0].text
+    assert env.events("unit.shown") == []  # nothing new was shown
+    env.log.close()
+    env.vault.close()

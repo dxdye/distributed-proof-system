@@ -200,6 +200,17 @@ class ChoiceSetDrawn(_P):
     at_limit: bool = False
 
 
+class UnitShown(_P):
+    """A reviewer unfolded another declaration of the submission and saw it in
+    the original (C-39). From then on it is not offered to them as a ticket:
+    with the original in mind, its planted copy could be told apart by
+    comparison instead of by mathematics."""
+
+    reviewer: str
+    submission_id: str
+    declaration: str
+
+
 class LeaseGranted(_P):
     lease_id: str
     reviewer: str
@@ -348,6 +359,7 @@ PAYLOADS: dict[str, type[_P]] = {
     "ticket.decided": TicketDecided,
     "choice_set.drawn": ChoiceSetDrawn,
     "lease.granted": LeaseGranted,
+    "unit.shown": UnitShown,
     "lease.extended": LeaseExtended,
     "lease.returned": LeaseEnded,
     "lease.expired": LeaseEnded,

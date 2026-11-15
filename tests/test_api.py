@@ -146,3 +146,53 @@ def test_a_reached_limit_is_reported_with_its_time_not_as_an_error(env: Env,
     body = r.json()
     assert body["tickets"] == [] and body["limit"]["reason"] == "unused"
     assert body["limit"]["until"] > body["limit"]["until"][:10]  # an ISO time
+
+
+@pytest.mark.req("SR-21", "SR-06")
+def test_unfolding_shows_each_unit_in_one_version_per_person(tmp_path: Path) -> None:
+    """C-39: a unit unfolded in the original is not offered later (its planted
+    copy could be compared); a unit one had as a ticket unfolds as one saw it."""
+    from dpc.coord import TicketSpec
+    from dpc.tickets.views import Component, GlossaryEntry, UnitView
+
+    from test_coord import params
+
+    env = Env(tmp_path, params(pair_window_s=0))
+    bound = UnitView(declaration="P.Bound", decl_kind="def", components=(
+        Component(target="type", text="ℕ → ℕ → Prop"),
+        Component(target="value", text="fun k m => k ≤ m")))
+    main = UnitView(declaration="P.main", decl_kind="theorem", context=("P.Bound",),
+                    components=(Component(target="type", text="∀ k, P.Bound k (k ^ 2)",
+                                          glossary=(GlossaryEntry(name="P.Bound", type="…",
+                                                                  origin="submission"),)),))
+    sid = env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
+                                    tickets=[TicketSpec(main, domain="a"),
+                                             TicketSpec(bound, domain="a")], root="P.main")
+    client = TestClient(create_app(env.coord, tick_seconds=None))
+    auth = register(client, "fay")
+    cs = client.post("/api/choice-set", headers=auth).json()
+    main_ticket = next(t for t in cs["tickets"] if t["declaration"] == "P.main")
+    lease = client.post("/api/leases", headers=auth, json={
+        "set_id": cs["set_id"], "ticket_id": main_ticket["ticket_id"]}).json()
+    lid = lease["lease_id"]
+    ctx = client.get(f"/api/leases/{lid}/context", headers=auth).json()
+    assert ctx["root"] == "P.main" and ctx["own"] == "P.main"
+    units = {u["declaration"]: u for u in ctx["units"]}
+    assert units["P.main"]["depends_on"] == ["P.Bound"]
+    assert units["P.Bound"]["used_by"] == ["P.main"] and not units["P.Bound"]["seen"]
+    unfolded = client.post(f"/api/leases/{lid}/unfold", headers=auth,
+                           json={"declaration": "P.Bound"}).json()
+    assert unfolded["view"]["components"][1]["text"] == "fun k m => k ≤ m"
+    assert len(env.events("unit.shown")) == 1
+    client.post(f"/api/leases/{lid}/unfold", headers=auth, json={"declaration": "P.Bound"})
+    assert len(env.events("unit.shown")) == 1  # once
+    seen = client.get(f"/api/leases/{lid}/context", headers=auth).json()
+    assert {u["declaration"]: u["seen"] for u in seen["units"]}["P.Bound"]
+    # From now on P.Bound is not offered to this person.
+    bound_tickets = {t.ticket_id for t in env.coord.unit_tickets(sid, "P.Bound")}
+    rid = env.coord.vault.reviewer_for_pseudonym("fay")
+    assert rid is not None
+    assert all(env.coord.why_not(rid, env.coord.state.tickets[t], "review") is not None
+               for t in bound_tickets)
+    r = client.post(f"/api/leases/{lid}/unfold", headers=auth, json={"declaration": "P.none"})
+    assert r.status_code == 404

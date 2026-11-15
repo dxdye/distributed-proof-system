@@ -85,6 +85,10 @@ class LeaseReq(_Req):
     ticket_id: str
 
 
+class UnfoldReq(_Req):
+    declaration: str
+
+
 class ReviewReq(_Req):
     verdict: Literal["correct", "incorrect"]
     reason: str = ""
@@ -455,6 +459,18 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
     def extend(lease_id: str, rid: Rid) -> dict[str, Any]:
         with coord.lock:
             return lease_view(call(coord.extend, rid, lease_id))
+
+    @app.get("/api/leases/{lease_id}/context")
+    def lease_context(lease_id: str, rid: Rid) -> dict[str, Any]:
+        """The map of the submission's class-A units around the ticket (C-39)."""
+        return call(coord.context_map, rid, lease_id)  # type: ignore[no-any-return]
+
+    @app.post("/api/leases/{lease_id}/unfold")
+    def lease_unfold(lease_id: str, req: UnfoldReq, rid: Rid) -> dict[str, Any]:
+        """Another unit, as this person sees it (C-39); recorded if new to them."""
+        view = annotate_view(call(coord.unfold, rid, lease_id, req.declaration))
+        return {"view": view.model_dump(mode="json"),
+                "relies_on": [g.model_dump(mode="json") for g in relies_on(view)]}
 
     @app.post("/api/leases/{lease_id}/return")
     def give_back(lease_id: str, rid: Rid) -> dict[str, bool]:

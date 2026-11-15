@@ -41,6 +41,11 @@ NOTES: dict[str, str] = {
                               "(MeasureTheory.integral_undef).",
     "MeasureTheory.MemLp": "For p = 0 it holds for every a.e. strongly measurable f "
                            "(MeasureTheory.memLp_zero_iff_aestronglyMeasurable).",
+    # Checked against Lean 4.34.1 and Mathlib d13f23b7, 2026-11-15:
+    "Nat.Coprime": "Coprime m n means gcd m n = 1. Since gcd 0 n = n, 0 is coprime only to "
+                   "1 (Nat.coprime_zero_left): it matters for windows that contain 0.",
+    "Nat.primeFactors": "0 and 1 have no prime factors: primeFactors 0 = primeFactors 1 = ∅ "
+                        "(Nat.primeFactors_zero, Nat.primeFactors_one).",
 }
 
 
