@@ -1,14 +1,52 @@
+/* Text font: JetBrains Mono Nerd Font, subset (src/fonts/README.md). */
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("./fonts/JetBrainsMonoNLNerdFont-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("./fonts/JetBrainsMonoNLNerdFont-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("./fonts/JetBrainsMonoNLNerdFont-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("./fonts/JetBrainsMonoNLNerdFont-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("./fonts/JetBrainsMonoNLNerdFont-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Distributed Proof Check: design system.
  *
  * Sober and well-structured, after the style of public-sector and academic
  * sites: white space, one dark-blue accent, clear hierarchy, strong focus
  * states. No official insignia. Light and dark scheme: `data-theme` on <html>
  * overrides the system preference (src/theme.ts). Fonts are self-hosted
- * (Inter, JetBrains Mono; SIL OFL), so no third-party content is loaded. */
+ * (JetBrains Mono Nerd Font for text, JetBrains Mono for code; SIL OFL), so no
+ * third-party content is loaded. */
 
 /* ------------------------------------------------------------------ tokens */
 :root {
-  --font-sans: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-text: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Consolas, monospace;
   --mono: "JetBrains Mono", "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
 
   --bg: #ffffff;
@@ -54,7 +92,7 @@
   --container: 72rem;
 
   color-scheme: light;
-  font-family: var(--font-sans);
+  font-family: var(--font-text);
   font-size: 16px;
   line-height: 1.6;
   color: var(--ink);
@@ -1293,7 +1331,7 @@ button.small {
 .hover-note {
   display: block;
   margin-top: 0.3rem;
-  font-family: var(--font-sans);
+  font-family: var(--font-text);
   font-size: 0.82rem;
   white-space: normal;
 }
