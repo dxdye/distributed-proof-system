@@ -23,6 +23,10 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   const [session, setSession] = useState<Session | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // On phones the navigation folds into a menu; it closes on every page change.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const where = route.join("/");
+  useEffect(() => setMenuOpen(false), [where]);
 
   // Who is signed in, and does that sign-in have a reviewer account?
   const refresh = useCallback(async () => {
@@ -151,7 +155,20 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
                 <small>Human review of machine-checked mathematics</small>
               </span>
             </a>
-            <nav className="main-nav" aria-label="Main">
+            <button
+              className="menu-toggle"
+              aria-expanded={menuOpen}
+              aria-controls="main-nav"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <span className={menuOpen ? "menu-icon open" : "menu-icon"} aria-hidden="true" />
+              {menuOpen ? "Close" : "Menu"}
+            </button>
+            <nav
+              id="main-nav"
+              className={menuOpen ? "main-nav open" : "main-nav"}
+              aria-label="Main"
+            >
               {/* Your work · public · your role */}
               {signedIn && (
                 <>
