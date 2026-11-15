@@ -196,9 +196,10 @@ class Coordinator:
             self._emit("reviewer.maintainer_appointed", ev.MaintainerAppointed(reviewer=rid))
 
     def unused_sets(self, rid: str) -> int:
-        """Choice sets of the last 24 hours that no ticket was taken from:
-        expired, or discarded by a change of preferences. Sets drawn at the
-        work-in-progress limit do not count; nothing could be taken (C-32)."""
+        """Choice sets of the last 24 hours that led to no review: expired or
+        discarded by a change of preferences without a ticket taken, or whose
+        ticket was given back or lapsed. Sets drawn at the work-in-progress limit
+        do not count; nothing could be taken (C-32)."""
         st, now = self.state, self.now()
         current = st.latest_set.get(rid)
         count = 0

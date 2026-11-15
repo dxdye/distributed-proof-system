@@ -603,20 +603,28 @@ def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
 
 @pytest.mark.req("SR-38")
 def test_sets_left_unused_are_limited_taking_tickets_is_not(tmp_path: Path) -> None:
-    """Rerolling, waiting for sets to expire or discarding them, is how one sees
-    a target ticket more often than chance allows (C-32). Sets a ticket was
-    taken from, and sets drawn at the work-in-progress limit, do not count."""
+    """Rerolling, waiting for sets to expire, discarding them or taking and
+    returning a ticket, is how one sees a target ticket more often than chance
+    allows (C-32). Sets that led to a review, and sets drawn at the
+    work-in-progress limit, do not count."""
     env = Env(tmp_path, params(pair_window_s=0))
     for title in "PQRS":
         env.coord.open_submission(title=title, repo_url=f"https://x/{title}",
                                   commit=title.lower() * 40, tickets=specs(title, 12))
     rid = env.people(1)[0]
     ttl = env.params.choice_set_ttl_s + 1
-    taken = env.coord.choice_set(rid)
-    assert taken is not None
-    lease = env.coord.lease(rid, taken.set_id, taken.tickets[0]).lease_id  # used: free
-    env.coord.return_lease(rid, lease)
-    for i in range(env.params.max_unused_sets_per_day):
+    reviewed = env.coord.choice_set(rid)
+    assert reviewed is not None
+    lease = env.coord.lease(rid, reviewed.set_id, reviewed.tickets[0]).lease_id
+    env.clock.advance(minutes=20)
+    env.coord.submit_review(rid, lease, verdict="correct")  # led to a review: free
+    assert env.coord.unused_sets(rid) == 0
+    returned = env.coord.choice_set(rid)
+    assert returned is not None
+    lease = env.coord.lease(rid, returned.set_id, returned.tickets[0]).lease_id
+    env.coord.return_lease(rid, lease)  # taking and giving back is a look, not a review
+    assert env.coord.unused_sets(rid) == 1
+    for i in range(1, env.params.max_unused_sets_per_day):
         assert env.coord.choice_set(rid) is not None
         assert env.coord.unused_sets(rid) == i  # the one on offer is not unused yet
         env.clock.advance(seconds=ttl)

@@ -159,7 +159,7 @@ class ChoiceSetSt:
     consumed: bool = False
     preferences_applied: bool = False
     at_limit: bool = False
-    used: bool = False  # a ticket was taken from it (C-32)
+    used: bool = False  # a ticket was taken from it and not given up (C-32)
 
 
 def _days(a: datetime, b: datetime) -> float:
@@ -420,14 +420,22 @@ class State:
         lease.status = status
         return lease
 
+    def _unuse_set(self, lease: LeaseSt) -> None:
+        """A ticket given up again leaves its set unused: otherwise taking and
+        returning would be a reroll that no limit counts (C-32). This limits
+        looks, not trust."""
+        if lease.set_id is not None and lease.set_id in self.choice_sets:
+            self.choice_sets[lease.set_id].used = False
+
     def _on_lease_returned(self, p: ev.LeaseEnded, at: datetime, _: Entry) -> None:
-        self._end_lease(p.lease_id, "returned")  # no penalty (SR-26)
+        self._unuse_set(self._end_lease(p.lease_id, "returned"))  # no penalty (SR-26)
 
     def _on_lease_cancelled(self, p: ev.LeaseEnded, at: datetime, _: Entry) -> None:
         self._end_lease(p.lease_id, "cancelled")
 
     def _on_lease_expired(self, p: ev.LeaseEnded, at: datetime, _: Entry) -> None:
         lease = self._end_lease(p.lease_id, "expired")
+        self._unuse_set(lease)
         person = self.reviewers[lease.reviewer]  # reliability only, never trust (SR-27)
         person.reliability = person.reliability.lapsed()
 

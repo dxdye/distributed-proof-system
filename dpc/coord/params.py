@@ -31,9 +31,10 @@ class CoordParams:
     #: Hard cap on choice sets per reviewer and day, used or not (C-32).
     max_choice_sets_per_day: int = 24
     #: Sets left unused per day: drawn, then expired or discarded without a
-    #: ticket taken from them. Bounds rerolling, the way to see a target ticket
-    #: more often than chance allows; taking tickets is not limited by it.
-    #: Sets drawn at the work-in-progress limit do not count (C-32).
+    #: ticket taken from them, or whose ticket was given back or lapsed. Bounds
+    #: rerolling, the way to see a target ticket more often than chance allows;
+    #: reviewing is not limited by it. Sets drawn at the work-in-progress limit
+    #: do not count (C-32).
     max_unused_sets_per_day: int = 6
     # --- leases (SR-26, SR-27, SR-30) ---
     lease_alpha: float = 0.1  # τ = F⁻¹(1 − α)
