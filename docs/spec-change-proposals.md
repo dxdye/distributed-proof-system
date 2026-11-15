@@ -760,6 +760,133 @@ this is in effect one domain per paper.
 Otherwise hard tickets are avoided once preferences make easy ones easy to
 find, and the hardest tickets wait longest.
 
+### C-39 · §3, §8.8, §16 step 3, SR-21, SR-24 — Class-A tickets that can be checked · refine
+*Problem (walkthrough with the project owner, 2026-11-15):* the Erdős 970
+ticket `OAI.Erdos970.Erdos970Final.erdos_970_quadratic` could not be
+checked. Its statement is only the name `…Targets.JacobsthalQuadratic`; the
+glossary gave its type `Prop`, "Builds on" gave names, no passage was mapped,
+and the tier said "easy". The content sat in two other tickets
+(`JacobsthalQuadratic`, `IsJacobsthalBound`). Concept §3 asks for the
+definitions a statement uses, the passage and the neighbours in the graph,
+§8.8 for unfolding definitions, SR-21 for go-to-definition (S-14: not built).
+
+*The rule for everything below:* a planted copy may stand out only in ways a
+real error can. A real error is a false statement whose proof the kernel
+checked: everything proven fits it. For a mutant, everything proven fits the
+original. So every aid must be producible for the mutant in the same way, and
+nothing proven that mentions the reviewed declaration is shown during class
+A: not its proof, not the lemmas using it with their statements and names
+(`…_lt_iff` gives the relation away). Otherwise "does the proof fit the
+statement?" finds planted copies without mathematics. Definitions and Mathlib
+are safe: definitions are not proven (a planted copy shows its mutant there),
+and Mathlib is the same for every ticket. A meaning in words stays absent on
+purpose: it would be a back-translation, only after round 1 (SR-36); the
+passage gives the meaning, and comparing the two is the review.
+
+*Implemented (2026-11-15):*
+- **Unfolding and go-to-definition.** Under the statement, "Builds on" and
+  "Used by" list the class-A declarations of the submission; each unfolds on
+  request, level by level down to Lean and Mathlib, in the plain rendering,
+  with only the conventions to know (the rest on hover). The main theorem is
+  marked; a folded map lists all declarations of the formalization. Only
+  units of TCB_new appear (definitions, structures, the main theorem's
+  statement), never a lemma of class B. Server side: `GET
+  /api/leases/<id>/context` (names, kinds, edges), `POST
+  /api/leases/<id>/unfold` (one view).
+- **One version per person** (added in the implementation). Unfolding the
+  original of a declaration D in one ticket would give away D's planted copy
+  in a later ticket, by comparison; and someone who reviewed D's copy would
+  learn from unfolding D elsewhere that it was a copy, before the batch
+  reveal. So every person sees every declaration in one version: the one of
+  their own ticket (a planted copy included) if they had one, otherwise the
+  original, recorded as `unit.shown`, after which D is not offered to them as
+  a ticket. The ticket says so next to the unfolding.
+- **The main theorem needs its passage:** `open-submission` refuses a
+  submission without one (§16 step 3, SR-24, ADR 0012). Without a common
+  passage every reviewer compares with another place, and the k_min votes do
+  not answer the same question. Other declarations may be mapped later.
+  Passages for Erdős 970 and Seymour are written for the walkthrough, as
+  paraphrases.
+- **The tier is measured on the unfolded statement** (`tier_of_unfolded`):
+  the statement with every declaration it builds on. A one-name statement is
+  no longer "easy".
+- **Hover for chained field notation** looks up every link
+  (`n.primeFactors.card`, `(a + i).natAbs.Coprime n`).
+- **Conventions:** `Nat.Coprime` (0 is coprime only to 1,
+  `Nat.coprime_zero_left`), `Nat.primeFactors` (none for 0 and 1,
+  `Nat.primeFactors_zero`, `Nat.primeFactors_one`); checked against Lean
+  4.34.1 and Mathlib d13f23b7.
+- **No repository link in the ticket header**, cosmetically: the name is
+  enough to search, but the platform should not invite a comparison. The
+  submission page keeps it.
+- Docstrings of the submission's constants are empty because the source has
+  none (openai/math, `Model.lean`), not because rendering drops them.
+
+*Still open (covered by the specification, not built yet):*
+- For Lean and Mathlib constants, their definition on request, one level
+  deep, or a link to the Mathlib documentation. For junk values the
+  definition counts, not the docstring. The hosted documentation shows only
+  the current Mathlib: build it for the pinned version, or link with a note.
+- The declaration's own docstring (§3). Borderline: a contradiction with the
+  docstring also occurs for real errors, probably more often for planted
+  copies; measure in the pilot how often they are found that way.
+- Source with proofs after the batch reveal (§8.9, SR-37), on the progress
+  page and in the discussions: from the reveal date, not right after one's
+  own verdict.
+- A later event for maintainers to map or correct a passage of an open
+  submission; today passages are set when it is opened.
+
+*Pilot measures:* returns, time per ticket and agreement between reviewers;
+planted errors found per mutation kind and via the docstring; share of
+justifications that cite the passage; A/B with and without unfolding and
+passage. Acceptance test: Erdős 970, the whole statement with its passage on
+one screen, every name in it looked up, `primeFactors` and `natAbs`
+included.
+
+*Evidence:* `TicketContext`, `Coordinator.context_map`, `Coordinator.unfold`,
+`tier_of_unfolded`, `require_main_passage`; tests
+`test_unfolding_shows_each_unit_in_one_version_per_person`,
+`test_whoever_holds_a_planted_copy_unfolds_it_as_the_copy`,
+`test_a_statement_that_is_a_single_name_is_measured_unfolded`,
+`test_the_main_theorem_needs_its_passage_before_review`.
+
+### C-40 · I-3, §15 — No proof in class A during review · refine
+*Current:* interface I-3 lists `source_lean` for class-A tickets; §15 assumes
+that comparing with the repository costs about as much as a review.
+*Proposed:* remove `source_lean` from class A during review and state the
+rule of C-39 instead (ADR 0008 already deviates so). In the threat table of
+§15, drop the assumption: comparing takes about a minute and also tells which
+tickets are real (ADR 0006, simulation: lookup attackers earn more trust than
+honest reviewers).
+
+### C-41 · ADR 0006, §8.2 — More kinds of planted errors and of tickets · decide
+Each of the following needs the project owner's decision:
+- **Theorems that only confirm a name** (decide). If the type of a theorem
+  is exactly one `Prop` constant of the submission, it joins the unit of that
+  definition (`dpc/analysis/tcb.py`, `units()`). SR-05 still holds (every
+  declaration in exactly one ticket). It departs slightly from §3 ("one
+  declaration"), but units already group auxiliary declarations; without it,
+  four people check the same content twice.
+- **Planted errors on the paper side** (decide; ADR 0006 option 2): the Lean
+  stays genuine, the passage is changed subtly. Its proof fits its statement,
+  as for a real fidelity error, so it obeys the rule of C-39 even with proofs
+  visible. Conditions: every passage is paraphrased uniformly, no verbatim
+  quotes (otherwise the arXiv PDF exposes the change); a person confirms every
+  change as really different (there is no automatic equivalence filter for
+  text). Gap: docstrings that quote the paper expose them too.
+- **Visibility by kind of ticket** (decide), building on the mixed form of SE
+  §8.3: fidelity tickets (experts) with planted errors on the paper side only,
+  proofs and source visible; question tickets for everyone (junk values,
+  vacuity, edge cases) with Lean mutants and no proofs. Everybody knows the
+  kind, and both kinds carry the same share of planted errors, so visibility
+  tells nothing.
+- **Proofs during review** (decide): not for now; decide again after the
+  pilot, with data on how well planted errors are disguised (AS-5).
+- **Class B:** how planted errors should look there is open; with proofs
+  visible, Lean mutants are recognised at once.
+- *Later:* `#eval` examples and a search for counterexamples (§8.8) need the
+  mutant built in the sandbox as well (SR-20); expensive.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -981,3 +1108,16 @@ from the preferred domains where possible." See C-32.
 *Proposed:* Decide whether preferences, choice sets and choices stay in the
 public audit log, move to the vault, or are published as commitments only.
 See C-35.
+
+### S-34 · SE §8.3 Mixed form — context for class A · refine
+*Proposed:* The assumption "a class-A declaration can be judged without much
+context" fails for declarations whose content lies in another one (Erdős 970:
+the main theorem states only a name). Add: "Class-A tickets unfold the
+declarations of the submission they build on, on request; every person sees
+every declaration in one version." See C-39.
+
+### S-35 · SR-21 Infoview — content and definitions on request · refine
+*Proposed:* Add to SR-21: "The glossary shows, for constants of the
+submission, their content (unfoldable), and for Lean and Mathlib constants
+their definition on request. Hover works for every link of a dotted name."
+Complements S-14 and S-27. See C-39.
