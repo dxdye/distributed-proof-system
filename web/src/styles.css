@@ -62,16 +62,16 @@
   --muted: #56606d;
   --line: #dde2e8;
   --line-strong: #c3cad3;
-  --accent: #0b4f8a;
-  --accent-hover: #083c69;
+  --accent: #81909b; /* trial 2026-11-15, was #0b4f8a */
+  --accent-hover: #6b7a85;
   --accent-ink: #ffffff;
-  --accent-soft: #e8f0f8;
-  --btn-bg: #0b4f8a;
+  --accent-soft: #eef1f3;
+  --btn-bg: #81909b;
   --btn-ink: #ffffff;
-  --btn-border: #0b4f8a;
-  --btn-hover-bg: #083c69;
-  --btn-hover-border: #083c69;
-  --mark-bg: #0b4f8a;
+  --btn-border: #81909b;
+  --btn-hover-bg: #6b7a85;
+  --btn-hover-border: #6b7a85;
+  --mark-bg: #81909b;
   --mark-ink: #ffffff;
   --error: #b3261e;
   --error-soft: #fbeceb;
@@ -90,7 +90,7 @@
   --footer-muted: #9aa4b1;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
   --shadow-lg: 0 10px 30px rgba(16, 24, 40, 0.14);
-  --focus: 0 0 0 3px #ffffff, 0 0 0 5px #0b4f8a;
+  --focus: 0 0 0 3px #ffffff, 0 0 0 5px #81909b;
 
   --radius: 2px; /* controls: sharp, as on public-sector sites */
   --radius-lg: 10px;
