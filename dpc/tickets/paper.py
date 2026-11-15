@@ -81,3 +81,13 @@ class PaperMap(_Model):
     def domain(self, declaration: str) -> str | None:
         unit = self.units.get(declaration)
         return unit.domain if unit else None
+
+
+def require_main_passage(paper: PaperMap | None, root: str) -> None:
+    """The main theorem must have its paper passage before review starts
+    (concept §16 step 3, SR-24, ADR 0012, C-39): without a common passage every
+    reviewer compares with another place, and the k_min votes do not answer the
+    same question. Other class-A declarations may follow later."""
+    if paper is None or paper.passage(root) is None:
+        raise ValueError(f"the main theorem {root} has no paper passage: map it in the paper "
+                         "file (paper.yaml) before opening the submission")

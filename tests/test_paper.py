@@ -119,3 +119,22 @@ def test_tickets_without_a_passage_cannot_be_contested(env: Env) -> None:
     lid = env.take(rid)
     with pytest.raises(CoordError, match="no paper passage"):
         env.coord.contest_mapping(rid, lid, "there is no passage, so nothing to contest")
+
+
+@pytest.mark.req("SR-24")
+def test_the_main_theorem_needs_its_passage_before_review(tmp_path: Path) -> None:
+    """C-39: without a common passage the votes do not answer the same question."""
+    from dpc.tickets.paper import require_main_passage
+
+    with pytest.raises(ValueError, match="no paper passage"):
+        require_main_passage(None, "P.main")
+    paper_file = tmp_path / "paper.yaml"
+    paper_file.write_text(
+        "source: {title: On P, url: https://arxiv.org/abs/0000.00000}\n"
+        "mapped_by: maintainer\n"
+        "units:\n"
+        "  P.helper: {locator: Lemma 2, statement: Something.}\n", "utf-8")
+    paper = PaperMap.load(paper_file)
+    with pytest.raises(ValueError, match="P.main"):
+        require_main_passage(paper, "P.main")
+    require_main_passage(paper, "P.helper")

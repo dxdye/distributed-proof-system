@@ -35,7 +35,7 @@ from dpc.lean.workspace import VolumeWorkspace
 from dpc.requirements import load_requirements
 from dpc.sim import ReviewerType, SimConfig, simulate
 from dpc.sim.study import Grid, render_markdown, run_study
-from dpc.tickets.paper import PaperMap
+from dpc.tickets.paper import PaperMap, require_main_passage
 
 DEFAULT_CACHE = Path(".dpc-cache")
 
@@ -244,6 +244,11 @@ def cmd_open_submission(args: argparse.Namespace) -> int:
         analysis = merge(analysis, Analysis.load(metadata))
     paper_file = Path(args.paper) if args.paper else workdir / "paper.yaml"
     paper = PaperMap.load(paper_file) if paper_file.is_file() else None
+    try:
+        require_main_passage(paper, submission.root)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 2
     specs = ticket_specs(analysis, submission.commit, load_views(workdir / "views.jsonl"),
                          paper)
     coord = _coordinator(args)
