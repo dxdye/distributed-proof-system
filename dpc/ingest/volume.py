@@ -6,6 +6,7 @@ cache step and the provenance check of the hardened set.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from dpc.audit import AuditLog, canonical_json, sha256_hex
 from dpc.ingest.pipeline import IngestError, artifact_key, check_replay_against, record_replay
 from dpc.ingest.submission import Submission
 from dpc.lean.executor import DockerExecutor, RunResult
+from dpc.lean.project import Manifest
 from dpc.lean.replay import ReplayReport
 from dpc.lean.workspace import VolumeWorkspace, compare_digests
 
@@ -72,11 +74,22 @@ def _step(result: RunResult, step: str, log: AuditLog, log_dir: Path | None = No
                           + "\n".join(errors[:20]) + "\n…\n" + result.output.strip()[-2000:])
 
 
-def ingest_in_volume(
-    submission: Submission, *, executor: DockerExecutor, log: AuditLog, out_dir: Path
-) -> VolumeIngestResult:
-    logs = out_dir.parent / "logs"
-    log.append("submission.received", submission.model_dump())
+@dataclass(frozen=True)
+class _Prepared:
+    """A volume with fetched sources and a verified trusted snapshot."""
+
+    ws: VolumeWorkspace
+    manifest: Manifest
+    key: str
+    image: str
+    before: dict[str, str]
+
+
+def _prepare(submission: Submission, *, executor: DockerExecutor, log: AuditLog,
+             logs: Path) -> _Prepared:
+    """Fetch, Mathlib cache and the snapshot of the hardened set (trusted
+    steps), or the re-verification of a reused volume against its snapshot.
+    Afterwards the volume is marked untrusted: the build runs foreign code."""
     ws = VolumeWorkspace(executor, volume_name(submission), submission.project_dir)
     ws.create()
 
@@ -138,6 +151,16 @@ def ingest_in_volume(
                               "remove it and start from scratch")
 
     ws.mark_untrusted(image)
+    return _Prepared(ws, manifest, key, image, before)
+
+
+def ingest_in_volume(
+    submission: Submission, *, executor: DockerExecutor, log: AuditLog, out_dir: Path
+) -> VolumeIngestResult:
+    logs = out_dir.parent / "logs"
+    log.append("submission.received", submission.model_dump())
+    prep = _prepare(submission, executor=executor, log=log, logs=logs)
+    ws, manifest, key, image, before = prep.ws, prep.manifest, prep.key, prep.image, prep.before
     build = ws.build(image, manifest, [submission.root_module])
     after = ws.digest_hardened(image, manifest)
     integrity = compare_digests(before, after)
@@ -159,7 +182,16 @@ def ingest_in_volume(
     _step(ws.replay(image, manifest, roots=[submission.root_module], out=replay_path),
           "replay", log, logs)
     replay = record_replay(log, key, replay_path)
+    return _analyse(submission, prep, log=log, out_dir=out_dir, logs=logs, replay=replay)
 
+
+def _analyse(submission: Submission, prep: _Prepared, *, log: AuditLog, out_dir: Path,
+             logs: Path, replay: ReplayReport, shared_replay: bool = False
+             ) -> VolumeIngestResult:
+    """Both analysis runs of one main theorem, their cross-checks with the
+    replay and the hardened set, and the findings. A shared replay (batch) is
+    cut down to what this theorem depends on and written next to the analysis."""
+    ws, manifest, key, image = prep.ws, prep.manifest, prep.key, prep.image
     paths = {mode: out_dir / f"{mode}.jsonl" for mode in ("core", "metadata")}
     for mode, path in paths.items():
         result = ws.analyze(image, manifest, root=submission.root,
@@ -173,6 +205,8 @@ def ingest_in_volume(
         log.append("analysis.mismatch", {"artifact_key": key, "reason": str(exc)})
         raise IngestError(f"core and metadata analysis disagree: {exc}") from exc
 
+    if shared_replay:
+        replay = restrict_replay(replay, analysis, out_dir / "replay.jsonl")
     by_name = unverified_hardened_modules(analysis, ws.official_modules(image, manifest))
     summary = summarize(analysis)
     log.append(
@@ -196,3 +230,101 @@ def ingest_in_volume(
     unverified = tuple(sorted(set(by_name) | set(by_location)))
     return VolumeIngestResult(ws.volume, paths["core"], paths["metadata"], analysis, summary,
                               key, unverified, replay, failures)
+
+
+@dataclass(frozen=True)
+class BatchResult:
+    """Several main theorems of one repository commit, ingested together."""
+
+    results: dict[str, VolumeIngestResult]  # by root
+    failed: dict[str, str]  # root -> why it was skipped
+    replay: ReplayReport | None
+
+
+def _same_artifact(submissions: list[Submission]) -> None:
+    first = submissions[0]
+    for s in submissions[1:]:
+        if (s.repo_url, s.commit, s.project_dir, s.patch_dir) != \
+                (first.repo_url, first.commit, first.project_dir, first.patch_dir):
+            raise IngestError("a batch needs one repository, commit, project and patch "
+                              f"directory; {s.root} differs from {first.root}")
+    roots = [s.root for s in submissions]
+    if len(set(roots)) != len(roots):
+        raise IngestError("a main theorem is listed twice")
+
+
+def restrict_replay(report: ReplayReport, analysis: Analysis, path: Path) -> ReplayReport:
+    """The part of a shared replay that one main theorem depends on: the
+    modules of its analysed declarations. Written to ``path`` for the record
+    of what the result relies on (C-29)."""
+    modules = {d.module for d in analysis.decls.values() if d.module is not None}
+    kept = [m for m in report.modules if m.module in modules]
+    records = [report.header.model_dump(mode="json", by_alias=True),
+               *(m.model_dump(mode="json") for m in kept)]
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records),
+                    encoding="utf-8", newline="\n")
+    return ReplayReport(report.header, tuple(kept))
+
+
+def ingest_batch_in_volume(
+    submissions: list[Submission], *, executor: DockerExecutor, log: AuditLog, out_root: Path,
+    name: dict[str, str],
+) -> BatchResult:
+    """Ingest several main theorems of the same repository commit (C-28).
+
+    Everything that depends only on the artifact runs once: fetch, Mathlib
+    cache, snapshot of the hardened set, and the kernel replay, over the import
+    closures of all main theorems together (C-29: check once, share). The
+    build runs per main theorem, incrementally in the same volume, so that one
+    that does not build does not hold up the others. The analysis runs per main
+    theorem, into ``out_root/<name>/analysis``; each gets the part of the shared
+    replay its declarations depend on.
+    """
+    if not submissions:
+        raise IngestError("nothing to ingest")
+    _same_artifact(submissions)
+    shared = out_root / "shared"
+    shared.mkdir(parents=True, exist_ok=True)
+    for s in submissions:
+        log.append("submission.received", s.model_dump())
+    prep = _prepare(submissions[0], executor=executor, log=log, logs=shared / "logs")
+    ws, manifest, key, image = prep.ws, prep.manifest, prep.key, prep.image
+
+    built: list[Submission] = []
+    failed: dict[str, str] = {}
+    for s in submissions:
+        result = ws.build(image, manifest, [s.root_module])
+        try:
+            _step(result, "build", log, out_root / name[s.root] / "logs")
+            built.append(s)
+        except IngestError as exc:
+            failed[s.root] = str(exc).splitlines()[0]
+    after = ws.digest_hardened(image, manifest)
+    integrity = compare_digests(prep.before, after)
+    log.append("hardened.verified", {
+        "artifact_key": key, "ok": integrity.ok, "changed": list(integrity.changed[:50]),
+        "added": list(integrity.added[:50]), "sha256": _digest_of(after),
+    })
+    if not integrity.ok:
+        raise IngestError(
+            "a build modified hardened packages — refusing to analyse: "
+            f"{len(integrity.changed)} changed, {len(integrity.added)} added")
+    if not built:
+        return BatchResult({}, failed, None)
+
+    replay_path = shared / "replay.jsonl"
+    _step(ws.replay(image, manifest, roots=[s.root_module for s in built], out=replay_path),
+          "replay", log, shared / "logs")
+    replay = record_replay(log, key, replay_path)
+
+    results: dict[str, VolumeIngestResult] = {}
+    for s in built:
+        out_dir = out_root / name[s.root] / "analysis"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            results[s.root] = _analyse(s, prep, log=log, out_dir=out_dir,
+                                       logs=out_root / name[s.root] / "logs", replay=replay,
+                                       shared_replay=True)
+        except IngestError as exc:
+            failed[s.root] = str(exc).splitlines()[0]
+    return BatchResult(results, failed, replay)

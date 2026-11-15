@@ -27,7 +27,7 @@ from dpc.domain.decision import DecisionParams
 from dpc.domain.trust import RoleThresholds
 from dpc.honeypots import HoneypotPool, MutantFileSource, MutantSet, Origin, load_registry
 from dpc.ingest import Submission, ingest
-from dpc.ingest.volume import ingest_in_volume, volume_name
+from dpc.ingest.volume import ingest_batch_in_volume, ingest_in_volume, volume_name
 from dpc.lean.executor import DockerExecutor, HostExecutor, LeanExecutor, Limits
 from dpc.lean.project import Manifest
 from dpc.lean.render import merge_mutants, merge_views
@@ -107,6 +107,31 @@ def cmd_ingest(args: argparse.Namespace) -> int:
             "kernel_replay": result.replay.summary(), "blocking": result.blocking,
         })
     return 0
+
+
+def cmd_ingest_batch(args: argparse.Namespace) -> int:
+    """Several main theorems of one commit: fetch, snapshot and kernel replay
+    once, build and analysis per theorem (C-28, C-29). Each submission file's
+    name (without .json) names its workdir under --workdir-root."""
+    files = [Path(f) for f in args.submissions]
+    subs = [Submission.model_validate_json(f.read_text("utf-8")) for f in files]
+    names = {s.root: f.stem for s, f in zip(subs, files, strict=True)}
+    if len(set(names.values())) != len(names):
+        print("two submission files have the same name", file=sys.stderr)
+        return 2
+    limits = Limits(cpus=args.cpus, memory=args.memory, timeout_s=args.timeout_h * 3600)
+    root = Path(args.workdir_root).resolve()
+    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+    with AuditLog(args.log) as log:
+        batch = ingest_batch_in_volume(subs, executor=DockerExecutor(limits=limits), log=log,
+                                       out_root=root, name=names)
+    _print({
+        "kernel_replay": batch.replay.summary() if batch.replay else None,
+        "ingested": {names[r]: _report(v.analysis) | {"blocking": v.blocking}
+                     for r, v in batch.results.items()},
+        "failed": {names[r]: why for r, why in batch.failed.items()},
+    })
+    return 0 if batch.results else 1
 
 
 def cmd_summary(args: argparse.Namespace) -> int:
@@ -406,6 +431,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--memory", default=Limits.memory)
     p.add_argument("--timeout-h", type=float, default=Limits.timeout_s / 3600)
     p.set_defaults(func=cmd_ingest)
+
+    p = sub.add_parser("ingest-batch",
+                       help="several main theorems of one commit, sharing the kernel replay")
+    p.add_argument("submissions", nargs="+", help="I-1 JSON files, one per main theorem")
+    p.add_argument("--workdir-root", required=True, help="one workdir per file name")
+    p.add_argument("--log", default="data/audit.sqlite")
+    p.add_argument("--cpus", type=float, default=Limits.cpus)
+    p.add_argument("--memory", default=Limits.memory)
+    p.add_argument("--timeout-h", type=float, default=Limits.timeout_s / 3600)
+    p.set_defaults(func=cmd_ingest_batch)
 
     p = sub.add_parser("summary", help="summarise an analysis file")
     p.add_argument("file")
