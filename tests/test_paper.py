@@ -135,6 +135,6 @@ def test_the_main_theorem_needs_its_passage_before_review(tmp_path: Path) -> Non
         "units:\n"
         "  P.helper: {locator: Lemma 2, statement: Something.}\n", "utf-8")
     paper = PaperMap.load(paper_file)
-    with pytest.raises(ValueError, match="P.main"):
+    with pytest.raises(ValueError, match=r"P.main"):
         require_main_passage(paper, "P.main")
     require_main_passage(paper, "P.helper")
