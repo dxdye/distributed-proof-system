@@ -1,4 +1,5 @@
-/* Text font: JetBrains Mono Nerd Font, subset (src/fonts/README.md). */
+/* Optional text font (font switch in the footer, src/font.ts): JetBrains Mono
+ * Nerd Font, subset (src/fonts/README.md). Loaded only when chosen. */
 @font-face {
   font-family: "JetBrainsMono Nerd Font";
   src: url("./fonts/JetBrainsMonoNLNerdFont-Regular.woff2") format("woff2");
@@ -41,12 +42,16 @@
  * sites: white space, one dark-blue accent, clear hierarchy, strong focus
  * states. No official insignia. Light and dark scheme: `data-theme` on <html>
  * overrides the system preference (src/theme.ts). Fonts are self-hosted
- * (JetBrains Mono Nerd Font for text, JetBrains Mono for code; SIL OFL), so no
- * third-party content is loaded. */
+ * (Inter or, by choice, JetBrains Mono Nerd Font for text, JetBrains Mono for
+ * code; SIL OFL), so no third-party content is loaded. */
 
 /* ------------------------------------------------------------------ tokens */
-:root {
+:root[data-font="mono"] {
   --font-text: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+:root {
+  --font-text: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
 
   --bg: #ffffff;
@@ -1192,6 +1197,10 @@ button.small {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.appearance-label {
+  margin-left: 0.6rem;
 }
 .site-footer .theme-switch {
   border-color: rgba(255, 255, 255, 0.25);
@@ -2243,3 +2252,4 @@ ul.basis p {
   align-items: center;
   gap: 1rem;
 }
+

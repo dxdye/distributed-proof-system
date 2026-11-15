@@ -310,10 +310,10 @@ function PrivacyEn({ d }: { d: LegalData }) {
       <p>
         Only what signing in technically requires is stored: your sign-in session (session storage)
         or your access token, the fact that you have read the storage notice (local storage), a
-        colour scheme chosen for the current visit (session storage), and the session cookies of the
-        sign-in service. Fonts are served by this server, not by third parties. No consent is
-        required for this (§ 25 (2) no. 2 TDDDG). There are no analytics or tracking services and no
-        third-party content.
+        colour scheme and font chosen for the current visit (session storage), and the session
+        cookies of the sign-in service. Fonts are served by this server, not by third parties. No
+        consent is required for this (§ 25 (2) no. 2 TDDDG). There are no analytics or tracking
+        services and no third-party content.
       </p>
 
       <h3>5. Legal basis</h3>

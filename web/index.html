@@ -7,10 +7,12 @@
     <title>Distributed Proof Check</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>
-      // Apply the stored colour scheme before the first paint (see src/theme.ts).
+      // Apply the stored colour scheme and font before the first paint (src/theme.ts, src/font.ts).
       try {
         var t = sessionStorage.getItem("dpc.theme");
         if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+        if (sessionStorage.getItem("dpc.font") === "mono")
+          document.documentElement.setAttribute("data-font", "mono");
       } catch (e) {}
     </script>
   </head>

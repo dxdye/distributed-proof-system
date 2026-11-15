@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { getFont, setFont, type FontChoice } from "../font";
 import { getTheme, setTheme, type ThemeChoice } from "../theme";
 
-// Page frame: brand mark, colour-scheme switch, footer.
+// Page frame: brand mark, colour-scheme and font switches, footer.
 
 /** The mark: ⊢, "is provable", in a square. Own design, no official insignia. */
 export function BrandMark() {
@@ -40,6 +41,32 @@ export function ThemeSwitch() {
           }}
         >
           {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const FONTS: { value: FontChoice; label: string; title: string }[] = [
+  { value: "sans", label: "Inter", title: "Inter, the standard text font" },
+  { value: "mono", label: "JetBrains Mono", title: "JetBrains Mono Nerd Font for all text" },
+];
+
+export function FontSwitch() {
+  const [choice, setChoice] = useState<FontChoice>(getFont);
+  return (
+    <div className="theme-switch" role="group" aria-label="Text font">
+      {FONTS.map((f) => (
+        <button
+          key={f.value}
+          aria-pressed={choice === f.value}
+          title={f.title}
+          onClick={() => {
+            setFont(f.value);
+            setChoice(f.value);
+          }}
+        >
+          {f.label}
         </button>
       ))}
     </div>
@@ -91,6 +118,7 @@ export function SiteFooter() {
           </span>
           <span className="appearance">
             Appearance <ThemeSwitch />
+            <span className="appearance-label">Font</span> <FontSwitch />
           </span>
         </div>
       </div>
