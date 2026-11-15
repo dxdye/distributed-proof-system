@@ -1625,6 +1625,22 @@ button.user-signout:hover:not(:disabled) {
   padding: 0.5rem 0;
   overflow-x: auto;
 }
+/* The example: what the paper claims next to what Lean proves */
+.claim-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem 1.5rem;
+  margin: 1rem 0;
+}
+.claim-pair > div {
+  min-width: 0;
+}
+.claim-pair .term {
+  margin: 0.35rem 0;
+}
+.intro-goal .steps {
+  margin: 1.25rem 0 0.5rem;
+}
 .example-risks li {
   margin-bottom: 0.5rem;
 }

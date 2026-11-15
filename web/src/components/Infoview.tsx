@@ -22,13 +22,18 @@ function lookupTable(glossary: GlossaryEntry[]): Map<string, GlossaryEntry[]> {
   return table;
 }
 
-function Term({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
+export function Term({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
   const table = useMemo(() => lookupTable(glossary), [glossary]);
   const pieces = text.split(IDENT);
   return (
     <pre className="term">
       {pieces.map((piece, i) => {
-        const hits = i % 2 === 1 ? table.get(piece) : undefined;
+        // `s.re` is generalized field notation: look up the field, `re`.
+        const hits =
+          i % 2 === 1
+            ? (table.get(piece) ??
+              (piece.includes(".") ? table.get(piece.split(".").pop() ?? "") : undefined))
+            : undefined;
         if (!hits) return <span key={i}>{piece}</span>;
         return (
           <span key={i} className="const" tabIndex={0}>
