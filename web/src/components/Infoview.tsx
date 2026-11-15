@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { kindLabel } from "../kinds";
+import { layoutTerm } from "../layout";
 import type { Component, GlossaryEntry, UnitView } from "../api";
 
 // Static infoview (SR-21): the elaborated statement of each component, with the
@@ -42,11 +43,66 @@ function Const({ text, hits }: { text: string; hits?: GlossaryEntry[] }) {
   );
 }
 
-export function Term({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
+/** How many characters of the block's font fit on one line of `ref`. */
+function useColumns(ref: RefObject<HTMLElement>): number {
+  const [cols, setCols] = useState(100);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const canvas = document.createElement("canvas").getContext("2d");
+    const measure = () => {
+      const style = getComputedStyle(el);
+      if (!canvas) return;
+      canvas.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const ch = canvas.measureText("0".repeat(40)).width / 40;
+      const inner = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      if (ch > 0 && inner > 0) setCols(Math.max(30, Math.min(110, Math.floor(inner / ch) - 1)));
+    };
+    measure();
+    void document.fonts?.ready.then(measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return cols;
+}
+
+/** A Lean term with hover types. Laid out for reading (layout.ts: only line
+ * breaks and indentation change) unless `asPrinted`; Lean's own layout is one
+ * click away. */
+export function Term({
+  text,
+  glossary,
+  asPrinted,
+}: {
+  text: string;
+  glossary: GlossaryEntry[];
+  asPrinted?: boolean;
+}) {
+  const ref = useRef<HTMLPreElement>(null);
+  const cols = useColumns(ref);
+  const [lean, setLean] = useState(false);
+  const laid = useMemo(() => (asPrinted ? text : layoutTerm(text, cols)), [text, cols, asPrinted]);
+  const shown = lean ? text : laid;
+  return (
+    <div className="term-box">
+      <pre className="term lean" ref={ref}>
+        <TermText text={shown} glossary={glossary} />
+      </pre>
+      {!asPrinted && laid !== text && (
+        <button className="link term-layout" onClick={() => setLean(!lean)}>
+          {lean ? "Readable layout" : "Lean's own line breaks"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function TermText({ text, glossary }: { text: string; glossary: GlossaryEntry[] }) {
   const table = useMemo(() => lookupTable(glossary), [glossary]);
   const pieces = text.split(IDENT);
   return (
-    <pre className="term">
+    <>
       {pieces.map((piece, i) => {
         if (i % 2 === 0) return <span key={i}>{piece}</span>;
         const whole = table.get(piece);
@@ -65,7 +121,7 @@ export function Term({ text, glossary }: { text: string; glossary: GlossaryEntry
           </span>
         );
       })}
-    </pre>
+    </>
   );
 }
 
@@ -165,12 +221,20 @@ export function Infoview({ view, hideContext }: { view: UnitView; hideContext?: 
         <ComponentBox key={`${c.target}:${c.label}`} component={c} kind={view.decl_kind} />
       ))}
       {!hideContext && view.context.length > 0 && (
-        <p className="muted small">
-          Builds on (also under review):{" "}
-          {view.context.map((c) => (
-            <code key={c}>{c} </code>
-          ))}
-        </p>
+        <details className="builds-on small">
+          <summary className="muted">
+            Builds on{" "}
+            {view.context.length === 1 ? "one declaration" : `${view.context.length} declarations`}{" "}
+            of this submission (also under review)
+          </summary>
+          <ul>
+            {view.context.map((c) => (
+              <li key={c}>
+                <code>{c}</code>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );

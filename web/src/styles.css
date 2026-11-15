@@ -925,6 +925,34 @@ pre.term {
   word-break: break-word;
   color: var(--ink-strong);
 }
+/* Lean terms are laid out for the block's width (layout.ts). Only a single name
+   longer than a whole line still wraps. No scrolling: it would clip the hover
+   types, which are positioned inside the block. */
+pre.term.lean {
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.term-box {
+  margin: 0 0 0.6rem;
+}
+.term-layout {
+  display: block;
+  margin: 0.25rem 0 0 auto;
+  font-size: 0.78rem;
+}
+details.builds-on {
+  margin-top: 0.6rem;
+}
+details.builds-on summary {
+  cursor: pointer;
+}
+details.builds-on ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+  columns: 2 22rem;
+}
 .const {
   position: relative;
   border-bottom: 1px dotted var(--muted);

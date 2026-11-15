@@ -73,7 +73,7 @@ export function Intro() {
             </div>
             <div>
               <p className="term-label">What Lean says</p>
-              <Term text={LEAN_LINES} glossary={GLOSSARY} />
+              <Term text={LEAN_LINES} glossary={GLOSSARY} asPrinted />
               <p className="small muted">
                 The last two conditions of{" "}
                 <span className="mono">
