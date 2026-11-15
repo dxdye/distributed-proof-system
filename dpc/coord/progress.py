@@ -20,6 +20,7 @@ PRL 4 (class B certified) and 5 (accepted by the community) come with M5.
 from __future__ import annotations
 
 import math
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -151,7 +152,17 @@ def summary(coord: Coordinator, submission_id: str) -> dict[str, Any]:
         "main_statement": paper.statement if paper else None,
         "main_locator": paper.locator if paper else None,
         "replaced_by": replaced_by(coord, submission_id),
+        "domain": paper_domain(us, root),
     }
+
+
+def paper_domain(us: list[Unit], root: Unit | None) -> str | None:
+    """The domain a paper is filed under on the progress page: that of its main
+    theorem, otherwise the most frequent among its declarations."""
+    if root is not None:
+        return root.real.domain
+    counts = Counter(u.real.domain for u in us)
+    return counts.most_common(1)[0][0] if counts else None
 
 
 def detail(coord: Coordinator, submission_id: str, viewer: str | None) -> dict[str, Any]:

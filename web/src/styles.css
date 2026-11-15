@@ -2637,3 +2637,42 @@ details.card.replaced ul {
   margin: 0.5rem 0 0;
   padding-left: 1.2rem;
 }
+
+/* Filters of the progress page: one row of controls, one row of status */
+.progress-filters {
+  margin: 0 0 1.25rem;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+.filter-row input[type="search"] {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+}
+.filter-row select {
+  flex: 0 1 auto;
+}
+.filter-row .segmented {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+.filter-row .segmented button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.filter-count {
+  margin: 0 0 0 auto;
+}
+@media (max-width: 640px) {
+  .filter-row select,
+  .filter-row input[type="search"] {
+    flex: 1 1 100%;
+  }
+  .filter-count {
+    margin: 0;
+  }
+}

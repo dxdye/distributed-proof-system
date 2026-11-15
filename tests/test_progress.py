@@ -127,6 +127,18 @@ def test_a_submission_opened_again_replaces_the_closed_one(env: Env) -> None:
     assert progress.summary(env.coord, other)["replaced_by"] is None  # another theorem
 
 
+def test_a_paper_is_filed_under_the_domain_of_its_main_theorem(env: Env) -> None:
+    """The filter on the progress page files each paper once."""
+    tickets = [TicketSpec(view("P.u0"), domain="combinatorics"),
+               *[TicketSpec(view(f"P.u{i}"), domain="algebra") for i in (1, 2)]]
+    sid = env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
+                                    tickets=tickets, root="P.u0")
+    assert progress.summary(env.coord, sid)["domain"] == "combinatorics"
+    no_root = env.coord.open_submission(title="Q", repo_url="https://x/q", commit="c" * 40,
+                                        tickets=tickets)
+    assert progress.summary(env.coord, no_root)["domain"] == "algebra"  # the most frequent
+
+
 @pytest.mark.req("SR-06")
 def test_the_lean_statement_waits_for_the_decision(env: Env) -> None:
     sid = open_paper(env, 1)

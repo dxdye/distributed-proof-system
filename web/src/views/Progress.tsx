@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   api,
   type Me,
@@ -12,6 +12,7 @@ import { Basis } from "../components/Basis";
 import { Infoview } from "../components/Infoview";
 import { MathText } from "../components/MathText";
 import { ProgressChart } from "../components/ProgressChart";
+import { ProgressFilters, useProgressFilter } from "../components/ProgressFilters";
 import { TierBadge } from "../components/Tier";
 import { PostCard, threadHref } from "./Discussions";
 
@@ -151,11 +152,12 @@ export function ProgressList({ me }: { me: Me | null }) {
     api.progress().then(setAll, (e) => setError((e as Error).message));
     api.stats().then(setStats, () => setStats(null));
   }, []);
+  // A submission closed and opened again is listed once, as its current one.
+  const list = useMemo(() => (all ?? []).filter((s) => !s.replaced_by), [all]);
+  const replaced = (all ?? []).filter((s) => s.replaced_by);
+  const { filter, setFilter, shown } = useProgressFilter(list);
   if (error) return <p className="error">{error}</p>;
   if (!all) return <p className="muted">Loading…</p>;
-  // A submission closed and opened again is listed once, as its current one.
-  const list = all.filter((s) => !s.replaced_by);
-  const replaced = all.filter((s) => s.replaced_by);
   const decls = list.reduce((n, s) => n + s.declarations, 0);
   const decided = list.reduce((n, s) => n + s.decided, 0);
   const found = list.reduce((n, s) => n + s.errors, 0);
@@ -184,7 +186,13 @@ export function ProgressList({ me }: { me: Me | null }) {
       </section>
       {stats && <Activity stats={stats} />}
       {list.length === 0 && <p className="muted">No paper has been submitted yet.</p>}
-      {list.map((s) => (
+      {list.length > 1 && (
+        <ProgressFilters list={list} filter={filter} setFilter={setFilter} shown={shown.length} />
+      )}
+      {list.length > 0 && shown.length === 0 && (
+        <p className="muted">No paper matches these filters.</p>
+      )}
+      {shown.map((s) => (
         <section key={s.submission_id} className="card progress-card">
           <div className="progress-card-head">
             <h3>
