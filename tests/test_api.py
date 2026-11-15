@@ -126,3 +126,23 @@ def test_preferences_can_be_given_at_sign_up(env: Env, client: TestClient) -> No
     assert r.status_code == 200, r.text
     me = client.get("/api/me", headers={"Authorization": f"Bearer {r.json()['token']}"}).json()
     assert me["preferences"] == {"domains": ["analysis"], "tiers": []}
+
+
+@pytest.mark.req("SR-38")
+def test_a_reached_limit_is_reported_with_its_time_not_as_an_error(env: Env,
+                                                                   client: TestClient) -> None:
+    """C-32: the client says when the next set comes, and how many changes of
+    preferences are left."""
+    env.coord.open_submission(title="Paper", repo_url="https://x/p", commit="c" * 40,
+                              tickets=specs("P", 12))
+    auth = register(client, "erin")
+    me = client.get("/api/me", headers=auth).json()
+    assert me["preference_changes_left"] == 3 and me["preference_change_at"] is None
+    for _ in range(env.params.max_unused_sets_per_day):
+        assert client.post("/api/choice-set", headers=auth).json()["tickets"]
+        env.clock.advance(seconds=env.params.choice_set_ttl_s + 1)
+    r = client.post("/api/choice-set", headers=auth)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["tickets"] == [] and body["limit"]["reason"] == "unused"
+    assert body["limit"]["until"] > body["limit"]["until"][:10]  # an ISO time

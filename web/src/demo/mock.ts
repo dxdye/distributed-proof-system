@@ -649,6 +649,8 @@ function me(role: Role): Json {
         ).length
       : 0,
     preferences: p.prefs,
+    preference_changes_left: null, // the click dummy has no limits on rerolling
+    preference_change_at: null,
     tiers_open: prof.tiers,
     leases: activeLeases(role).map(leaseJson),
     history: [...p.history].reverse(),

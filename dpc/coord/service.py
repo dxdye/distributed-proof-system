@@ -79,6 +79,20 @@ class Conflict(CoordError):
     status = 409
 
 
+class RerollLimit(Conflict):
+    """A limit on rerolling is reached (C-32); ``until``: when it frees up."""
+
+    def __init__(self, reason: str, until: datetime, message: str) -> None:
+        super().__init__(message)
+        self.reason, self.until = reason, until
+
+
+def _frees_at(times: Sequence[datetime], limit: int) -> datetime:
+    """When fewer than ``limit`` of these times lie within the last 24 hours."""
+    ordered = sorted(times)
+    return ordered[len(ordered) - limit] + timedelta(days=1)
+
+
 @dataclass(frozen=True)
 class TicketSpec:
     view: UnitView
@@ -195,14 +209,14 @@ class Coordinator:
             self._reviewer(rid)
             self._emit("reviewer.maintainer_appointed", ev.MaintainerAppointed(reviewer=rid))
 
-    def unused_sets(self, rid: str) -> int:
-        """Choice sets of the last 24 hours that led to no review: expired or
-        discarded by a change of preferences without a ticket taken, or whose
-        ticket was given back or lapsed. Sets drawn at the work-in-progress limit
-        do not count; nothing could be taken (C-32)."""
+    def unused_set_times(self, rid: str) -> list[datetime]:
+        """When the choice sets of the last 24 hours that led to no review were
+        drawn: expired or discarded by a change of preferences without a ticket
+        taken, or whose ticket was given back or lapsed. Sets drawn at the
+        work-in-progress limit do not count; nothing could be taken (C-32)."""
         st, now = self.state, self.now()
         current = st.latest_set.get(rid)
-        count = 0
+        times = []
         for sid in reversed(st.sets_of[rid]):
             s = st.choice_sets[sid]
             if now - s.drawn >= timedelta(days=1):
@@ -211,8 +225,22 @@ class Coordinator:
                 continue
             if sid == current and not s.consumed and now < s.expires:
                 continue  # still on offer: not left unused yet
-            count += 1
-        return count
+            times.append(s.drawn)
+        return times
+
+    def unused_sets(self, rid: str) -> int:
+        return len(self.unused_set_times(rid))
+
+    def preference_changes(self, rid: str) -> tuple[int | None, datetime | None]:
+        """Changes of preferences left today (None: no limit, for maintainers)
+        and, if none is left, when the next one is possible (C-32)."""
+        st, now = self.state, self.now()
+        if st.reviewers[rid].maintainer:
+            return None, None
+        cap = self.params.max_preference_changes_per_day
+        recent = [t for t in st.pref_changes[rid] if now - t < timedelta(days=1)]
+        left = max(0, cap - len(recent))
+        return left, (_frees_at(recent, cap) if left == 0 else None)
 
     def set_preferences(self, rid: str, *, domains: Sequence[str] = (),
                         tiers: Sequence[str] = ()) -> None:
@@ -228,14 +256,15 @@ class Coordinator:
         ordered = tuple(t for t in TIERS if t in tiers)
         with self.lock:
             self._reviewer(rid)
-            person, now = self.state.reviewers[rid], self.now()
+            person = self.state.reviewers[rid]
             if (domains, ordered) == (tuple(person.pref_domains), tuple(person.pref_tiers)):
                 return
-            changes = [t for t in self.state.pref_changes[rid] if now - t < timedelta(days=1)]
-            if len(changes) >= self.params.max_preference_changes_per_day:
-                raise Conflict(
-                    f"preferences can be changed {self.params.max_preference_changes_per_day} "
-                    "times a day: each change draws a new choice set")
+            left, until = self.preference_changes(rid)
+            if left == 0 and until is not None:
+                raise RerollLimit("preferences", until,
+                                  "Preferences can be changed "
+                                  f"{self.params.max_preference_changes_per_day} times a day: "
+                                  "each change draws a new choice set.")
             self._emit("reviewer.preferences_set", ev.PreferencesSet(
                 reviewer=rid, domains=domains, tiers=ordered))
 
@@ -414,15 +443,20 @@ class Coordinator:
                 return current
             # Rerolling is how one sees a target ticket more often than chance
             # allows (C-32): sets left unused are limited, taking tickets is not.
+            # Maintainers are exempt: appointed, not anonymous accounts.
             recent = [t for t in st.sets_drawn[rid] if now - t < timedelta(days=1)]
-            if len(recent) >= self.params.max_choice_sets_per_day:
-                raise Conflict(f"you have drawn {len(recent)} choice sets in the last 24 hours, "
-                               "the most allowed; new ones come as those age")
-            if self.unused_sets(rid) >= self.params.max_unused_sets_per_day:
-                raise Conflict(
-                    f"you have left {self.params.max_unused_sets_per_day} choice sets unused in "
-                    "the last 24 hours; to keep the draw fair, the next one comes when the "
-                    "oldest of them is a day old. Tickets you hold stay yours.")
+            cap, unused_cap = (self.params.max_choice_sets_per_day,
+                               self.params.max_unused_sets_per_day)
+            if not person.maintainer and len(recent) >= cap:
+                raise RerollLimit("sets", _frees_at(recent, cap),
+                                  f"You have drawn {len(recent)} choice sets in the last 24 hours, "
+                                  "the most allowed.")
+            unused = self.unused_set_times(rid)
+            if not person.maintainer and len(unused) >= unused_cap:
+                raise RerollLimit("unused", _frees_at(unused, unused_cap),
+                                  f"You have left {len(unused)} choice sets in the last 24 hours "
+                                  "without a review. To keep the draw fair, the next set comes "
+                                  "when the oldest of them is a day old.")
             at_limit = len(st.active_leases(rid)) >= person.reliability.wip_limit("A")
             # The set is drawn even at the work-in-progress limit, so that it can be
             # shown; taking a ticket from it still respects the limit (lease()).

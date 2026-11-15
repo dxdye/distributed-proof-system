@@ -37,6 +37,7 @@ function Preferences({ me, onSaved, open }: { me: Me; onSaved: () => void; open?
     tiers.join() !==
       [...me.preferences.tiers].sort((a, b) => ALL_TIERS.indexOf(a) - ALL_TIERS.indexOf(b)).join();
   const anySet = me.preferences.domains.length + me.preferences.tiers.length > 0;
+  const noChangesLeft = me.preference_changes_left === 0 && me.preference_change_at !== null;
 
   useEffect(() => {
     api
@@ -111,12 +112,20 @@ function Preferences({ me, onSaved, open }: { me: Me; onSaved: () => void; open?
         })}
       </div>
       {error && <p className="error">{error}</p>}
-      {changed ? (
+      {noChangesLeft ? (
+        <p className="muted small prefs-saved">
+          No changes left today: each change draws a new set. The next change is possible{" "}
+          {whenText(me.preference_change_at!)}.
+        </p>
+      ) : changed ? (
         <button className="secondary" onClick={save}>
           Save and draw new tickets
         </button>
       ) : (
         anySet && <p className="muted small prefs-saved">✓ Saved</p>
+      )}
+      {me.preference_changes_left !== null && !noChangesLeft && (
+        <p className="muted small">{me.preference_changes_left} of 3 changes left today.</p>
       )}
     </details>
   );
@@ -136,6 +145,17 @@ function Breakable({ text, className }: { text: string; className: string }) {
       ))}
     </code>
   );
+}
+
+/** "at 17:42", "tomorrow at 09:10" or a date, in the reader's time zone. */
+function whenText(iso: string): string {
+  const at = new Date(iso);
+  const time = at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((day(at) - day(new Date())) / 86_400_000);
+  if (days <= 0) return `at ${time}`;
+  if (days === 1) return `tomorrow at ${time}`;
+  return `on ${at.toLocaleDateString("en-GB", { day: "numeric", month: "long" })} at ${time}`;
 }
 
 function duration(minutes: number | null): string {
@@ -354,6 +374,13 @@ export function Work({
               })}
             </ul>
           </>
+        ) : set?.limit ? (
+          <p className="pref-note">
+            {set.limit.reason === "unused"
+              ? "You have looked at several sets in the last 24 hours without a review. To keep the draw fair, the next set comes "
+              : "You have drawn the most sets allowed in 24 hours. The next set comes "}
+            {whenText(set.limit.until)}. Tickets you hold stay yours.
+          </p>
         ) : (
           <p className="muted">Nothing to review for you at the moment.</p>
         )}

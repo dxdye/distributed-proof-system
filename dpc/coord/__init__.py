@@ -12,6 +12,7 @@ from dpc.coord.service import (
     Coordinator,
     Forbidden,
     NotFound,
+    RerollLimit,
     TicketSpec,
 )
 from dpc.coord.state import State
@@ -26,6 +27,7 @@ __all__ = [
     "Coordinator",
     "Forbidden",
     "NotFound",
+    "RerollLimit",
     "State",
     "TicketSpec",
     "Vault",

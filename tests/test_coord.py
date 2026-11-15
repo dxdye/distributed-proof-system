@@ -19,6 +19,7 @@ from dpc.coord import (
     Coordinator,
     CoordParams,
     Forbidden,
+    RerollLimit,
     TicketSpec,
     Vault,
     commitment,
@@ -629,8 +630,11 @@ def test_sets_left_unused_are_limited_taking_tickets_is_not(tmp_path: Path) -> N
         assert env.coord.unused_sets(rid) == i  # the one on offer is not unused yet
         env.clock.advance(seconds=ttl)
     assert env.coord.unused_sets(rid) == env.params.max_unused_sets_per_day
-    with pytest.raises(Conflict, match="unused"):
+    with pytest.raises(RerollLimit, match="without a review") as limit:
         env.coord.choice_set(rid)
+    # It frees up when the oldest unused set is a day old: the one given back.
+    assert limit.value.reason == "unused"
+    assert limit.value.until == returned.drawn + timedelta(days=1)
     env.clock.advance(days=1)  # they age out
     assert env.coord.choice_set(rid) is not None
 
@@ -660,10 +664,28 @@ def test_preference_changes_are_limited_because_each_one_rerolls(tmp_path: Path)
         env.coord.set_preferences(rid, domains=domains)
     env.coord.set_preferences(rid, domains=["analysis", "algebra"])  # the same: no change
     assert len(env.events("reviewer.preferences_set")) == 3
-    with pytest.raises(Conflict, match="3 times a day"):
+    assert env.coord.preference_changes(rid)[0] == 0
+    with pytest.raises(RerollLimit, match="3 times a day"):
         env.coord.set_preferences(rid, domains=["geometry"])
     env.clock.advance(days=1)
     env.coord.set_preferences(rid, domains=["geometry"])
+    assert env.coord.preference_changes(rid)[0] == 2
+
+
+@pytest.mark.req("SR-38")
+def test_maintainers_are_not_limited_in_rerolling(tmp_path: Path) -> None:
+    """The limits are aimed at anonymous accounts; maintainers are appointed."""
+    env = Env(tmp_path, params(pair_window_s=0))
+    env.coord.open_submission(title="P", repo_url="https://x/p", commit="p" * 40,
+                              tickets=specs("P", 12))
+    admin = env.people(1, "admin")[0]
+    env.coord.appoint_maintainer(admin)
+    for i in range(env.params.max_preference_changes_per_day + 2):
+        env.coord.set_preferences(admin, domains=[f"d{i}"])
+    assert env.coord.preference_changes(admin) == (None, None)
+    for _ in range(env.params.max_unused_sets_per_day + 2):
+        assert env.coord.choice_set(admin) is not None
+        env.clock.advance(seconds=env.params.choice_set_ttl_s + 1)
 
 
 def test_tiers_are_absolute_not_relative_to_the_submission() -> None:

@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from dpc.auth import Authenticator, AuthError, Identity, LocalTokenProvider
-from dpc.coord import NOTICE_VERSION, CoordError, Coordinator
+from dpc.coord import NOTICE_VERSION, CoordError, Coordinator, RerollLimit
 from dpc.coord import progress as progress_page
 from dpc.coord import report as report_page
 from dpc.coord.state import LeaseSt, TicketSt
@@ -381,6 +381,9 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "roles": {d: sorted(st.roles(rid, d, now)) for d in domains},
                 "preferences": {"domains": list(person.pref_domains),
                                 "tiers": list(person.pref_tiers)},
+                # C-32: changes left today (None: no limit) and when the next one comes
+                "preference_changes_left": (changes := coord.preference_changes(rid))[0],
+                "preference_change_at": changes[1].isoformat() if changes[1] else None,
                 "tiers_open": coord.tiers_open(rid),
                 "reliability": round(person.reliability.rate.mean, 3),
                 "wip_limit": person.reliability.wip_limit("A"),
@@ -411,7 +414,14 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
     @app.post("/api/choice-set")
     def choice_set(rid: Rid) -> dict[str, Any]:
         with coord.lock:
-            cs = call(coord.choice_set, rid)
+            try:
+                cs = coord.choice_set(rid)
+            except RerollLimit as exc:  # not an error: say when the next set comes (C-32)
+                return {"set_id": None, "tickets": [], "preferences_applied": False,
+                        "limit": {"reason": exc.reason, "until": exc.until.isoformat(),
+                                  "message": str(exc)}}
+            except CoordError as exc:
+                raise HTTPException(exc.status, str(exc)) from exc
             if cs is None:
                 return {"set_id": None, "tickets": [], "preferences_applied": False}
             # Whether the preferences could be used, never why not (C-22).

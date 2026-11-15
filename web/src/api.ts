@@ -82,6 +82,8 @@ export type ChoiceSet = {
   tickets: Card[];
   /** The reviewer's preferences could be used for this set (never why not). */
   preferences_applied?: boolean;
+  /** A limit on rerolling is reached (C-32): no set until then. */
+  limit?: { reason: "sets" | "unused"; until: string; message: string };
 };
 export type HistoryItem = {
   declaration: string;
@@ -102,6 +104,9 @@ export type Me = {
   wip_limit: number;
   pvv_waiting: number; // re-checks next_duty could hand out now
   preferences: { domains: string[]; tiers: string[] };
+  /** Changes of preferences left today (null: no limit) and when the next is possible (C-32). */
+  preference_changes_left: number | null;
+  preference_change_at: string | null;
   tiers_open: string[];
   leases: Lease[];
   history: HistoryItem[];
