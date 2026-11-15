@@ -529,7 +529,7 @@ main:focus {
   padding: 0;
   margin: 0 0 2.5rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
   gap: 1rem;
   counter-reset: step;
 }
@@ -608,7 +608,7 @@ details.alt-access summary {
 }
 .columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
   gap: 1.5rem;
   align-items: start;
 }
@@ -758,7 +758,7 @@ button + button {
 /* ------------------------------------------------------------- choice cards */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -1472,7 +1472,7 @@ button.small {
 }
 .role-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -1675,7 +1675,7 @@ button.user-signout:hover:not(:disabled) {
 /* The example: what the paper claims next to what Lean proves */
 .claim-pair {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
   gap: 1rem 1.5rem;
   margin: 1rem 0;
 }
@@ -2348,6 +2348,19 @@ code,
   }
   .menu-toggle {
     display: inline-flex;
+    flex: none;
+  }
+  /* Brand and menu button share one row: the name may take two lines, the
+     button never moves to the next one. */
+  .header-inner {
+    flex-wrap: wrap;
+  }
+  .brand {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .brand-text strong {
+    font-size: 1rem;
   }
   nav.main-nav {
     display: none;
@@ -2403,5 +2416,16 @@ code,
   .demo-inner,
   :root:has(.test-sash) .service-bar .container {
     padding-right: 3.5rem;
+  }
+}
+/* Very narrow screens, or large text: the menu button shows only its icon. */
+@media (max-width: 420px) {
+  .menu-label {
+    display: none;
+  }
+  .menu-toggle {
+    width: 2.75rem;
+    justify-content: center;
+    padding: 0;
   }
 }

@@ -159,10 +159,11 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
               className="menu-toggle"
               aria-expanded={menuOpen}
               aria-controls="main-nav"
+              aria-label="Menu"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <span className={menuOpen ? "menu-icon open" : "menu-icon"} aria-hidden="true" />
-              {menuOpen ? "Close" : "Menu"}
+              <span className="menu-label">{menuOpen ? "Close" : "Menu"}</span>
             </button>
             <nav
               id="main-nav"
