@@ -590,6 +590,14 @@ defence (C-34), and the parameters below must come from the simulation.
 - **Preferences can change 3 times a day** (`max_preference_changes_per_day`),
   since each change is a reroll. Saving unchanged preferences changes nothing
   and draws no new set.
+- **Maintainers are exempt** from both limits: they are appointed, not
+  anonymous accounts, and they test. The limits count the last 24 hours, so
+  at their introduction they also counted the day's earlier sets; the project
+  owner, a maintainer, met them in the walkthrough at once.
+- **A reached limit is not an error.** The client says when the next set
+  comes ("tomorrow at 15:33") and how many changes of preferences are left
+  today; `POST /api/choice-set` returns `limit` with reason and time,
+  `GET /api/me` returns `preference_changes_left` and `preference_change_at`.
 - **Preferences at sign-up, optional,** for domains. The form says that a
   preference is not a qualification: it only raises the chance, trust comes
   from the work, harder tiers open with experience. Nothing selected means

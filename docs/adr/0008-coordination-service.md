@@ -65,7 +65,9 @@ single sequencer of ADR 0003.
    limits per 24 hours (proposal C-32): at most 6 sets that led to no review
    (expired or discarded by a change of preferences, or whose ticket was given
    back or lapsed; sets drawn at the work-in-progress limit do not count), and
-   at most 24 sets in all; reviewing is not limited otherwise. Preferences can change 3 times a day, since each change
+   at most 24 sets in all; reviewing is not limited otherwise. Maintainers are
+   exempt. A reached limit is reported with the time it frees up, not as an
+   error. Preferences can change 3 times a day, since each change
    draws a new set. Taking a ticket from the set is binding: it becomes a
    lease.
 2. *Eligibility (SR-08, SR-27, SR-50).* A person cannot take a ticket if any of
