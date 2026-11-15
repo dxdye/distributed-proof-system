@@ -568,7 +568,7 @@ def test_hard_tickets_need_experience_until_they_have_waited_long(env: Env) -> N
 def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
     """Preferences fill at most half of a set, the rest is random, and they are
     ignored where the matching tickets come from a single paper (SR-38)."""
-    env = Env(tmp_path, params(pair_window_s=0))
+    env = Env(tmp_path, params(pair_window_s=0, max_unused_sets_per_day=100))
     for title, domain in (("P", "algebra"), ("Q", "algebra"), ("R", "analysis"),
                           ("S", "geometry"), ("T", "topology")):
         env.coord.open_submission(title=title, repo_url=f"https://x/{title}",
@@ -583,7 +583,7 @@ def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
     assert env.events("reviewer.preferences_set")[0]["domains"] == ["algebra"]
     chosen_by_preference = 0
     for _ in range(20):  # the other half stays random: no set is all algebra by force
-        env.coord.set_preferences(rid, domains=["algebra"])
+        env.clock.advance(seconds=env.params.choice_set_ttl_s + 1)  # a new set
         drawn = env.coord.choice_set(rid)
         assert drawn is not None
         chosen_by_preference += sum(env.coord.state.tickets[t].domain == "algebra"
@@ -599,6 +599,63 @@ def test_preferences_raise_the_chance_but_cannot_steer(tmp_path: Path) -> None:
     assert len(analysis) <= 1  # one per paper, as without preferences
     with pytest.raises(CoordError, match="unknown tiers"):
         env.coord.set_preferences(rid, tiers=["legendary"])
+
+
+@pytest.mark.req("SR-38")
+def test_sets_left_unused_are_limited_taking_tickets_is_not(tmp_path: Path) -> None:
+    """Rerolling, waiting for sets to expire or discarding them, is how one sees
+    a target ticket more often than chance allows (C-32). Sets a ticket was
+    taken from, and sets drawn at the work-in-progress limit, do not count."""
+    env = Env(tmp_path, params(pair_window_s=0))
+    for title in "PQRS":
+        env.coord.open_submission(title=title, repo_url=f"https://x/{title}",
+                                  commit=title.lower() * 40, tickets=specs(title, 12))
+    rid = env.people(1)[0]
+    ttl = env.params.choice_set_ttl_s + 1
+    taken = env.coord.choice_set(rid)
+    assert taken is not None
+    lease = env.coord.lease(rid, taken.set_id, taken.tickets[0]).lease_id  # used: free
+    env.coord.return_lease(rid, lease)
+    for i in range(env.params.max_unused_sets_per_day):
+        assert env.coord.choice_set(rid) is not None
+        assert env.coord.unused_sets(rid) == i  # the one on offer is not unused yet
+        env.clock.advance(seconds=ttl)
+    assert env.coord.unused_sets(rid) == env.params.max_unused_sets_per_day
+    with pytest.raises(Conflict, match="unused"):
+        env.coord.choice_set(rid)
+    env.clock.advance(days=1)  # they age out
+    assert env.coord.choice_set(rid) is not None
+
+
+@pytest.mark.req("SR-38", "SR-27")
+def test_sets_drawn_at_the_work_in_progress_limit_never_count(tmp_path: Path) -> None:
+    env = Env(tmp_path, params(pair_window_s=0))
+    for title in "PQ":
+        env.coord.open_submission(title=title, repo_url=f"https://x/{title}",
+                                  commit=title.lower() * 40, tickets=specs(title, 12))
+    rid = env.people(1)[0]
+    limit = env.coord.state.reviewers[rid].reliability.wip_limit("A")
+    for _ in range(limit):
+        env.take(rid)
+    for _ in range(env.params.max_unused_sets_per_day + 2):
+        drawn = env.coord.choice_set(rid)  # shown, greyed out, nothing can be taken
+        assert drawn is not None and drawn.at_limit
+        env.clock.advance(seconds=env.params.choice_set_ttl_s + 1)
+    assert env.coord.unused_sets(rid) == 0
+
+
+@pytest.mark.req("SR-32", "SR-38")
+def test_preference_changes_are_limited_because_each_one_rerolls(tmp_path: Path) -> None:
+    env = Env(tmp_path, params(pair_window_s=0))
+    rid = env.people(1)[0]
+    for domains in (["algebra"], ["analysis"], ["algebra", "analysis"]):
+        env.coord.set_preferences(rid, domains=domains)
+    env.coord.set_preferences(rid, domains=["analysis", "algebra"])  # the same: no change
+    assert len(env.events("reviewer.preferences_set")) == 3
+    with pytest.raises(Conflict, match="3 times a day"):
+        env.coord.set_preferences(rid, domains=["geometry"])
+    env.clock.advance(days=1)
+    env.coord.set_preferences(rid, domains=["geometry"])
 
 
 def test_tiers_are_absolute_not_relative_to_the_submission() -> None:

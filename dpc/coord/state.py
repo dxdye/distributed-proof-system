@@ -158,6 +158,8 @@ class ChoiceSetSt:
     expires: datetime
     consumed: bool = False
     preferences_applied: bool = False
+    at_limit: bool = False
+    used: bool = False  # a ticket was taken from it (C-32)
 
 
 def _days(a: datetime, b: datetime) -> float:
@@ -207,6 +209,9 @@ class State:
         self.choice_sets: dict[str, ChoiceSetSt] = {}
         self.latest_set: dict[str, str] = {}
         self.sets_drawn: dict[str, list[datetime]] = defaultdict(list)
+        self.sets_of: dict[str, list[str]] = defaultdict(list)  # set ids per reviewer
+        # when each reviewer changed preferences (C-32: a change is a reroll)
+        self.pref_changes: dict[str, list[datetime]] = defaultdict(list)
         self.reviews: dict[int, ReviewRec] = {}
         self.pairs: dict[frozenset[str], datetime] = {}
         self.durations: dict[tuple[str, int], list[int]] = defaultdict(list)
@@ -307,6 +312,7 @@ class State:
                                      _: Entry) -> None:
         person = self.reviewers[p.reviewer]
         person.pref_domains, person.pref_tiers, person.prefs_at = p.domains, p.tiers, at
+        self.pref_changes[p.reviewer].append(at)
         # The current choice set was drawn for the old preferences.
         current = self.choice_sets.get(self.latest_set.get(p.reviewer, ""))
         if current is not None:
@@ -389,9 +395,11 @@ class State:
     def _on_choice_set_drawn(self, p: ev.ChoiceSetDrawn, at: datetime, _: Entry) -> None:
         self.choice_sets[p.set_id] = ChoiceSetSt(p.set_id, p.reviewer, p.tickets, at,
                                                  ev.parse_ts(p.expires_at),
-                                                 preferences_applied=p.preferences_applied)
+                                                 preferences_applied=p.preferences_applied,
+                                                 at_limit=p.at_limit)
         self.latest_set[p.reviewer] = p.set_id
         self.sets_drawn[p.reviewer].append(at)
+        self.sets_of[p.reviewer].append(p.set_id)
 
     def _on_lease_granted(self, p: ev.LeaseGranted, at: datetime, _: Entry) -> None:
         lease = LeaseSt(p.lease_id, p.reviewer, p.duty, p.ticket_id, p.claim_id, p.set_id, at,
@@ -401,6 +409,7 @@ class State:
         self.seen_units[p.reviewer].add((ticket.submission_id, ticket.view.declaration))
         if p.set_id is not None:
             self.choice_sets[p.set_id].consumed = True
+            self.choice_sets[p.set_id].used = True
 
     def _on_lease_extended(self, p: ev.LeaseExtended, at: datetime, _: Entry) -> None:
         lease = self.leases[p.lease_id]

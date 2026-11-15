@@ -195,20 +195,48 @@ class Coordinator:
             self._reviewer(rid)
             self._emit("reviewer.maintainer_appointed", ev.MaintainerAppointed(reviewer=rid))
 
+    def unused_sets(self, rid: str) -> int:
+        """Choice sets of the last 24 hours that no ticket was taken from:
+        expired, or discarded by a change of preferences. Sets drawn at the
+        work-in-progress limit do not count; nothing could be taken (C-32)."""
+        st, now = self.state, self.now()
+        current = st.latest_set.get(rid)
+        count = 0
+        for sid in reversed(st.sets_of[rid]):
+            s = st.choice_sets[sid]
+            if now - s.drawn >= timedelta(days=1):
+                break
+            if s.used or s.at_limit:
+                continue
+            if sid == current and not s.consumed and now < s.expires:
+                continue  # still on offer: not left unused yet
+            count += 1
+        return count
+
     def set_preferences(self, rid: str, *, domains: Sequence[str] = (),
                         tiers: Sequence[str] = ()) -> None:
-        """What the reviewer wants to work on (SR-32: raises the chance only)."""
+        """What the reviewer wants to work on (SR-32: raises the chance only).
+        A change discards the current choice set, so it is a reroll: limited
+        per day (C-32). Saving the same preferences again changes nothing."""
         domains = tuple(sorted({d.strip() for d in domains if d.strip()}))
         if len(domains) > 20 or any(len(d) > 64 for d in domains):
             raise CoordError("at most 20 domains of at most 64 characters")
         unknown = [t for t in tiers if t not in TIERS]
         if unknown:
             raise CoordError(f"unknown tiers {unknown}; known: {list(TIERS)}")
+        ordered = tuple(t for t in TIERS if t in tiers)
         with self.lock:
             self._reviewer(rid)
+            person, now = self.state.reviewers[rid], self.now()
+            if (domains, ordered) == (tuple(person.pref_domains), tuple(person.pref_tiers)):
+                return
+            changes = [t for t in self.state.pref_changes[rid] if now - t < timedelta(days=1)]
+            if len(changes) >= self.params.max_preference_changes_per_day:
+                raise Conflict(
+                    f"preferences can be changed {self.params.max_preference_changes_per_day} "
+                    "times a day: each change draws a new choice set")
             self._emit("reviewer.preferences_set", ev.PreferencesSet(
-                reviewer=rid, domains=domains,
-                tiers=tuple(t for t in TIERS if t in tiers)))
+                reviewer=rid, domains=domains, tiers=ordered))
 
     def tiers_open(self, rid: str, domain: str | None = None) -> list[Tier]:
         """Tiers the reviewer may take (in ``domain``, or in any domain)."""
@@ -383,9 +411,18 @@ class Coordinator:
                     self.why_not(rid, st.tickets[t], "review", check_wip=False) is None
                     for t in current.tickets):
                 return current
+            # Rerolling is how one sees a target ticket more often than chance
+            # allows (C-32): sets left unused are limited, taking tickets is not.
             recent = [t for t in st.sets_drawn[rid] if now - t < timedelta(days=1)]
             if len(recent) >= self.params.max_choice_sets_per_day:
-                raise Conflict("too many choice sets today")
+                raise Conflict(f"you have drawn {len(recent)} choice sets in the last 24 hours, "
+                               "the most allowed; new ones come as those age")
+            if self.unused_sets(rid) >= self.params.max_unused_sets_per_day:
+                raise Conflict(
+                    f"you have left {self.params.max_unused_sets_per_day} choice sets unused in "
+                    "the last 24 hours; to keep the draw fair, the next one comes when the "
+                    "oldest of them is a day old. Tickets you hold stay yours.")
+            at_limit = len(st.active_leases(rid)) >= person.reliability.wip_limit("A")
             # The set is drawn even at the work-in-progress limit, so that it can be
             # shown; taking a ticket from it still respects the limit (lease()).
             eligible = [t for t in st.tickets.values() if t.ticket_class == "A"
@@ -421,7 +458,8 @@ class Coordinator:
             expires = now + timedelta(seconds=self.params.choice_set_ttl_s)
             self._emit("choice_set.drawn", ev.ChoiceSetDrawn(
                 set_id=set_id, reviewer=rid, tickets=tuple(t.ticket_id for t in picked),
-                expires_at=ev.ts(expires), preferences_applied=bool(preferred)))
+                expires_at=ev.ts(expires), preferences_applied=bool(preferred),
+                at_limit=at_limit))
             return st.choice_sets[set_id]
 
     # -------------------------------------------------------------- leases

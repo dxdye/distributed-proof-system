@@ -195,6 +195,9 @@ class ChoiceSetDrawn(_P):
     #: The reviewer's preferences could be used for this set (C-22). Never
     #: why not: that would tell which papers have such tickets.
     preferences_applied: bool = False
+    #: Drawn while the reviewer held as many tickets as allowed: shown, but no
+    #: ticket could be taken from it, so it never counts as unused (C-32).
+    at_limit: bool = False
 
 
 class LeaseGranted(_P):

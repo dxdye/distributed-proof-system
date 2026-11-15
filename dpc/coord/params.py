@@ -28,7 +28,13 @@ class CoordParams:
     # --- choice sets (SR-38, SR-39) ---
     choice_set_size: int = 4  # n_S
     choice_set_ttl_s: int = 3600
-    max_choice_sets_per_day: int = 24  # rerolling is limited (and logged)
+    #: Hard cap on choice sets per reviewer and day, used or not (C-32).
+    max_choice_sets_per_day: int = 24
+    #: Sets left unused per day: drawn, then expired or discarded without a
+    #: ticket taken from them. Bounds rerolling, the way to see a target ticket
+    #: more often than chance allows; taking tickets is not limited by it.
+    #: Sets drawn at the work-in-progress limit do not count (C-32).
+    max_unused_sets_per_day: int = 6
     # --- leases (SR-26, SR-27, SR-30) ---
     lease_alpha: float = 0.1  # τ = F⁻¹(1 − α)
     lease_min_samples: int = 20  # below this, the default duration applies
@@ -64,6 +70,9 @@ class CoordParams:
     #: Preferences apply only if the matching tickets come from at least this many
     #: submissions, so that nobody can steer towards one paper (SR-38).
     pref_min_papers: int = 2
+    #: A change of preferences discards the current set, so each change is a
+    #: reroll; at most this many changes per day (C-32).
+    max_preference_changes_per_day: int = 3
 
     @property
     def parallel(self) -> int:
