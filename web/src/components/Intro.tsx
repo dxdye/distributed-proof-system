@@ -3,7 +3,7 @@ import { Term } from "./Infoview";
 import { MathText } from "./MathText";
 
 // The front page for visitors who are not signed in: the problem, shown on a
-// real formalization, and how the system works. Figures and the glossary are
+// real formalization, and the goal. Figures and the glossary are
 // those of the quasi-Riemann case study (docs/case-studies/quasi-riemann.md);
 // the value of ζ at s = 1 is Mathlib's riemannZeta_one (Mathlib d13f23b7).
 //
@@ -108,34 +108,16 @@ export function Intro() {
       </section>
 
       <section className="card intro-goal">
-        <span className="eyebrow">How it works</span>
+        <span className="eyebrow">The goal</span>
         <h2>Review what matters, and measure how well it was reviewed.</h2>
-        <ol className="steps">
-          <li>
-            <strong>Machine checks</strong>
-            <p>
-              Every declaration passes Lean's kernel again, and only the standard axioms are
-              allowed. Then the formalization is taken apart: only the statements and the
-              definitions they depend on need a human. In the example, that is one line, against{" "}
-              {"53 394"} declarations the kernel had to check.
-            </p>
-          </li>
-          <li>
-            <strong>Human review</strong>
-            <p>
-              Volunteers compare each of these statements and definitions with the paper, under a
-              pseudonym.
-            </p>
-          </li>
-          <li>
-            <strong>Measured reliability</strong>
-            <p>
-              Errors planted on purpose measure how reliable every reviewer is. The result is not a
-              show of hands but a figure: how likely it is that an error went unnoticed. Every
-              report is published, including negative ones.
-            </p>
-          </li>
-        </ol>
+        <p>
+          The system takes a formalization apart automatically. Only the statement and the
+          definitions it depends on need human judgement; for the example above that is one line,
+          against {"53 394"} declarations the kernel had to check. Volunteers review them under a
+          pseudonym, comparing each with the paper. Errors planted on purpose measure how reliable
+          every reviewer is, so that the result is not a show of hands but a figure: how likely it
+          is that an error went unnoticed. Every report is published, including negative ones.
+        </p>
         <p className="intro-links">
           <a href="#/how">How a review works →</a>
           <a href="#/progress">Where every paper stands →</a>

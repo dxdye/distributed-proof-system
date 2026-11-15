@@ -1638,9 +1638,6 @@ button.user-signout:hover:not(:disabled) {
 .claim-pair .term {
   margin: 0.35rem 0;
 }
-.intro-goal .steps {
-  margin: 1.25rem 0 0.5rem;
-}
 .example-risks li {
   margin-bottom: 0.5rem;
 }

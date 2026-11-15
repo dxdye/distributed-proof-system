@@ -44,6 +44,29 @@ export function SignIn({
         </div>
       </section>
       <Intro />
+      <ol className="steps">
+        <li>
+          <strong>Machine checks</strong>
+          <p>
+            Every declaration of a submission passes the Lean kernel again; only the standard axioms
+            are allowed.
+          </p>
+        </li>
+        <li>
+          <strong>Human review</strong>
+          <p>
+            Reviewers check, under a pseudonym, that statements and definitions mean what the paper
+            claims.
+          </p>
+        </li>
+        <li>
+          <strong>Measured reliability</strong>
+          <p>
+            Planted errors and re-checks measure how well the review works. Reports are published
+            openly.
+          </p>
+        </li>
+      </ol>
       <div id="sign-in" />
       {demo ? (
         <section className="card">
