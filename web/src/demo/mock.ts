@@ -73,7 +73,7 @@ type Claim = {
 };
 type Person = {
   prefs: { domains: string[]; tiers: string[] };
-  set: { set_id: string; tickets: string[] } | null;
+  set: { set_id: string; tickets: string[]; preferred?: boolean } | null;
   history: HistoryItem[];
   seen: string[]; // ticket ids worked on (never offered again)
 };
@@ -600,14 +600,17 @@ function drawSet(role: Role): Json {
     }
   }
   picked.sort(() => Math.random() - 0.5);
-  p.set = picked.length ? { set_id: id("CS"), tickets: picked } : null;
+  p.set = picked.length
+    ? { set_id: id("CS"), tickets: picked, preferred: preferred.length > 0 }
+    : null;
   return setJson(p.set);
 }
 
 function setJson(set: Person["set"]): Json {
-  if (!set) return { set_id: null, tickets: [] };
+  if (!set) return { set_id: null, tickets: [], preferences_applied: false };
   return {
     set_id: set.set_id,
+    preferences_applied: set.preferred ?? false,
     tickets: set.tickets.map((tid) => {
       const { t, sub } = tickets.get(tid)!;
       return {

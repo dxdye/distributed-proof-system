@@ -2,20 +2,31 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type ChoiceSet, type Me } from "../api";
 import { TIER_HINTS, TIER_LABELS, TierBadge } from "../components/Tier";
 import { Welcome, introDone } from "../components/Welcome";
+import { domainLabel, kindLabel, splitName } from "../kinds";
 import { navigate } from "../router";
 
 const ALL_TIERS = ["easy", "medium", "hard", "excellence"];
 
 /** What the reviewer wants to work on. Preferences raise the chance that such
  * tickets are offered; they never hide the rest completely (SR-32). */
+/** The difficulty preference is an upper bound ("not harder than"): stored as
+ * the list of every tier up to it, which is what the server matches against. */
+const tiersUpTo = (upTo: string | null): string[] =>
+  upTo === null ? [] : ALL_TIERS.slice(0, ALL_TIERS.indexOf(upTo) + 1);
+const upToOf = (tiers: string[]): string | null =>
+  [...ALL_TIERS].reverse().find((t) => tiers.includes(t)) ?? null;
+
 function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
   const [domains, setDomains] = useState<string[]>(me.preferences.domains);
-  const [tiers, setTiers] = useState<string[]>(me.preferences.tiers);
+  const [upTo, setUpTo] = useState<string | null>(upToOf(me.preferences.tiers));
+  const tiers = tiersUpTo(upTo);
   const [known, setKnown] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const changed =
-    domains.join() !== me.preferences.domains.join() ||
-    tiers.join() !== me.preferences.tiers.join();
+    [...domains].sort().join() !== [...me.preferences.domains].sort().join() ||
+    tiers.join() !==
+      [...me.preferences.tiers].sort((a, b) => ALL_TIERS.indexOf(a) - ALL_TIERS.indexOf(b)).join();
+  const anySet = me.preferences.domains.length + me.preferences.tiers.length > 0;
 
   useEffect(() => {
     api
@@ -38,14 +49,12 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
   }
 
   return (
-    <details
-      className="prefs"
-      open={me.preferences.domains.length + me.preferences.tiers.length > 0}
-    >
+    <details className="prefs" open={anySet}>
       <summary>What would you like to work on?</summary>
       <p className="muted small">
         Up to half of the offered tickets match your choice, the rest is drawn at random, so that
-        nobody can steer towards a particular paper. Nothing selected means: anything.
+        nobody can steer towards a particular paper. Domain and difficulty must both match. Nothing
+        selected means: anything.
       </p>
       <div className="chip-row">
         <span className="chip-label">Domain</span>
@@ -56,22 +65,27 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
             aria-pressed={domains.includes(d)}
             onClick={() => toggle(domains, setDomains, d)}
           >
-            {d}
+            {domainLabel(d)}
           </button>
         ))}
       </div>
-      <div className="chip-row">
-        <span className="chip-label">Difficulty</span>
+      <div className="chip-row" role="group" aria-label="Difficulty up to">
+        <span className="chip-label">Up to</span>
+        <button className="chip" aria-pressed={upTo === null} onClick={() => setUpTo(null)}>
+          Any
+        </button>
         {ALL_TIERS.map((t) => {
           const open = me.tiers_open.includes(t);
           return (
             <button
               key={t}
               className={`chip tier-chip tier-${t}`}
-              aria-pressed={tiers.includes(t)}
+              aria-pressed={upTo === t}
               disabled={!open}
-              title={open ? TIER_HINTS[t] : `Locked. ${TIER_HINTS[t]}`}
-              onClick={() => toggle(tiers, setTiers, t)}
+              title={
+                open ? `${TIER_LABELS[t]} and easier. ${TIER_HINTS[t]}` : `Locked. ${TIER_HINTS[t]}`
+              }
+              onClick={() => setUpTo(t)}
             >
               {open ? "" : "🔒 "}
               {TIER_LABELS[t]}
@@ -80,10 +94,30 @@ function Preferences({ me, onSaved }: { me: Me; onSaved: () => void }) {
         })}
       </div>
       {error && <p className="error">{error}</p>}
-      <button className="secondary" disabled={!changed} onClick={save}>
-        Save and draw new tickets
-      </button>
+      {changed ? (
+        <button className="secondary" onClick={save}>
+          Save and draw new tickets
+        </button>
+      ) : (
+        anySet && <p className="muted small prefs-saved">✓ Saved</p>
+      )}
     </details>
+  );
+}
+
+/** A Lean name that may break only after a dot or an underscore, never inside
+ * a word. */
+function Breakable({ text, className }: { text: string; className: string }) {
+  const parts = text.split(/(?<=[._])/);
+  return (
+    <code className={className}>
+      {parts.map((p, i) => (
+        <span key={i}>
+          {p}
+          {i < parts.length - 1 && <wbr />}
+        </span>
+      ))}
+    </code>
   );
 }
 
@@ -121,6 +155,10 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
   }, [draw, me.leases.length]);
 
   const blocked = me.leases.length >= me.wip_limit;
+  const wanted = me.preferences.domains.length + me.preferences.tiers.length > 0;
+  // Before any ticket of a kind has been reviewed there are no estimates: say
+  // so once, not on every row (SR-30).
+  const noEstimates = Boolean(set?.tickets.every((t) => t.expected_minutes === null));
   const blockedHint =
     `You already hold ${me.leases.length === 1 ? "a ticket" : `${me.leases.length} tickets`} ` +
     `(your limit is ${me.wip_limit}). Finish or return it to take this one; returning carries no penalty.`;
@@ -241,31 +279,54 @@ export function Work({ me, reload }: { me: Me; reload: () => void }) {
               </p>
             ) : (
               <p className="muted small">
-                Pick one — your choice is binding: the ticket is lent to you until you submit or
-                return it.
+                Pick one. Your choice is binding: the ticket is lent to you until you submit or
+                return it. You can return it at any time, without penalty.
               </p>
             )}
-            <div className="cards">
-              {set.tickets.map((t) => (
-                <button
-                  key={t.ticket_id}
-                  className={blocked ? "choice blocked" : "choice"}
-                  aria-disabled={blocked}
-                  title={blocked ? blockedHint : undefined}
-                  onClick={() => (blocked ? undefined : take(t.ticket_id))}
-                >
-                  <span className="card-badges">
-                    <span className="badge">{t.decl_kind}</span>
-                    <TierBadge tier={t.tier} />
-                  </span>
-                  <code className="choice-name">{t.declaration}</code>
-                  <span className="muted small">{t.paper}</span>
-                  <span className="muted small">
-                    {t.domain} · {duration(t.expected_minutes)}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {wanted && !set.preferences_applied && (
+              <p className="pref-note">
+                Nothing matching your choice can be offered right now; this set is drawn at random.
+              </p>
+            )}
+            {noEstimates && (
+              <p className="muted small">
+                No time estimates yet: they appear once tickets like these have been reviewed.
+              </p>
+            )}
+            {/* One ticket per row, always built the same way, for any number of tickets. */}
+            <ul className="choice-list">
+              {set.tickets.map((t) => {
+                const { ns, short } = splitName(t.declaration);
+                return (
+                  <li key={t.ticket_id}>
+                    <button
+                      className={blocked ? "choice blocked" : "choice"}
+                      aria-disabled={blocked}
+                      title={blocked ? blockedHint : undefined}
+                      onClick={() => (blocked ? undefined : take(t.ticket_id))}
+                    >
+                      <span className="choice-kind">
+                        <span className="badge">{kindLabel(t.decl_kind)}</span>
+                        <TierBadge tier={t.tier} />
+                      </span>
+                      <span className="choice-main">
+                        {ns && <Breakable className="choice-ns" text={ns} />}
+                        <Breakable className="choice-name" text={short} />
+                        <span className="choice-paper">
+                          {t.paper} · {domainLabel(t.domain)}
+                          {!noEstimates && ` · ${duration(t.expected_minutes)}`}
+                        </span>
+                      </span>
+                      {!blocked && (
+                        <span className="choice-take" aria-hidden="true">
+                          Take →
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </>
         ) : (
           <p className="muted">Nothing to review for you at the moment.</p>

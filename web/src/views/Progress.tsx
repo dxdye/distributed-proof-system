@@ -7,6 +7,7 @@ import {
   type ProgressUnit,
   type Stats,
 } from "../api";
+import { domainLabel, kindLabel } from "../kinds";
 import { Basis } from "../components/Basis";
 import { Infoview } from "../components/Infoview";
 import { MathText } from "../components/MathText";
@@ -346,11 +347,11 @@ function Units({
                   <code>{u.declaration}</code>
                 )}
               </td>
-              <td>{u.decl_kind}</td>
+              <td>{kindLabel(u.decl_kind)}</td>
               <td>
                 <TierBadge tier={u.tier} />
               </td>
-              <td>{u.domain}</td>
+              <td>{domainLabel(u.domain)}</td>
               <td>
                 <span className="state">
                   <span className={`swatch ${stateClass(u.state)}`} aria-hidden="true" />

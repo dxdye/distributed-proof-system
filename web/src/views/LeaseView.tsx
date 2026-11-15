@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Lease, type ReviewInput } from "../api";
+import { domainLabel } from "../kinds";
 import { Infoview } from "../components/Infoview";
 import { Reference } from "../components/Reference";
 import { ReliesOn } from "../components/ReliesOn";
@@ -257,8 +258,8 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
           <div>
             <h2>{t.paper}</h2>
             <p className="muted small">
-              <TierBadge tier={t.tier} /> {t.domain} · <a href={t.repo_url}>{t.repo_url}</a> @{" "}
-              <code>{t.commit.slice(0, 12)}</code>
+              <TierBadge tier={t.tier} /> {domainLabel(t.domain)} ·{" "}
+              <a href={t.repo_url}>{t.repo_url}</a> @ <code>{t.commit.slice(0, 12)}</code>
             </p>
           </div>
           {active && (

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { kindLabel } from "../kinds";
 import type { Component, GlossaryEntry, UnitView } from "../api";
 
 // Static infoview (SR-21): the elaborated statement of each component, with the
@@ -132,7 +133,7 @@ export function Infoview({ view }: { view: UnitView }) {
   return (
     <div className="infoview">
       <div className="decl-head">
-        <span className="badge">{view.decl_kind}</span>
+        <span className="badge">{kindLabel(view.decl_kind)}</span>
         <code>{view.declaration}</code>
       </div>
       {differing > 0 && (

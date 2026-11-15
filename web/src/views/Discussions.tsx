@@ -1,3 +1,4 @@
+import { domainLabel } from "../kinds";
 import { useCallback, useEffect, useState } from "react";
 import { api, type Post, type Thread, type ThreadSummary } from "../api";
 import { Infoview } from "../components/Infoview";
@@ -111,7 +112,7 @@ export function Discussions() {
                 </span>
                 {t.can_share && <span className="badge share-hint">you can share your review</span>}
                 <div className="muted small">
-                  {t.paper} · {t.domain} · {t.posts} {t.posts === 1 ? "post" : "posts"}
+                  {t.paper} · {domainLabel(t.domain)} · {t.posts} {t.posts === 1 ? "post" : "posts"}
                 </div>
               </div>
             </li>
@@ -288,7 +289,8 @@ export function ThreadView({ sid, decl }: { sid: string; decl: string }) {
           </h2>
         </div>
         <p className="muted small">
-          {thread.paper} · {thread.domain} · <a href={thread.repo_url}>{thread.repo_url}</a> @{" "}
+          {thread.paper} · {domainLabel(thread.domain)} ·{" "}
+          <a href={thread.repo_url}>{thread.repo_url}</a> @{" "}
           <code>{thread.commit.slice(0, 12)}</code>
         </p>
         <Reference

@@ -77,7 +77,12 @@ export type Card = {
   paper: string;
   expected_minutes: number | null;
 };
-export type ChoiceSet = { set_id: string | null; tickets: Card[] };
+export type ChoiceSet = {
+  set_id: string | null;
+  tickets: Card[];
+  /** The reviewer's preferences could be used for this set (never why not). */
+  preferences_applied?: boolean;
+};
 export type HistoryItem = {
   declaration: string;
   paper: string;

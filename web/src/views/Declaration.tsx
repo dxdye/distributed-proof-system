@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type MaintainerDeclaration } from "../api";
+import { domainLabel, kindLabel } from "../kinds";
 import { Infoview } from "../components/Infoview";
 import { ReliesOn } from "../components/ReliesOn";
 import { Reference } from "../components/Reference";
@@ -37,14 +38,15 @@ export function DeclarationView({ sid, decl }: { sid: string; decl: string }) {
           <h2>
             <code>{d.declaration}</code>
           </h2>
-          <span className="badge">{d.decl_kind}</span>
+          <span className="badge">{kindLabel(d.decl_kind)}</span>
           <TierBadge tier={d.tier} />
           <span className={`badge state-${d.state.replace(" ", "-")}`}>
             {STATE_LABELS[d.state] ?? d.state}
           </span>
         </div>
         <p className="muted small">
-          {d.domain} · <a href={d.repo_url}>{d.repo_url}</a> @ <code>{d.commit.slice(0, 12)}</code>
+          {domainLabel(d.domain)} · <a href={d.repo_url}>{d.repo_url}</a> @{" "}
+          <code>{d.commit.slice(0, 12)}</code>
           {d.decided_at &&
             ` · decided ${new Date(d.decided_at).toLocaleDateString("en", { dateStyle: "medium" })}`}
           {d.contested > 0 &&
