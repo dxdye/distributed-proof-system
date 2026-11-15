@@ -822,6 +822,20 @@ passage gives the meaning, and comparing the two is the review.
 - Docstrings of the submission's constants are empty because the source has
   none (openai/math, `Model.lean`), not because rendering drops them.
 
+*Added (2026-11-16):*
+- **Statements laid out for reading** (`web/src/layout.ts`). Lean's printer
+  nests every `∧`, `∀` and `→` one level deeper; a long statement
+  (`OAI.MemoryPrecision.main`: ten conjuncts) became a staircase. The page
+  lays the same text out again: conjuncts one below the other, each `∀` with
+  its hypotheses on one line, the conclusion indented. Only whitespace
+  changes, checked by the function itself; originals and planted copies pass
+  through the same function, so it obeys the rule above. Lean's own line
+  breaks are one click away.
+- **A submission opened again replaces the closed one** on the progress page
+  (same repository, commit and main theorem). Until the event for correcting
+  passages exists (below), closing and opening again is how a passage is
+  fixed; the earlier version keeps its record.
+
 *Still open (covered by the specification, not built yet):*
 - For Lean and Mathlib constants, their definition on request, one level
   deep, or a link to the Mathlib documentation. For junk values the
@@ -886,6 +900,71 @@ Each of the following needs the project owner's decision:
   visible, Lean mutants are recognised at once.
 - *Later:* `#eval` examples and a search for counterexamples (§8.8) need the
   mutant built in the sandbox as well (SR-20); expensive.
+
+### C-43 · §6, §6.5, §10, §12.8, SR-08, SR-41, SR-50 — Courses: students review during a semester · new
+*Idea (project owner, 2026-11-16):* a lecturer (Dr, PhD) runs a course on the
+platform; during the semester the students review a few tickets that belong
+to the course's subject.
+
+*Why it fits:* a class-A ticket is an exercise in reading a formal statement
+against the paper, which is what a course on formal mathematics teaches.
+Planted errors give each student objective feedback after the batch reveal.
+Students sign in through their university and so bring a strong identity
+(C-34). Courses bring reviewers to the domains that lack them.
+
+*Where it meets the mechanism, and what is proposed:*
+- **Course lead, not maintainer.** Maintainers see declarations under review,
+  planted copies included (C-39, maintainer view). A lecturer with that view
+  could tell students, even without meaning to, which of their tickets are
+  planted. Proposed: a separate role *course lead*, confirmed by a maintainer,
+  only with a strong identity (C-34). The course lead sees who in the course
+  took part and how many reviews each made; after the batch reveal, also
+  their verdicts, reasons and the planted errors they met and found. The
+  course lead does not see tickets under review, the vault or other
+  reviewers' votes. The role is scoped to one course; it belongs in the role
+  hierarchy announced as C-42 (an axis "scope": platform or course).
+- **One student of a course per ticket.** Students of one course talk to each
+  other and hear the same explanations in the tutorial. Their votes on one
+  ticket are not independent, but the decision rule assumes they are (§6).
+  Proposed: at most one member of a course per ticket, checked like the
+  conflicts of interest of SR-08. Membership is a group in the vault, like an
+  affiliation (SR-50), and does not appear in the public log. Monitoring of
+  pairs that agree conspicuously often (C-34) covers what remains.
+- **A pool, not assignments.** The course lead chooses a pool: one or more
+  submissions or domains, and a range of tiers. Students draw choice sets
+  inside the pool as everyone does (C-32). The course lead never assigns
+  single tickets; otherwise a course becomes a way to target tickets. If the
+  pool runs out, students draw from all tickets as usual.
+- **Weight as for anyone.** Students start with the weight their identity
+  gives (C-34), entry planted errors included, and gain trust by measured
+  reliability like every reviewer. Optionally a practice mode first: decided
+  tickets with known answers, not counted, then live tickets.
+- **No grades from the platform.** Grading on verdicts would reward agreeing
+  with the majority and punish reporting an error. The course lead gets
+  participation, reasons and the planted errors met and found as feedback;
+  credit for the course is the lecturer's decision, outside the platform.
+- **Privacy.** The link between pseudonym and student, needed for course
+  credit, stays in the vault, with the student's consent, readable only by
+  the course lead. The public log knows the random id and not the course.
+  A student can leave the course; their reviews remain under the open licence
+  (§12.8) without the link to the course.
+- **Semester.** A course has a start and an end. Leases still open at the end
+  are returned without counting against the student. The pool has to hold
+  enough open tickets: a course of 30 students with three tickets each needs
+  about 90 reviews; the 18 openai/math papers of the walkthrough hold 266
+  units.
+
+*Order:* after C-34 (identity strength) and C-42 (role hierarchy). Then a
+course is a scoped role plus a group: events for creating a course, joining
+and leaving it (membership in the vault), the pool as a parameter of the
+draw, and the one-per-course rule in the eligibility check
+(`Coordinator.why_not`).
+
+*Pilot measures:* students against other reviewers on planted errors;
+agreement inside a course against agreement across courses (is the
+one-per-ticket rule enough?); returns; how often reasons cite the passage.
+
+*Status:* proposal; nothing built.
 
 ## SE document
 
@@ -1121,3 +1200,10 @@ every declaration in one version." See C-39.
 submission, their content (unfoldable), and for Lean and Mathlib constants
 their definition on request. Hover works for every link of a dotted name."
 Complements S-14 and S-27. See C-39.
+
+### S-36 · new requirement — Courses · new
+*Proposed:* A requirement for courses: a course lead role scoped to one course
+(strong identity, confirmed by a maintainer, no view of tickets under review);
+at most one member of a course per ticket; a pool of submissions or domains
+inside which students draw as everyone does; membership and the link to the
+student in the vault, with consent; no grades from the platform. See C-43.
