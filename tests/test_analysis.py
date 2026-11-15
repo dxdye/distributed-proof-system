@@ -191,6 +191,21 @@ def test_domains_from_library_modules_and_overrides(basic: Analysis) -> None:
 
 
 @pytest.mark.req("SR-04")
+def test_a_repository_sorting_its_modules_by_area_is_believed(basic: Analysis) -> None:
+    """openai/math files its papers as OAI.Combinatorics.*, OAI.NumberTheory.*:
+    the authors' classification beats the Mathlib vocabulary a statement uses."""
+    decls = dict(basic.decls)
+    decls["Nat"] = decls["Nat"].model_copy(update={"module": "Mathlib.Algebra.Basic"})
+    for name, d in basic.decls.items():
+        if d.module == "Basic":
+            decls[name] = d.model_copy(update={"module": "OAI.NumberTheory.Jacobsthal.Basic"})
+    domains = assign_domains(Analysis(basic.header, decls))
+    assert domains["Basic.double"].domain == "number_theory"
+    assert domains["Basic.double"].source == "module"
+    assert all(d.domain == "number_theory" for d in domains.values())
+
+
+@pytest.mark.req("SR-04")
 def test_domains_unassigned_without_evidence(basic: Analysis) -> None:
     domains = assign_domains(basic)
     assert all(d.source == "unassigned" for d in domains.values())

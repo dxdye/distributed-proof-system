@@ -1,10 +1,15 @@
 """Domain assignment for class-A units (SR-04).
 
-Heuristic: a unit belongs to the domain of the hardened library code its
-statement builds on, e.g. a definition using ``Mathlib.Analysis.*`` belongs to
-analysis. Units without such evidence inherit the majority domain of the new
-units they depend on. Maintainer overrides always win; reviewers can later
-re-route tickets to another domain (concept §9.4), which feeds back here.
+Heuristic, strongest evidence first:
+1. a maintainer override;
+2. the unit's own module, where the repository sorts its modules by area as
+   Mathlib does (``OAI.Combinatorics.SecondNeighborhood`` is combinatorics):
+   the authors' own classification of the paper;
+3. the hardened library code its statement builds on, e.g. a definition using
+   ``Mathlib.Analysis.*`` belongs to analysis;
+4. the majority domain of the new units it depends on.
+Reviewers can later re-route tickets to another domain (concept §9.4), which
+feeds back here.
 """
 
 from __future__ import annotations
@@ -44,7 +49,26 @@ DEFAULT_MODULE_DOMAINS: Mapping[str, str | None] = {
     "Mathlib.Tactic": None,
 }
 
-Source = Literal["override", "library", "inherited", "unassigned"]
+Source = Literal["override", "module", "library", "inherited", "unassigned"]
+
+
+def _area_segments(table: Mapping[str, str | None]) -> dict[str, str]:
+    """Area names as module segments: ``Mathlib.NumberTheory`` gives
+    ``NumberTheory`` → number_theory."""
+    return {prefix.split(".", 1)[1]: domain for prefix, domain in table.items()
+            if domain is not None and prefix.startswith("Mathlib.") and "." not in
+            prefix.split(".", 1)[1]}
+
+
+def _domain_of_own_module(module: str | None, table: Mapping[str, str | None]) -> str | None:
+    """The area a repository files its own module under, if it names one."""
+    if module is None or module.startswith("Mathlib."):
+        return None
+    areas = _area_segments(table)
+    for segment in module.split(".")[1:]:
+        if segment in areas:
+            return areas[segment]
+    return None
 
 
 @dataclass(frozen=True)
@@ -96,8 +120,12 @@ def assign_domains(
                 elif target.unit != name:
                     deps.add(target.unit)
         unit_deps[name] = deps
+        own = _domain_of_own_module(decls[name].module if name in decls else None,
+                                    module_domains)
         if overrides and name in overrides:
             result[name] = DomainAssignment(overrides[name], "override")
+        elif own:
+            result[name] = DomainAssignment(own, "module")
         elif votes:
             result[name] = DomainAssignment(_majority(votes), "library", dict(votes))
 
