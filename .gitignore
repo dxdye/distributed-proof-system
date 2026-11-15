@@ -29,3 +29,7 @@ Thumbs.db
 config.local.yaml
 
 doc
+
+# --- Fonts to try out locally, never committed (web/public/local-fonts/README.md) ---
+/web/public/local-fonts/*
+!/web/public/local-fonts/README.md

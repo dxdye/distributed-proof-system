@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { getFont, setFont, type FontChoice } from "../font";
+import { useEffect, useState } from "react";
+import {
+  getFont,
+  localChoice,
+  localFonts,
+  setFont,
+  type FontChoice,
+  type LocalFont,
+} from "../font";
 import { getTheme, setTheme, type ThemeChoice } from "../theme";
 
 // Page frame: brand mark, colour-scheme and font switches, footer.
@@ -54,22 +61,48 @@ const FONTS: { value: FontChoice; label: string; title: string }[] = [
 
 export function FontSwitch() {
   const [choice, setChoice] = useState<FontChoice>(getFont);
+  const [local, setLocal] = useState<LocalFont[]>([]);
+  useEffect(() => {
+    localFonts().then((fonts) => {
+      setLocal(fonts);
+      setChoice(getFont()); // a listed font may have gone: then Inter again
+    });
+  }, []);
+  const pick = (value: FontChoice) => {
+    setFont(value);
+    setChoice(value);
+  };
   return (
-    <div className="theme-switch" role="group" aria-label="Text font">
-      {FONTS.map((f) => (
-        <button
-          key={f.value}
-          aria-pressed={choice === f.value}
-          title={f.title}
-          onClick={() => {
-            setFont(f.value);
-            setChoice(f.value);
-          }}
+    <>
+      <div className="theme-switch" role="group" aria-label="Text font">
+        {FONTS.map((f) => (
+          <button
+            key={f.value}
+            aria-pressed={choice === f.value}
+            title={f.title}
+            onClick={() => pick(f.value)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      {local.length > 0 && (
+        <select
+          className="font-local"
+          aria-label="Local fonts (public/local-fonts, not in git)"
+          title="Fonts from public/local-fonts on this computer; never committed"
+          value={local.some((f) => localChoice(f.name) === choice) ? choice : ""}
+          onChange={(e) => pick(e.target.value || "sans")}
         >
-          {f.label}
-        </button>
-      ))}
-    </div>
+          <option value="">Local fonts…</option>
+          {local.map((f) => (
+            <option key={f.name} value={localChoice(f.name)}>
+              {f.name}
+            </option>
+          ))}
+        </select>
+      )}
+    </>
   );
 }
 

@@ -1199,6 +1199,20 @@ button.small {
   gap: 0.6rem;
   flex-wrap: wrap;
 }
+.site-footer select.font-local {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--footer-muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius);
+}
+.site-footer select.font-local option {
+  color: #000000;
+}
 .appearance-label {
   margin-left: 0.6rem;
 }
