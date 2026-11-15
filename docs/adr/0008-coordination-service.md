@@ -61,9 +61,13 @@ single sequencer of ADR 0003.
 **Process of a class-A ticket.**
 1. *Choice set (SR-38, SR-39).* Up to `n_S` eligible tickets: first one per
    paper, then fill. Random order, no popularity shown. The set stays the same
-   until it is used or expires, and the number of sets per day is capped, so
-   tickets cannot be rerolled at will. Taking a ticket from the set is binding:
-   it becomes a lease.
+   until it is used or expires, so tickets cannot be rerolled at will. Two
+   limits per 24 hours (proposal C-32): at most 6 sets left unused (expired or
+   discarded by a change of preferences, not counting sets drawn at the
+   work-in-progress limit), and at most 24 sets in all; taking tickets is not
+   limited otherwise. Preferences can change 3 times a day, since each change
+   draws a new set. Taking a ticket from the set is binding: it becomes a
+   lease.
 2. *Eligibility (SR-08, SR-27, SR-50).* A person cannot take a ticket if any of
    these holds:
    - they are an author of the submission;
