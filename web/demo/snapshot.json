@@ -164,7 +164,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -268,7 +268,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -372,7 +372,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -469,7 +469,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -573,7 +573,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -695,7 +695,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -817,7 +817,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -939,7 +939,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1050,7 +1050,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1186,7 +1186,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1290,7 +1290,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1391,7 +1391,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1499,7 +1499,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1618,7 +1618,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1710,7 +1710,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Do junk values of the functions involved (x / 0 = 0, derivatives where there is no derivative) make a condition weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -1881,7 +1881,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -2003,7 +2003,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Where the paper's definition does not apply (division by zero, outside the domain), does the value Lean assigns change any theorem that uses it? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -2156,7 +2156,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",
@@ -2260,7 +2260,7 @@
       },
       {
        "id": "junk_values",
-       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what each of them means, and what it returns where the paper's notion is undefined."
+       "text": "Could junk values (x / 0 = 0, default values, truncated subtraction) make the statement weaker than intended? Here it relies on Nat: check what it means, and what it returns where the paper's notion is undefined."
       },
       {
        "id": "edge_cases",

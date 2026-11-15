@@ -94,8 +94,9 @@ def junk_values_here(relies_on: Sequence[GlossaryEntry]) -> str:
         return ""
     names = [g.name for g in relies_on]
     noted = [g.name for g in relies_on if g.note]
-    text = (f" Here it relies on {_names(names)}: check what each of them means, and what it "
-            "returns where the paper's notion is undefined.")
+    what = "what it means" if len(names) == 1 else "what each of them means"
+    text = (f" Here it relies on {_names(names)}: check {what}, and what it returns where the "
+            "paper's notion is undefined.")
     if noted:
         text += f" Conventions to know are noted for {_names(noted)}."
     return text
