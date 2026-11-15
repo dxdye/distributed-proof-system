@@ -62,7 +62,7 @@
   --muted: #56606d;
   --line: #dde2e8;
   --line-strong: #c3cad3;
-  --accent: #81909b; /* trial 2026-11-15, was #0b4f8a */
+  --accent: #81909b; /* grey-blue, chosen 2026-11-15 (before: #0b4f8a) */
   --accent-hover: #6b7a85;
   --accent-ink: #ffffff;
   --accent-soft: #eef1f3;
