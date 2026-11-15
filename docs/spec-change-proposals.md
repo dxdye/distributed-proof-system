@@ -78,6 +78,13 @@ earning **more** trust than honest reviewers and raising the miss rate to up to
 15 % (`k_min = 2`). Options: review before publication (embargo), private pools
 of non-public formalizations, informal-side honeypots (genuine Lean, altered
 informal statement). Decision on extending the specification pending.
+*Decided for public examples (2026-11-15):* the front page and other public
+teaching material show only a declaration that is decided and whose paper has
+no unrevealed planted error. An example under review tells every reviewer what
+to look for in exactly that ticket, and its risks can resemble its planted
+copies (QRH: "Re(s) > 1" next to the candidates `8 / 8 < s.re`, `7 / 7 < s.re`):
+a side channel like the lookup above. The QRH example meets the rule in the
+test system; check it again before any launch.
 *Evidence:* ADR 0006, `docs/simulation/README.md`.
 
 ### C-08 · §5.1 Honeypots and automatic lints · new
