@@ -2774,3 +2774,35 @@ span.tag {
 .how-more li {
   margin: 0.3rem 0;
 }
+
+/* Mapping a paper passage by four eyes (C-42) */
+.proposals {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0;
+}
+.proposal {
+  border-left: 3px solid var(--line-strong);
+  padding: 0.4rem 0.8rem;
+  margin: 0.5rem 0;
+}
+.proposal-confirmed {
+  border-left-color: var(--ok, #2e8b57);
+}
+.proposal-rejected {
+  opacity: 0.65;
+}
+.propose-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.propose-form button {
+  align-self: flex-start;
+}
+.propose-preview {
+  padding: 0.5rem 0.8rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+}

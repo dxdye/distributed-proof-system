@@ -104,6 +104,18 @@ export type HistoryItem = {
   outcome: string | null;
   planted_error: boolean | null;
 };
+/** A proposed paper passage (C-42): open until another maintainer decides. */
+export type PassageProposal = {
+  proposal_id: string;
+  locator: string;
+  statement: string;
+  note: string;
+  status: "open" | "confirmed" | "rejected";
+  mine: boolean;
+  at: string;
+  reason: string;
+};
+
 /** A maintainer of one domain (C-42), as administrators see it. */
 export type MaintainerRow = {
   pseudonym: string;
@@ -437,6 +449,21 @@ export const api = {
   report: (postId: string, reason: string) =>
     request("POST", `/api/posts/${postId}/report`, { reason }),
   progress: () => request<ProgressSummary[]>("GET", "/api/progress"),
+  passages: (sid: string, decl: string) =>
+    request<PassageProposal[]>(
+      "GET",
+      `/api/passages?submission_id=${encodeURIComponent(sid)}&declaration=${encodeURIComponent(decl)}`,
+    ),
+  proposePassage: (sid: string, decl: string, locator: string, statement: string, note: string) =>
+    request<{ proposal_id: string }>("POST", "/api/passages", {
+      submission_id: sid,
+      declaration: decl,
+      locator,
+      statement,
+      note,
+    }),
+  decidePassage: (id: string, confirm: boolean, reason: string) =>
+    request("POST", `/api/passages/${id}/decide`, { confirm, reason }),
   progressDetail: (sid: string) =>
     request<ProgressDetail>("GET", `/api/progress/${encodeURIComponent(sid)}`),
   note: (sid: string, text: string, showPseudonym: boolean) =>

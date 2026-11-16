@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { api, type MaintainerDeclaration } from "../api";
+import { useCallback, useEffect, useState } from "react";
+import { api, type MaintainerDeclaration, type Me } from "../api";
+import { PassageMapping } from "../components/PassageMapping";
 import { domainLabel, kindLabel } from "../kinds";
 import { Infoview } from "../components/Infoview";
 import { ReliesOn } from "../components/ReliesOn";
@@ -8,9 +9,10 @@ import { TierBadge } from "../components/Tier";
 import { threadHref } from "./Discussions";
 import { progressHref } from "./Progress";
 
-// A declaration as its reviewers see it, for maintainers (from the progress
-// page). Not public: the real statement next to a planted copy would give the
-// copy away.
+// A declaration as its reviewers see it, for maintainers and PVVs of its
+// domain (from the progress page), and where its paper passage is mapped by
+// four eyes (C-42). Not public: the real statement next to a planted copy
+// would give the copy away; opening it counts as having seen the original.
 
 const STATE_LABELS: Record<string, string> = {
   accepted: "accepted",
@@ -19,12 +21,13 @@ const STATE_LABELS: Record<string, string> = {
   "not started": "not started",
 };
 
-export function DeclarationView({ sid, decl }: { sid: string; decl: string }) {
+export function DeclarationView({ sid, decl, me }: { sid: string; decl: string; me: Me }) {
   const [d, setD] = useState<MaintainerDeclaration | null>(null);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
+  const load = useCallback(() => {
     api.admin.declaration(sid, decl).then(setD, (e) => setError((e as Error).message));
   }, [sid, decl]);
+  useEffect(load, [load]);
 
   if (error) return <p className="error">{error}</p>;
   if (!d) return <p className="muted">Loading…</p>;
@@ -53,8 +56,9 @@ export function DeclarationView({ sid, decl }: { sid: string; decl: string }) {
             ` · paper passage contested by ${d.contested} ${d.contested === 1 ? "reviewer" : "reviewers"}`}
         </p>
         <p className="maintainer-note small">
-          Maintainer view: the ticket as its reviewers see it. Only maintainers see declarations
-          under review, because the real statement next to a planted copy would give the copy away.
+          The ticket as its reviewers see it. Only maintainers and PVVs of the domain see
+          declarations under review, because the real statement next to a planted copy would give
+          the copy away. You have now seen the original: its tickets are not offered to you.
           {d.discussion && (
             <>
               {" "}
@@ -78,6 +82,14 @@ export function DeclarationView({ sid, decl }: { sid: string; decl: string }) {
           <ReliesOn entries={d.relies_on} />
         </section>
       </section>
+      {d.state === "not started" && (
+        <PassageMapping
+          sid={sid}
+          decl={d.declaration}
+          canConfirm={Boolean(me.root) || me.maintains.includes(d.domain)}
+          onChanged={load}
+        />
+      )}
       <section className="card">
         <h3>The checklist reviewers answer</h3>
         <ul className="questions">

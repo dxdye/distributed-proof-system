@@ -427,6 +427,8 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
   }, [sid]);
   useEffect(load, [load]);
 
+  const canOpen =
+    Boolean(me?.maintainer) || Object.values(me?.roles ?? {}).some((r) => r.includes("PVV"));
   if (error) return <p className="error">{error}</p>;
   if (!d) return <p className="muted">Loading…</p>;
   return (
@@ -531,12 +533,14 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
 
       <section className="card">
         <h3>Declarations</h3>
-        {me?.maintainer && (
+        {canOpen && (
           <p className="muted small">
-            As a maintainer you can open each declaration and see the ticket as its reviewers do.
+            As a maintainer or PVV you can open a declaration of your domain, see the ticket as its
+            reviewers do and map its paper passage. Opening it counts as having seen the original:
+            its tickets are no longer offered to you.
           </p>
         )}
-        <Units units={d.units} sid={sid} maintainer={Boolean(me?.maintainer)} />
+        <Units units={d.units} sid={sid} maintainer={canOpen} />
       </section>
 
       <section className="card">

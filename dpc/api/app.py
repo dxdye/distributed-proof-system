@@ -141,6 +141,19 @@ class DeclarationReq(_Req):
     declaration: str
 
 
+class ProposeReq(_Req):
+    submission_id: str
+    declaration: str
+    locator: str
+    statement: str
+    note: str = ""
+
+
+class PassageDecisionReq(_Req):
+    confirm: bool
+    reason: str = ""
+
+
 class AppointReq(_Req):
     """A maintainer of domains (C-42), by an administrator."""
 
@@ -761,8 +774,37 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                                 "reasons": [reason for _, reason in t.contests]})
             return out
 
+    @app.post("/api/passages")
+    def propose(req: ProposeReq, rid: Rid) -> dict[str, str]:
+        """Propose a paper passage (PVVs and maintainers of the domain, C-42)."""
+        pid = call(coord.propose_passage, rid, req.submission_id, req.declaration,
+                   locator=req.locator, statement=req.statement, note=req.note)
+        return {"proposal_id": pid}
+
+    @app.get("/api/passages")
+    def proposals(submission_id: str, declaration: str, rid: Rid) -> list[dict[str, Any]]:
+        """Proposals for one declaration, for those who may map it."""
+        with coord.lock:
+            real = coord.real_ticket(submission_id, declaration)
+            if real is None:
+                raise HTTPException(404, "no such declaration")
+            st, now = coord.state, coord.now()
+            if not (st.maintains(rid, real.domain, now) or "PVV" in st.roles(rid, real.domain,
+                                                                               now)):
+                raise HTTPException(403, "PVVs and maintainers of this domain only")
+            return [{"proposal_id": p.proposal_id, "locator": p.locator,
+                     "statement": p.statement, "note": p.note, "status": p.status,
+                     "mine": p.by == rid, "at": p.at.isoformat(), "reason": p.reason}
+                    for p in st.proposals.values()
+                    if (p.submission_id, p.declaration) == (submission_id, declaration)]
+
+    @app.post("/api/passages/{proposal_id}/decide")
+    def decide_passage(proposal_id: str, req: PassageDecisionReq, rid: Rid) -> dict[str, bool]:
+        call(coord.decide_passage, rid, proposal_id, confirm=req.confirm, reason=req.reason)
+        return {"ok": True}
+
     @app.post("/api/admin/declaration")
-    def admin_declaration(req: DeclarationReq, rid: Maint) -> dict[str, Any]:
+    def admin_declaration(req: DeclarationReq, rid: Rid) -> dict[str, Any]:
         """A declaration as its reviewers see it, for a maintainer of its domain
         (progress page). Not public: the real statement next to a planted copy
         would give it away. Recorded as seen (C-42): the maintainer is not

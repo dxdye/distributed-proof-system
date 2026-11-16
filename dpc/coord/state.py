@@ -21,7 +21,7 @@ from dpc.domain.anomaly import DetectionRecord
 from dpc.domain.lease import Reliability
 from dpc.domain.trust import Source, TrustState, record
 from dpc.tickets.model import Evidence
-from dpc.tickets.paper import PaperPassage
+from dpc.tickets.paper import PaperPassage, PaperSource
 from dpc.tickets.views import UnitView
 
 LeaseStatus = Literal["active", "done", "returned", "expired", "cancelled"]
@@ -37,6 +37,23 @@ class EvidenceRec:
     p_error: float
     factor: float  # time factor of the underlying review (SR-29)
     ticket_id: str
+
+
+@dataclass
+class ProposalSt:
+    """A proposed paper passage (C-42): open, confirmed or rejected."""
+
+    proposal_id: str
+    submission_id: str
+    declaration: str
+    by: str
+    locator: str
+    statement: str
+    note: str
+    at: datetime
+    status: str = "open"  # open | confirmed | rejected
+    decided_by: str | None = None
+    reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -241,6 +258,7 @@ class State:
         self.seq = -1
         # Roles per (reviewer, domain, time), valid until the next event: a
         # choice set asks for them once per ticket (SR-22).
+        self.proposals: dict[str, ProposalSt] = {}  # paper passages (C-42)
         self._roles: dict[tuple[str, str, datetime], frozenset[str]] = {}
         self._roles_seq = -1
 
@@ -353,6 +371,30 @@ class State:
 
     # Older logs: the single maintainer role of before C-42 is the administrator.
     _on_reviewer_maintainer_appointed = _on_reviewer_admin_appointed
+
+    def _on_passage_proposed(self, p: ev.PassageProposed, at: datetime, _: Entry) -> None:
+        self.proposals[p.proposal_id] = ProposalSt(
+            p.proposal_id, p.submission_id, p.declaration, p.by, p.locator, p.statement,
+            p.note, at)
+
+    def _on_passage_decided(self, p: ev.PassageDecided, at: datetime, _: Entry) -> None:
+        prop = self.proposals[p.proposal_id]
+        prop.status = "confirmed" if p.confirmed else "rejected"
+        prop.decided_by, prop.reason = p.by, p.reason
+        if not p.confirmed:
+            return
+        sub = self.submissions[prop.submission_id]
+        tickets = [self.tickets[t] for t in sub.tickets
+                   if self.tickets[t].view.declaration == prop.declaration]
+        known = next((t.paper.source for t in self.tickets.values()
+                      if t.submission_id == sub.submission_id and t.paper is not None), None)
+        source = known or PaperSource(title=sub.title, url=sub.paper_ref)
+        passage = PaperPassage(source=source, locator=prop.locator, statement=prop.statement,
+                               mapped_by=f"proposed by {prop.by}, confirmed by {p.by}",
+                               note=prop.note)
+        for ticket in tickets:  # the original and its planted copies alike
+            ticket.paper = passage
+            ticket.contests.clear()
 
     def _on_reviewer_root_appointed(self, p: ev.RootAppointed, at: datetime, _: Entry) -> None:
         self.reviewers[p.reviewer].root = True

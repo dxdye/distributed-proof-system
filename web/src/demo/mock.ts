@@ -87,6 +87,19 @@ type State = {
   revealed: string[];
   closed: string[];
   tags?: Record<string, string[]>; // hashtags per submission (C-44)
+  // passages proposed and confirmed by four eyes (C-42)
+  proposals?: {
+    proposal_id: string;
+    sid: string;
+    decl: string;
+    by: Role;
+    locator: string;
+    statement: string;
+    note: string;
+    status: "open" | "confirmed" | "rejected";
+    at: string;
+    reason: string;
+  }[];
   people: Record<Role, Person>;
   next: number;
   // discussion after the decision (proposal C-25)
@@ -1232,6 +1245,49 @@ function unitState(u: Unit): string {
   return started ? "in review" : "not started";
 }
 
+/** Passages by four eyes (C-42): in the dummy, the maintainer and the root
+ * tester propose; the other one confirms (the root tester may confirm its own). */
+function passages(role: Role, method: string, path: string, body: Json, query: URLSearchParams) {
+  if (!PROFILE[role].roles.includes("PVV"))
+    throw new HttpError(403, "PVVs and maintainers of this domain only");
+  const list = (state.proposals ??= []);
+  if (path === "/api/passages" && method === "GET")
+    return list
+      .filter((x) => x.sid === query.get("submission_id") && x.decl === query.get("declaration"))
+      .map((x) => ({ ...x, mine: x.by === role }));
+  if (path === "/api/passages" && method === "POST") {
+    const statement = String(body.statement ?? "").trim();
+    if (!String(body.locator ?? "").trim() || statement.length < 10)
+      throw new HttpError(400, "a passage needs a locator and a statement");
+    const proposal_id = id("PP");
+    list.push({
+      proposal_id,
+      sid: String(body.submission_id),
+      decl: String(body.declaration),
+      by: role,
+      locator: String(body.locator).trim(),
+      statement,
+      note: String(body.note ?? "").trim(),
+      status: "open",
+      at: now(),
+      reason: "",
+    });
+    return { proposal_id };
+  }
+  const decide = path.match(/^\/api\/passages\/([^/]+)\/decide$/);
+  if (decide && method === "POST") {
+    const prop = list.find((x) => x.proposal_id === decide[1] && x.status === "open");
+    if (!prop) throw new HttpError(409, "no open proposal with this id");
+    if (!PROFILE[role].maintainer) throw new HttpError(403, "maintainers of this domain only");
+    if (prop.by === role && role !== "root")
+      throw new HttpError(403, "four eyes: another maintainer confirms (C-42)");
+    prop.status = body.confirm ? "confirmed" : "rejected";
+    prop.reason = String(body.reason ?? "");
+    return { ok: true };
+  }
+  throw new HttpError(404, "not found");
+}
+
 /** Hashtags of a submission (C-44): set in the dummy by the maintainer role. */
 function tagsOf(sid: string): string[] {
   return state.tags?.[sid] ?? [];
@@ -1561,6 +1617,8 @@ function handle(
     const out = discussion(role, method, path, body, query);
     if (out !== undefined) return out;
   }
+  if (path === "/api/passages" || path.startsWith("/api/passages/"))
+    return passages(role, method, path, body, query);
   if (path.startsWith("/api/admin/")) {
     if (!PROFILE[role].maintainer) throw new HttpError(403, "maintainers only");
     const adminOnly =

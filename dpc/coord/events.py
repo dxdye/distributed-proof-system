@@ -87,6 +87,31 @@ class AdminRevoked(_P):
     by: Literal["operator", "identity_provider"]
 
 
+class PassageProposed(_P):
+    """A paper passage for a declaration, proposed by a PVV or maintainer of
+    its domain (C-42); it takes effect only when another maintainer of the
+    domain confirms it."""
+
+    proposal_id: str
+    submission_id: str
+    declaration: str
+    by: str
+    locator: str = Field(min_length=1)
+    statement: str = Field(min_length=1)
+    note: str = ""
+
+
+class PassageDecided(_P):
+    """A maintainer of the domain, not the proposer, confirms or rejects a
+    proposal. Confirmed, it becomes the passage of every ticket of the
+    declaration, planted copies included."""
+
+    proposal_id: str
+    by: str
+    confirmed: bool
+    reason: str = ""
+
+
 class RootAppointed(_P):
     """A root tester: every role, free of the rules. Effective only where the
     parameters allow root accounts (test systems, never production)."""
@@ -392,6 +417,8 @@ PAYLOADS: dict[str, type[_P]] = {
     # The same, as older logs name it (before C-42 the administrator was "maintainer").
     "reviewer.maintainer_appointed": AdminAppointed,
     "reviewer.maintainer_revoked": AdminRevoked,
+    "passage.proposed": PassageProposed,
+    "passage.decided": PassageDecided,
     "reviewer.root_appointed": RootAppointed,
     "reviewer.root_revoked": RootRevoked,
     "role.maintainer_appointed": MaintainerRoleAppointed,

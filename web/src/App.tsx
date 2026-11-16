@@ -88,15 +88,19 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   else if (page === "lease" && route[1]) body = <LeaseView id={route[1]} reload={reload} />;
   else if (page === "history") body = <History me={me} />;
   else if (page === "progress" && route[1] && route[2])
-    body = me.maintainer ? (
-      <DeclarationView
-        key={`${route[1]}/${route[2]}`}
-        sid={decodeURIComponent(route[1])}
-        decl={decodeURIComponent(route[2])}
-      />
-    ) : (
-      <p className="muted">Only maintainers see declarations under review.</p>
-    );
+    body =
+      me.maintainer || Object.values(me.roles).some((r) => r.includes("PVV")) ? (
+        <DeclarationView
+          key={`${route[1]}/${route[2]}`}
+          sid={decodeURIComponent(route[1])}
+          decl={decodeURIComponent(route[2])}
+          me={me}
+        />
+      ) : (
+        <p className="muted">
+          Only maintainers and PVVs of the domain see declarations under review.
+        </p>
+      );
   else if (page === "discussions") body = <Discussions />;
   else if (page === "thread" && route[1] && route[2])
     body = (

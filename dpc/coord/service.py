@@ -449,7 +449,7 @@ class Coordinator:
             real = self.real_ticket(submission_id, declaration)
             if real is None:
                 raise NotFound("no such declaration")
-            self._maintainer_of(rid, [real.domain])
+            self._mapper(rid, real)
             st = self.state
             involved = any(rid in st.participants(t)
                            for t in self.unit_tickets(submission_id, declaration))
@@ -461,6 +461,65 @@ class Coordinator:
                 self._emit("unit.shown", ev.UnitShown(
                     reviewer=rid, submission_id=submission_id, declaration=declaration))
             return real
+
+    def _mapper(self, rid: str, real: TicketSt) -> None:
+        """PVVs and maintainers of the declaration's domain map passages (C-42)."""
+        st, now = self.state, self.now()
+        if not (st.maintains(rid, real.domain, now) or "PVV" in st.roles(rid, real.domain, now)):
+            raise Forbidden("PVVs and maintainers of this domain map passages (C-42)")
+
+    def _unreviewed(self, submission_id: str, declaration: str) -> None:
+        """A passage may change only while nobody has reviewed the declaration:
+        otherwise the verdicts would compare with different passages."""
+        if any(t.reviews for t in self.unit_tickets(submission_id, declaration)):
+            raise Conflict("this declaration has reviews already: its passage changes only by "
+                           "opening the submission again")
+
+    def _seen(self, rid: str, submission_id: str, declaration: str) -> None:
+        if (submission_id, declaration) not in self.state.seen_units[rid]:
+            self._emit("unit.shown", ev.UnitShown(
+                reviewer=rid, submission_id=submission_id, declaration=declaration))
+
+    def propose_passage(self, rid: str, submission_id: str, declaration: str, *,
+                        locator: str, statement: str, note: str = "") -> str:
+        """Propose the paper passage of a declaration (C-42). Mapping means
+        reading the original: recorded as seen, so its tickets are not offered
+        to the proposer afterwards."""
+        with self.lock:
+            real = self.real_ticket(submission_id, declaration)
+            if real is None:
+                raise NotFound("no such declaration")
+            self._mapper(rid, real)
+            self._unreviewed(submission_id, declaration)
+            if not locator.strip() or len(statement.strip()) < 10:
+                raise CoordError("a passage needs a locator and a statement")
+            pid = self.new_id("PP")
+            self._seen(rid, submission_id, declaration)
+            self._emit("passage.proposed", ev.PassageProposed(
+                proposal_id=pid, submission_id=submission_id, declaration=declaration, by=rid,
+                locator=locator.strip(), statement=statement.strip(), note=note.strip()))
+            return pid
+
+    def decide_passage(self, rid: str, proposal_id: str, *, confirm: bool,
+                       reason: str = "") -> None:
+        """A maintainer of the domain other than the proposer confirms or
+        rejects (four eyes, C-42); a rejection needs a reason."""
+        with self.lock:
+            prop = self.state.proposals.get(proposal_id)
+            if prop is None or prop.status != "open":
+                raise Conflict("no open proposal with this id")
+            real = self.real_ticket(prop.submission_id, prop.declaration)
+            assert real is not None
+            self._maintainer_of(rid, [real.domain])
+            if rid == prop.by and not self.state.is_root(rid):
+                raise Forbidden("four eyes: another maintainer confirms (C-42)")
+            if not confirm and len(reason.strip()) < 10:
+                raise CoordError("say why, in at least 10 characters")
+            if confirm:
+                self._unreviewed(prop.submission_id, prop.declaration)
+            self._seen(rid, prop.submission_id, prop.declaration)
+            self._emit("passage.decided", ev.PassageDecided(
+                proposal_id=proposal_id, by=rid, confirmed=confirm, reason=reason.strip()))
 
     def tag_submission(self, rid: str, submission_id: str,
                        tags: Sequence[str]) -> tuple[str, ...]:
