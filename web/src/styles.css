@@ -64,13 +64,20 @@
   --line-strong: #c3cad3;
   --accent: #81909b; /* grey-blue, chosen 2026-11-15 (before: #0b4f8a) */
   --accent-hover: #6b7a85;
+  /* The grey-blue has two roles (contrast concept, WCAG 2.2 AA): #81909b for
+     the brand, surfaces, borders and underlines (3.3:1, enough for those);
+     a darker tone of the same hue wherever it is text (6.5:1 on white). */
+  --accent-text: #526069;
+  --accent-text-hover: #44525c;
+  /* Borders that delineate a control (inputs, selects): 3.3:1 on white. */
+  --control-line: #848f9b;
   --accent-ink: #ffffff;
   --accent-soft: #eef1f3;
-  --btn-bg: #81909b;
+  --btn-bg: #5f6e79; /* white on it 5.3:1 (on #81909b it was 3.3:1) */
   --btn-ink: #ffffff;
-  --btn-border: #81909b;
-  --btn-hover-bg: #6b7a85;
-  --btn-hover-border: #6b7a85;
+  --btn-border: #5f6e79;
+  --btn-hover-bg: #526069;
+  --btn-hover-border: #526069;
   --mark-bg: #81909b;
   --mark-ink: #ffffff;
   --error: #b3261e;
@@ -83,14 +90,14 @@
   --st-accepted: #38a169;
   --st-error: #b3261e;
   --st-review: #3a78c2;
-  --st-none: #c3cad3;
+  --st-none: #848f9b; /* "not started" in the bar: 3.3:1 on white (was 1.65) */
   --term-bg: #f6f7f9;
   --footer-bg: #1b2129;
   --footer-ink: #d5dbe3;
   --footer-muted: #9aa4b1;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
   --shadow-lg: 0 10px 30px rgba(16, 24, 40, 0.14);
-  --focus: 0 0 0 3px #ffffff, 0 0 0 5px #81909b;
+  --focus: 0 0 0 3px #ffffff, 0 0 0 5px #526069;
 
   --radius: 2px; /* controls: sharp, as on public-sector sites */
   --radius-lg: 10px;
@@ -118,6 +125,9 @@
     --line-strong: #3a3a3a;
     --accent: #7db8ab;
     --accent-hover: #9ad3c5;
+    --accent-text: #7db8ab;
+    --accent-text-hover: #9ad3c5;
+    --control-line: #6e6e6e;
     --accent-ink: #000000;
     --accent-soft: #101a17;
     --btn-bg: #ffffff;
@@ -136,7 +146,7 @@
     --st-accepted: #3aa765;
     --st-error: #b8352e;
     --st-review: #6c8ff0;
-    --st-none: #3a3a3a;
+    --st-none: #6e6e6e;
     --term-bg: #070707;
     --footer-bg: #000000;
     --footer-ink: #bbbbbb;
@@ -158,6 +168,9 @@
   --line-strong: #3a3a3a;
   --accent: #7db8ab;
   --accent-hover: #9ad3c5;
+  --accent-text: #7db8ab;
+  --accent-text-hover: #9ad3c5;
+  --control-line: #6e6e6e;
   --accent-ink: #000000;
   --accent-soft: #101a17;
   --btn-bg: #ffffff;
@@ -176,7 +189,7 @@
   --st-accepted: #3aa765;
   --st-error: #b8352e;
   --st-review: #6c8ff0;
-  --st-none: #3a3a3a;
+  --st-none: #6e6e6e;
   --term-bg: #070707;
   --footer-bg: #000000;
   --footer-ink: #bbbbbb;
@@ -196,11 +209,11 @@ body {
   background: var(--bg);
 }
 a {
-  color: var(--accent);
+  color: var(--accent-text);
   text-underline-offset: 0.18em;
 }
 a:hover {
-  color: var(--accent-hover);
+  color: var(--accent-text-hover);
 }
 :focus-visible {
   outline: none;
@@ -373,7 +386,7 @@ html {
 }
 .service-bar a.signin-link {
   margin-left: auto;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
   font-size: 0.85rem;
   text-decoration: underline;
@@ -381,7 +394,7 @@ html {
   white-space: nowrap;
 }
 .service-bar a.signin-link:hover {
-  color: var(--accent-hover);
+  color: var(--accent-text-hover);
 }
 .maintainer-note {
   border-left: 3px solid var(--btn-bg);
@@ -398,7 +411,7 @@ html {
   background: var(--error-soft);
 }
 nav.main-nav a[aria-current="page"] {
-  color: var(--accent);
+  color: var(--accent-text);
   box-shadow: inset 0 -2px 0 var(--accent);
   border-radius: var(--radius) var(--radius) 0 0;
 }
@@ -516,7 +529,7 @@ main:focus {
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
   margin-bottom: 0.9rem;
 }
 .lead {
@@ -545,7 +558,7 @@ main:focus {
   display: block;
   font-family: var(--mono);
   font-size: 0.8rem;
-  color: var(--accent);
+  color: var(--accent-text);
   margin-bottom: 0.4rem;
 }
 .steps strong {
@@ -588,7 +601,7 @@ details.alt-access {
 }
 details.alt-access summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 550;
   margin-bottom: 1rem;
 }
@@ -656,7 +669,7 @@ textarea {
   font-weight: 400;
   color: var(--ink);
   background: var(--card);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--control-line);
   border-radius: var(--radius);
   padding: 0.6rem 0.75rem;
   min-height: 2.75rem;
@@ -669,14 +682,14 @@ textarea:hover {
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  border-color: var(--accent);
+  border-color: var(--accent-text);
 }
 input[type="checkbox"],
 input[type="radio"] {
   min-height: 0;
   width: 1.1rem;
   height: 1.1rem;
-  accent-color: var(--accent);
+  accent-color: var(--accent-text);
 }
 textarea {
   min-height: 6rem;
@@ -725,14 +738,14 @@ button.link {
   border: 0;
   min-height: 0;
   padding: 0;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
 button.link:hover:not(:disabled) {
   background: none;
-  color: var(--accent-hover);
+  color: var(--accent-text-hover);
 }
 button + button {
   margin-left: 0.5rem;
@@ -748,7 +761,7 @@ button + button {
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
   border-radius: var(--radius);
   padding: 0.15rem 0.45rem;
@@ -779,7 +792,7 @@ button.choice {
 }
 button.choice:hover:not(:disabled) {
   background: var(--card);
-  border-color: var(--accent);
+  border-color: var(--accent-text);
   box-shadow: var(--shadow-lg);
 }
 /* The choice set as a list: one ticket per row, always the same layout,
@@ -832,7 +845,7 @@ button.choice:hover:not(:disabled) {
   color: var(--muted);
 }
 .choice-take {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
   font-size: 0.9rem;
   white-space: nowrap;
@@ -1176,7 +1189,7 @@ fieldset.failed label.inline {
   background: var(--ok-soft);
 }
 .badge.tier-medium {
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
 }
 .badge.tier-hard {
@@ -1421,7 +1434,7 @@ button.small {
   background: var(--surface);
 }
 .badge.origin-library {
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
 }
 .badge.origin-submission {
@@ -1521,7 +1534,7 @@ button.small {
   color: var(--muted);
 }
 .badge.ctx-main {
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
 }
 .ctx-body {
@@ -1600,7 +1613,7 @@ button.small {
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 .duty-card.waiting {
-  border-left-color: var(--accent);
+  border-left-color: var(--accent-text);
 }
 .duty-card h2 {
   margin: 0;
@@ -1863,7 +1876,7 @@ button.user-signout:hover:not(:disabled) {
   font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .example-formula {
   font-size: 1.2rem;
@@ -1986,7 +1999,7 @@ button.vote:hover:not(:disabled) {
   border: 0;
 }
 button.vote.on {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .score {
   font-weight: 650;
@@ -2026,7 +2039,7 @@ button.vote.on {
 }
 .lean-details summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 550;
   margin: 0.5rem 0;
 }
@@ -2261,7 +2274,7 @@ dl.kv dt[title] {
 }
 .prl-ladder li.done,
 .prl-ladder li.current {
-  border-top-color: var(--accent);
+  border-top-color: var(--accent-text);
 }
 .prl-ladder li.done strong,
 .prl-ladder li.current strong {
@@ -2271,7 +2284,7 @@ dl.kv dt[title] {
   background: var(--accent-soft);
 }
 .prl-ladder li.current .prl-level {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 700;
 }
 .chart {
@@ -2399,7 +2412,7 @@ ul.basis p {
 }
 .basis-more summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 0.88rem;
   margin-top: 0.3rem;
 }
@@ -2705,7 +2718,7 @@ span.tag {
 }
 .tag:hover {
   color: var(--ink);
-  border-color: var(--accent);
+  border-color: var(--accent-text);
 }
 .tag.on {
   background: var(--btn-bg);
@@ -2776,7 +2789,7 @@ span.tag {
     box-shadow 0.15s;
 }
 .how-nav a:hover {
-  border-color: var(--accent);
+  border-color: var(--accent-text);
   color: var(--ink-strong);
   box-shadow: var(--shadow);
 }
@@ -3013,7 +3026,7 @@ nav.main-nav .nav-drop-menu a:focus-visible {
   button.nav-fold:focus-visible,
   button.nav-fold:active {
     background: var(--surface);
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-text);
+    color: var(--accent-text);
   }
 }
