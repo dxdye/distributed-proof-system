@@ -3117,27 +3117,60 @@ button.ctx-row.current {
   padding: 0 0 0.3rem 0.6rem;
 }
 
-/* The side panel: fixed beside the page under the header; full screen on
-   phones. The page makes room for it on wide screens. */
+/* The panel: a sheet that slides up from below, at the width of the content,
+   with a shadow upwards. Nothing on the page moves; the page gets room at its
+   end so that everything can still be scrolled above the sheet. */
 .ctx-panel {
   position: fixed;
-  top: var(--masthead-h, 0px);
-  right: 0;
+  left: 50%;
   bottom: 0;
   z-index: 30;
   display: flex;
   flex-direction: column;
-  width: min(34rem, 42vw);
+  width: min(72rem, 100vw);
+  height: min(55vh, 34rem);
+  transform: translateX(-50%);
   background: var(--card);
-  border-left: 1px solid var(--line-strong);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line-strong);
+  border-bottom: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow:
+    0 -12px 32px rgba(16, 24, 40, 0.18),
+    0 -2px 6px rgba(16, 24, 40, 0.08);
+  animation: ctx-sheet-up 0.22s ease-out;
+}
+@keyframes ctx-sheet-up {
+  from {
+    transform: translate(-50%, 100%);
+  }
+  to {
+    transform: translate(-50%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctx-panel {
+    animation: none;
+  }
+}
+/* A grip at the top edge, so it reads as a sheet. */
+.ctx-panel::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  width: 2.5rem;
+  height: 0.25rem;
+  margin-left: -1.25rem;
+  border-radius: 999px;
+  background: var(--line-strong);
 }
 .ctx-panel-head {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.6rem 0.9rem;
+  padding: 0.85rem 1rem 0.6rem;
   border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: var(--surface);
 }
 .ctx-path {
@@ -3171,7 +3204,7 @@ button.ctx-panel-close:hover {
 .ctx-panel-body {
   flex: 1;
   overflow-y: auto;
-  padding: 0.9rem 1rem 1.5rem;
+  padding: 0.9rem 1.25rem 1.5rem;
 }
 .ctx-panel-title {
   display: flex;
@@ -3189,17 +3222,17 @@ button.ctx-panel-close:hover {
 .ctx-back {
   margin-top: 0.8rem;
 }
-@media (min-width: 900px) {
-  body.ctx-panel-open #main {
-    max-width: calc(100vw - min(34rem, 42vw) - 3rem);
-    margin-left: 1.5rem;
-    margin-right: 0;
-  }
+body.ctx-panel-open {
+  padding-bottom: min(55vh, 34rem);
 }
-@media (max-width: 899px) {
+@media (max-width: 640px) {
   .ctx-panel {
-    width: 100%;
+    height: 75vh;
     border-left: 0;
+    border-right: 0;
+  }
+  body.ctx-panel-open {
+    padding-bottom: 75vh;
   }
 }
 

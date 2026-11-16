@@ -30,8 +30,8 @@ import { UnfoldContext } from "./unfoldContext";
 // unfolded in the original is then not offered to them as a ticket.
 //
 // Presentation ("focus instead of a stack"): the page keeps the statement in
-// view; a declaration opens in a side panel with the path that led there, one
-// at a time, and what is already seen is marked.
+// view; a declaration opens in a sheet that slides up from below, with the
+// path that led there, one at a time, and what is already seen is marked.
 
 type Unfolded = { view: UnitView; relies_on: GlossaryEntry[] };
 
@@ -106,7 +106,7 @@ export function TicketContextProvider({
   const close = useCallback(() => setTrail([]), []);
   const jump = useCallback((index: number) => setTrail((t) => t.slice(0, index + 1)), []);
 
-  // The page makes room for the panel on wide screens; Escape closes it.
+  // The page gets room at its end for the sheet; Escape closes it.
   const isOpen = trail.length > 0;
   useEffect(() => {
     document.body.classList.toggle("ctx-panel-open", isOpen);
@@ -226,7 +226,7 @@ function Tree({ state }: { state: State }) {
   );
 }
 
-/** The side panel: the path, the declaration, what it builds on. */
+/** The sheet from below: the path, the declaration, what it builds on. */
 function Panel({
   state,
   shown,
@@ -375,7 +375,7 @@ export function TicketContext() {
         <Tree state={state} />
       </details>
       <p className="muted small">
-        A declaration opens beside the statement, with the path that led there; names in the
+        A declaration opens in a sheet from below, with the path that led there; names in the
         statement open the same way. Once you have seen one, it is not offered to you as a ticket of
         its own.
       </p>
