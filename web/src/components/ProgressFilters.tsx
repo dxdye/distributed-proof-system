@@ -1,23 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ProgressSummary } from "../api";
 import { domainLabel } from "../kinds";
+import { loadFilter, matchesText, presetFilter, tally } from "../tags";
 
-// Filters of the progress page: search, domain, source, status, order. The
-// state lives in the session, so it survives the way to a paper and back.
+// Filters of the progress page: search (titles and hashtags), hashtag,
+// domain, source, status, order. The state lives in the session, so it
+// survives the way to a paper and back.
 
 type Status = "all" | "not-started" | "in-review" | "complete" | "findings" | "closed";
 type Order = "newest" | "progress" | "interest" | "title";
 
 export type Filter = {
   q: string;
+  tag: string;
   domain: string;
   source: string;
   status: Status;
   order: Order;
 };
 
-const EMPTY: Filter = { q: "", domain: "", source: "", status: "all", order: "newest" };
+const EMPTY: Filter = { q: "", tag: "", domain: "", source: "", status: "all", order: "newest" };
 const KEY = "dpc.progress-filter";
+
+/** A link to the list of papers with one hashtag (C-44). */
+export const progressTagLink = (tag: string) => ({
+  href: "#/progress",
+  onClick: () => presetFilter(KEY, EMPTY, { tag }),
+});
 
 const STATUSES: {
   key: Exclude<Status, "all">;
@@ -61,16 +70,9 @@ export function sourceOf(repoUrl: string): string {
   }
 }
 
-function load(): Filter {
-  try {
-    return { ...EMPTY, ...(JSON.parse(sessionStorage.getItem(KEY) ?? "{}") as Partial<Filter>) };
-  } catch {
-    return EMPTY;
-  }
-}
-
 function matches(s: ProgressSummary, f: Filter, withStatus: boolean): boolean {
-  if (f.q && !s.title.toLowerCase().includes(f.q.trim().toLowerCase())) return false;
+  if (!matchesText(f.q, s.title, s.tags)) return false;
+  if (f.tag && !(s.tags ?? []).includes(f.tag)) return false;
   if (f.domain && s.domain !== f.domain) return false;
   if (f.source && sourceOf(s.repo_url) !== f.source) return false;
   if (withStatus && f.status !== "all") {
@@ -90,7 +92,7 @@ function ordered(list: ProgressSummary[], order: Order): ProgressSummary[] {
 
 /** The papers to show, and the filter row that chooses them. */
 export function useProgressFilter(list: ProgressSummary[]) {
-  const [filter, setFilter] = useState<Filter>(load);
+  const [filter, setFilter] = useState<Filter>(() => loadFilter(KEY, EMPTY));
   useEffect(() => sessionStorage.setItem(KEY, JSON.stringify(filter)), [filter]);
   const shown = useMemo(
     () =>
@@ -115,22 +117,41 @@ export function ProgressFilters({
   shown: number;
 }) {
   const set = (patch: Partial<Filter>) => setFilter({ ...filter, ...patch });
+  const tags = useMemo(() => tally(list.flatMap((s) => s.tags ?? [])), [list]);
   const domains = useMemo(() => tally(list.map((s) => s.domain ?? "")), [list]);
   const sources = useMemo(() => tally(list.map((s) => sourceOf(s.repo_url))), [list]);
   // Counts per status under the other filters, so a click never leads to nothing unexpected.
   const rest = list.filter((s) => matches(s, filter, false));
   const active =
-    filter.q !== "" || filter.domain !== "" || filter.source !== "" || filter.status !== "all";
+    filter.q !== "" ||
+    filter.tag !== "" ||
+    filter.domain !== "" ||
+    filter.source !== "" ||
+    filter.status !== "all";
   return (
     <section className="progress-filters" aria-label="Filter the papers">
       <div className="filter-row">
         <input
           type="search"
-          placeholder="Search titles"
-          aria-label="Search titles"
+          placeholder="Search titles and #hashtags"
+          aria-label="Search titles and hashtags"
           value={filter.q}
           onChange={(e) => set({ q: e.target.value })}
         />
+        {tags.length > 0 && (
+          <select
+            aria-label="Hashtag"
+            value={filter.tag}
+            onChange={(e) => set({ tag: e.target.value })}
+          >
+            <option value="">All hashtags</option>
+            {tags.map(([t, n]) => (
+              <option key={t} value={t}>
+                #{t} ({n})
+              </option>
+            ))}
+          </select>
+        )}
         <select
           aria-label="Domain"
           value={filter.domain}
@@ -202,11 +223,4 @@ export function ProgressFilters({
       </div>
     </section>
   );
-}
-
-/** Values with how often they occur, most frequent first; empty values dropped. */
-function tally(values: string[]): [string, number][] {
-  const counts = new Map<string, number>();
-  for (const v of values) if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
-  return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }

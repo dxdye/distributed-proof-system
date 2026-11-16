@@ -135,6 +135,11 @@ class NoteReq(_Req):
     show_pseudonym: bool = False
 
 
+class TagsReq(_Req):
+    #: The whole set of hashtags of a submission (C-44); replaces the previous one.
+    tags: list[str]
+
+
 class VoteReq(_Req):
     value: Literal[-1, 0, 1]
 
@@ -532,7 +537,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         return {
             "submission_id": sid, "declaration": decl, "decl_kind": real.view.decl_kind,
             "paper": sub.title, "repo_url": sub.repo_url, "commit": sub.commit,
-            "domain": real.domain, "outcome": real.status,
+            "domain": real.domain, "outcome": real.status, "tags": list(sub.tags),
             "decided_at": real.decided_at.isoformat() if real.decided_at else None,
             "view": real.view.model_dump(mode="json"),
             "paper_passage": real.paper.model_dump(mode="json") if real.paper else None,
@@ -561,6 +566,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                     "submission_id": sid, "declaration": decl,
                     "decl_kind": real.view.decl_kind, "paper": st.submissions[sid].title,
                     "domain": real.domain, "outcome": real.status, "posts": len(visible),
+                    "tags": list(st.submissions[sid].tags),
                     "last_activity": max((p.at for p in visible), default=real.decided_at
                                          or real.created).isoformat(),
                     "can_share": coord.shareable_review(rid, sid, decl) is not None,
@@ -659,6 +665,11 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
     def close(submission_id: str, rid: Admin) -> dict[str, bool]:
         call(coord.close_submission, rid, submission_id)
         return {"ok": True}
+
+    @app.post("/api/admin/submissions/{submission_id}/tags")
+    def set_tags(submission_id: str, req: TagsReq, rid: Admin) -> dict[str, list[str]]:
+        """Hashtags of the problem (C-44): for finding it, never for the draw."""
+        return {"tags": list(call(coord.tag_submission, rid, submission_id, req.tags))}
 
     @app.get("/api/admin/reports")
     def reports(_: Admin) -> list[dict[str, Any]]:

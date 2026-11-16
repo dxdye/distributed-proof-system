@@ -1,6 +1,12 @@
 import { domainLabel } from "../kinds";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type Post, type Thread, type ThreadSummary } from "../api";
+import {
+  DiscussionFilters,
+  discussionTagLink,
+  useDiscussionFilter,
+} from "../components/DiscussionFilters";
+import { Tags } from "../components/Tags";
 import { Infoview } from "../components/Infoview";
 import { Reference } from "../components/Reference";
 import { QUESTION_LABELS } from "./LeaseView";
@@ -78,6 +84,8 @@ export function Discussions() {
     api.discussions().then(setThreads, (e) => setError((e as Error).message));
   }, []);
   useEffect(load, [load]);
+  const all = useMemo(() => threads ?? [], [threads]);
+  const { filter, setFilter, shown } = useDiscussionFilter(all);
   if (error) return <p className="error">{error}</p>;
   if (!threads) return <p className="muted">Loading…</p>;
   return (
@@ -89,11 +97,21 @@ export function Discussions() {
         influenced. Votes sort the discussions and the posts: they say what is worth reading, never
         whether a decision is right, and they never count towards trust.
       </p>
+      {threads.length > 1 && (
+        <DiscussionFilters
+          list={threads}
+          filter={filter}
+          setFilter={setFilter}
+          shown={shown.length}
+        />
+      )}
       {threads.length === 0 ? (
         <p className="muted">No discussion is open yet: declarations are still under review.</p>
+      ) : shown.length === 0 ? (
+        <p className="muted">No discussion matches these filters.</p>
       ) : (
         <ul className="thread-list">
-          {threads.map((t) => (
+          {shown.map((t) => (
             <li key={`${t.submission_id}:${t.declaration}`}>
               <Votes
                 score={t.score}
@@ -114,6 +132,11 @@ export function Discussions() {
                 <div className="muted small">
                   {t.paper} · {domainLabel(t.domain)} · {t.posts} {t.posts === 1 ? "post" : "posts"}
                 </div>
+                <Tags
+                  tags={t.tags}
+                  active={filter.tag}
+                  onPick={(tag) => setFilter({ ...filter, tag: filter.tag === tag ? "" : tag })}
+                />
               </div>
             </li>
           ))}
@@ -293,6 +316,7 @@ export function ThreadView({ sid, decl }: { sid: string; decl: string }) {
           <a href={thread.repo_url}>{thread.repo_url}</a> @{" "}
           <code>{thread.commit.slice(0, 12)}</code>
         </p>
+        <Tags tags={thread.tags} href={discussionTagLink} />
         <Reference
           view={thread.view}
           passage={thread.paper_passage}

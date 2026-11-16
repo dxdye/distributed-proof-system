@@ -309,6 +309,18 @@ class SubmissionClosed(_P):
     submission_id: str
 
 
+class SubmissionTagged(_P):
+    """The hashtags of a submission, set by a maintainer (proposal C-44): the
+    whole set, replacing the previous one. They name the problem (`navier-stokes`,
+    `erdos-problems`, `counterexample`) so that it is found quickly on the
+    progress page and in the discussions. They are not a preference for the
+    draw: a tag can name a single paper, and choosing tickets by paper would
+    allow targeting them (C-32)."""
+
+    submission_id: str
+    tags: tuple[str, ...]
+
+
 class LibraryRef(_P):
     name: str
     url: str
@@ -353,6 +365,7 @@ PAYLOADS: dict[str, type[_P]] = {
     "ticket.reopen_resolved": ReopenResolved,
     "submission.opened": SubmissionOpened,
     "submission.closed": SubmissionClosed,
+    "submission.tagged": SubmissionTagged,
     "submission.basis_recorded": BasisRecorded,
     "ticket.created": TicketCreated,
     "ticket.round_opened": RoundOpened,

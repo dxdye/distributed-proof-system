@@ -8,6 +8,7 @@
 // rule is not run. Nothing leaves the browser; the state lives in session
 // storage and can be reset.
 import snapshotJson from "../../demo/snapshot.json";
+import { parseTags } from "../tags";
 
 type Json = Record<string, unknown>;
 type Tier = "easy" | "medium" | "hard" | "excellence";
@@ -85,6 +86,7 @@ type State = {
   status: Record<string, string>; // ticket id -> open | accepted | error | escalate
   revealed: string[];
   closed: string[];
+  tags?: Record<string, string[]>; // hashtags per submission (C-44)
   people: Record<Role, Person>;
   next: number;
   // discussion after the decision (proposal C-25)
@@ -930,6 +932,13 @@ function admin(path: string, method: string, body: Json): unknown {
     state.closed.push(close[1]);
     return { ok: true };
   }
+  const tagging = path.match(/^\/api\/admin\/submissions\/([^/]+)\/tags$/);
+  if (tagging && method === "POST") {
+    const { tags, bad } = parseTags(((body.tags as string[]) ?? []).join(" "));
+    if (bad.length) throw new HttpError(400, `not a tag: ${bad[0]}`);
+    (state.tags ??= {})[decodeURIComponent(tagging[1])] = tags;
+    return { tags };
+  }
   throw new HttpError(404, "not found");
 }
 
@@ -1005,6 +1014,7 @@ function threadJson(role: Role, sid: string, decl: string): Json {
     commit: sub.commit,
     domain: real.domain,
     outcome: statusOf(real.ticket_id),
+    tags: tagsOf(sid),
     decided_at: null,
     view: real.view,
     paper_passage: real.paper,
@@ -1041,6 +1051,7 @@ function discussion(
           paper: snap.submissions.find((x) => x.submission_id === sid)!.title,
           domain: real.domain,
           outcome: statusOf(real.ticket_id),
+          tags: tagsOf(sid),
           posts: posts.length,
           last_activity:
             posts
@@ -1202,6 +1213,11 @@ function unitState(u: Unit): string {
   return started ? "in review" : "not started";
 }
 
+/** Hashtags of a submission (C-44): set in the dummy by the maintainer role. */
+function tagsOf(sid: string): string[] {
+  return state.tags?.[sid] ?? [];
+}
+
 function progressSummary(sub: SnapSubmission): Json {
   const us = unitsOf(sub);
   const states = us.map(unitState);
@@ -1238,6 +1254,7 @@ function progressSummary(sub: SnapSubmission): Json {
     residual_error: accepted ? 1 - (1 - NOMINAL_P_ERROR) ** accepted : null,
     forecast: null,
     interest: null,
+    tags: tagsOf(sub.submission_id),
     main_statement: paper?.statement ?? null,
     main_locator: paper?.locator ?? null,
   };

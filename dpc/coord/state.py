@@ -147,6 +147,7 @@ class SubmissionSt:
     paper_ref: str | None = None
     root: str | None = None
     basis: ev.BasisRecorded | None = None  # what the result relies on (C-29)
+    tags: tuple[str, ...] = ()  # hashtags of the problem, set by maintainers (C-44)
 
 
 @dataclass
@@ -334,6 +335,9 @@ class State:
 
     def _on_submission_closed(self, p: ev.SubmissionClosed, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id].closed = True
+
+    def _on_submission_tagged(self, p: ev.SubmissionTagged, at: datetime, _: Entry) -> None:
+        self.submissions[p.submission_id].tags = p.tags
 
     def _on_ticket_created(self, p: ev.TicketCreated, at: datetime, _: Entry) -> None:
         self.tickets[p.ticket_id] = TicketSt(

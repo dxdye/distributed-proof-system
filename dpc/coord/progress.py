@@ -153,6 +153,7 @@ def summary(coord: Coordinator, submission_id: str) -> dict[str, Any]:
         "main_locator": paper.locator if paper else None,
         "replaced_by": replaced_by(coord, submission_id),
         "domain": paper_domain(us, root),
+        "tags": list(sub.tags),
     }
 
 

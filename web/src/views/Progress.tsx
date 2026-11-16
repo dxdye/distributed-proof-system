@@ -12,7 +12,8 @@ import { Basis } from "../components/Basis";
 import { Infoview } from "../components/Infoview";
 import { MathText } from "../components/MathText";
 import { ProgressChart } from "../components/ProgressChart";
-import { ProgressFilters, useProgressFilter } from "../components/ProgressFilters";
+import { ProgressFilters, progressTagLink, useProgressFilter } from "../components/ProgressFilters";
+import { TagEditor, Tags } from "../components/Tags";
 import { TierBadge } from "../components/Tier";
 import { PostCard, threadHref } from "./Discussions";
 
@@ -201,6 +202,11 @@ export function ProgressList({ me }: { me: Me | null }) {
             <PrlBadge s={s} />
             {s.closed && <span className="badge">closed</span>}
           </div>
+          <Tags
+            tags={s.tags}
+            active={filter.tag}
+            onPick={(tag) => setFilter({ ...filter, tag: filter.tag === tag ? "" : tag })}
+          />
           {s.main_statement && (
             <p className="progress-statement">
               <MathText text={s.main_statement} />
@@ -434,6 +440,8 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
           <PrlBadge s={d} />
           {d.closed && <span className="badge">closed</span>}
         </div>
+        <Tags tags={d.tags} href={progressTagLink} />
+        {me?.maintainer && <TagEditor sid={sid} tags={d.tags ?? []} onSaved={load} />}
         {d.replaced_by && (
           <p className="maintainer-note small">
             This submission was closed and opened again; this page keeps the record of the earlier

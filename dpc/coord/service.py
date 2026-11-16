@@ -44,6 +44,7 @@ from dpc.coord.state import (
     TicketSt,
     difficulty_bucket,
 )
+from dpc.coord.tags import normalize_tags
 from dpc.coord.tiers import TIERS, Tier, tier_of_unfolded, tier_open
 from dpc.coord.vault import BlobStore, Vault
 from dpc.domain.attention import Choice, fit_plackett_luce
@@ -296,21 +297,29 @@ class Coordinator:
         self, *, title: str, repo_url: str, commit: str, tickets: Sequence[TicketSpec],
         pool: HoneypotPool | None = None, share: float | None = None, lab: str | None = None,
         authors: Sequence[str] = (), artifact_key: str | None = None,
-        paper_ref: str | None = None, root: str | None = None,
+        paper_ref: str | None = None, root: str | None = None, tags: Sequence[str] = (),
     ) -> str:
-        """Create the class-A tickets (SR-05) with honeypots mixed in (SR-06)."""
+        """Create the class-A tickets (SR-05) with honeypots mixed in (SR-06).
+        ``tags``: hashtags of the problem (C-44), recorded right after opening."""
         share = self.params.honeypot_share if share is None else share
         with self.lock:
             sid = self.new_id("S")
             specs = {t.view.declaration: t for t in tickets}
             if len(specs) != len(tickets):
                 raise CoordError("one ticket per unit")
+            try:
+                clean_tags = normalize_tags(tags)
+            except ValueError as exc:
+                raise CoordError(str(exc)) from exc
             slots = plan_stream([t.view for t in tickets],
                                 pool or HoneypotPool([], self.rng), self.rng, share=share)
             self._emit("submission.opened", ev.SubmissionOpened(
                 submission_id=sid, title=title, repo_url=repo_url, commit=commit,
                 artifact_key=artifact_key, lab_tag=self.vault.tag(lab) if lab else None,
                 authors=tuple(authors), paper_ref=paper_ref, root=root))
+            if clean_tags:
+                self._emit("submission.tagged",
+                           ev.SubmissionTagged(submission_id=sid, tags=clean_tags))
             views = {d: sp.view for d, sp in specs.items()}  # for the unfolded tier
             for slot in slots:
                 spec = specs[slot.view.declaration]
@@ -337,6 +346,24 @@ class Coordinator:
             if basis.submission_id not in self.state.submissions:
                 raise NotFound("no such submission")
             self._emit("submission.basis_recorded", basis)
+
+    def tag_submission(self, rid: str, submission_id: str,
+                       tags: Sequence[str]) -> tuple[str, ...]:
+        """Set the hashtags of a submission (C-44): maintainers only, the whole
+        set at once. Returns the tags as recorded (normalized)."""
+        with self.lock:
+            self._maintainer(rid)
+            sub = self.state.submissions.get(submission_id)
+            if sub is None:
+                raise NotFound("no such submission")
+            try:
+                clean = normalize_tags(tags)
+            except ValueError as exc:
+                raise CoordError(str(exc)) from exc
+            if clean != sub.tags:
+                self._emit("submission.tagged",
+                           ev.SubmissionTagged(submission_id=submission_id, tags=clean))
+            return clean
 
     def close_submission(self, rid: str, submission_id: str) -> None:
         """Close a submission and open every remaining commitment."""

@@ -265,7 +265,7 @@ def cmd_open_submission(args: argparse.Namespace) -> int:
         title=args.title or submission.root, repo_url=submission.repo_url,
         commit=submission.commit, tickets=specs, pool=pool, share=args.share, lab=args.lab,
         paper_ref=submission.paper_ref, root=submission.root,
-        authors=authors)
+        authors=authors, tags=args.tags or ())
     basis = _record_basis(coord, sid, workdir, submission.commit, args.ingest_log)
     _print({"submission_id": sid, "units": len(specs),
             "tickets": len(coord.state.submissions[sid].tickets), "basis": basis})
@@ -297,6 +297,22 @@ def cmd_record_basis(args: argparse.Namespace) -> int:
         return 1
     _print(_record_basis(coord, sub.submission_id, Path(args.workdir).resolve(), sub.commit,
                          args.ingest_log))
+    return 0
+
+
+def cmd_tag_submission(args: argparse.Namespace) -> int:
+    """Set the hashtags of a submission (C-44) as a maintainer."""
+    coord = _coordinator(args)
+    rid = coord.vault.reviewer_for_pseudonym(args.maintainer)
+    if rid is None:
+        print(f"unknown pseudonym {args.maintainer!r}", file=sys.stderr)
+        return 1
+    try:
+        tags = coord.tag_submission(rid, args.submission_id, args.tags or [])
+    except CoordError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    _print({"submission_id": args.submission_id, "tags": list(tags)})
     return 0
 
 
@@ -517,6 +533,8 @@ def main(argv: list[str] | None = None) -> int:
                    "default: <workdir>/paper.yaml if present")
     p.add_argument("--ingest-log", help="audit log of the ingest: pinned libraries and "
                    "the integrity check, for what the result relies on (C-29)")
+    p.add_argument("--tag", dest="tags", action="append",
+                   help="hashtag of the problem (C-44), repeatable")
     coord_args(p)
     p.set_defaults(func=cmd_open_submission)
 
@@ -526,6 +544,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--ingest-log", help="audit log of the ingest")
     coord_args(p)
     p.set_defaults(func=cmd_record_basis)
+
+    p = sub.add_parser("tag-submission",
+                       help="set the hashtags of a submission (C-44), replacing the old ones")
+    p.add_argument("submission_id")
+    p.add_argument("--tag", dest="tags", action="append", help="a hashtag, e.g. navier-stokes")
+    p.add_argument("--maintainer", required=True, help="pseudonym of the maintainer who sets them")
+    coord_args(p)
+    p.set_defaults(func=cmd_tag_submission)
 
     p = sub.add_parser("appoint", help="appoint a maintainer")
     p.add_argument("pseudonym")

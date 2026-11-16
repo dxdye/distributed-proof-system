@@ -160,6 +160,7 @@ export type ThreadSummary = {
   can_share: boolean;
   score: number; // worth reading: sorts the list, says nothing about the decision
   my_vote: number;
+  tags?: string[]; // of the paper (C-44)
 };
 export type Post = {
   post_id: string;
@@ -189,6 +190,7 @@ export type Thread = {
   commit: string;
   domain: string;
   outcome: string;
+  tags?: string[]; // of the paper (C-44)
   decided_at: string | null;
   view: UnitView;
   paper_passage: PaperPassage | null;
@@ -232,6 +234,8 @@ export type ProgressSummary = {
   replaced_by?: string | null;
   /** The domain the paper is filed under: that of its main theorem. */
   domain?: string | null;
+  /** Hashtags of the problem (C-44). */
+  tags?: string[];
 };
 export type ProgressUnit = {
   declaration: string;
@@ -449,6 +453,9 @@ export const api = {
     decide: (ticket: string, error: boolean, reason: string) =>
       request("POST", `/api/admin/tickets/${ticket}/decide`, { error, reason }),
     close: (submission: string) => request("POST", `/api/admin/submissions/${submission}/close`),
+    /** Hashtags of the problem (C-44): the whole set, replacing the old one. */
+    setTags: (submission: string, tags: string[]) =>
+      request<{ tags: string[] }>("POST", `/api/admin/submissions/${submission}/tags`, { tags }),
     reports: () =>
       request<
         {
