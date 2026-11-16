@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { MathText } from "../components/MathText";
 
 // Subpages of "How it works": the organisation, planted errors, and why the
@@ -25,25 +26,43 @@ export const HOW_PAGES: { slug: string; title: string; summary: string }[] = [
   },
 ];
 
+/** The tab bar of the How pages. It sticks below the header once it would
+ * scroll away (desktop), with a shadow while it floats over the content. */
 export function HowNav({ current }: { current?: string }) {
+  const sentinel = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el) return;
+    const top =
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--masthead-h")) || 0;
+    const observer = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting), {
+      rootMargin: `-${Math.round(top) + 1}px 0px 0px 0px`,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <nav className="how-nav" aria-label="How it works">
-      <span className="how-nav-label" aria-hidden="true">
-        Sections
-      </span>
-      <a href="#/how" aria-current={current ? undefined : "page"}>
-        Overview
-      </a>
-      {HOW_PAGES.map((p) => (
-        <a
-          key={p.slug}
-          href={`#/how/${p.slug}`}
-          aria-current={current === p.slug ? "page" : undefined}
-        >
-          {p.title}
+    <>
+      <div ref={sentinel} className="how-nav-sentinel" aria-hidden="true" />
+      <nav className={stuck ? "how-nav stuck" : "how-nav"} aria-label="How it works">
+        <span className="how-nav-label" aria-hidden="true">
+          Sections
+        </span>
+        <a href="#/how" aria-current={current ? undefined : "page"}>
+          Overview
         </a>
-      ))}
-    </nav>
+        {HOW_PAGES.map((p) => (
+          <a
+            key={p.slug}
+            href={`#/how/${p.slug}`}
+            aria-current={current === p.slug ? "page" : undefined}
+          >
+            {p.title}
+          </a>
+        ))}
+      </nav>
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, type Me, type Session } from "./api";
 import { loadAuth, signOut, type Provider } from "./auth";
 import { DeclarationView } from "./views/Declaration";
@@ -18,6 +18,8 @@ import { JoinForm, SignIn } from "./views/Register";
 import { Work } from "./views/Work";
 
 /** `routes`: extra pages of a special build (the click dummy's role choice). */
+const NAV_KEY = "dpc.nav-folded";
+
 export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   const route = useRoute();
   const [providers, setProviders] = useState<Provider[] | null>(null);
@@ -26,6 +28,24 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   const [error, setError] = useState<string | null>(null);
   // On phones the navigation folds into a menu; it closes on every page change.
   const [menuOpen, setMenuOpen] = useState(false);
+  // On wider screens the navigation folds in with − and opens with + (kept
+  // for the visit), for a calmer page head.
+  const [navFolded, setNavFolded] = useState(() => sessionStorage.getItem(NAV_KEY) === "1");
+  const foldNav = (folded: boolean) => {
+    setNavFolded(folded);
+    sessionStorage.setItem(NAV_KEY, folded ? "1" : "0");
+  };
+  const masthead = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = masthead.current;
+    if (!el) return;
+    const set = () =>
+      document.documentElement.style.setProperty("--masthead-h", `${el.offsetHeight}px`);
+    set();
+    const observer = new ResizeObserver(set);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const where = route.join("/");
   useEffect(() => setMenuOpen(false), [where]);
 
@@ -131,8 +151,9 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
       <button className="skip" onClick={() => document.getElementById("main")?.focus()}>
         Skip to content
       </button>
-      {/* Service bar and header stay at the top while scrolling. */}
-      <div className="masthead">
+      {/* Service bar and header stay at the top while scrolling; their height
+          is passed on (--masthead-h) for bars that stick below them. */}
+      <div className="masthead" ref={masthead}>
         <div className="service-bar">
           <div className="container">
             <span>Research prototype · Review of Lean 4 formalizations</span>
@@ -182,7 +203,9 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
             </button>
             <nav
               id="main-nav"
-              className={menuOpen ? "main-nav open" : "main-nav"}
+              className={
+                "main-nav" + (menuOpen ? " open" : "") + (navFolded && !menuOpen ? " folded" : "")
+              }
               aria-label="Main"
             >
               {/* Your work · public · your role */}
@@ -235,6 +258,16 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
                 </>
               )}
             </nav>
+            <button
+              className="nav-fold"
+              aria-expanded={!navFolded}
+              aria-controls="main-nav"
+              title={navFolded ? "Show the menu" : "Fold the menu in"}
+              onClick={() => foldNav(!navFolded)}
+            >
+              <span aria-hidden="true">{navFolded ? "+" : "−"}</span>
+              <span className="sr-only">{navFolded ? "Show the menu" : "Fold the menu in"}</span>
+            </button>
           </div>
         </header>
       </div>

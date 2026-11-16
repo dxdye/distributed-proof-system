@@ -2940,3 +2940,79 @@ nav.main-nav .nav-drop-menu a:focus-visible {
     display: none;
   }
 }
+
+/* The How tab bar sticks below the header once it would scroll away
+   (desktop; on phones it has two rows and would take too much screen). */
+.how-nav {
+  position: sticky;
+  top: var(--masthead-h, 0px); /* flush below the header: nothing shows through */
+  z-index: 35; /* above content popovers, below the header */
+  transition:
+    box-shadow 0.15s,
+    border-color 0.15s;
+}
+.how-nav.stuck {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-lg);
+}
+.how-nav-sentinel {
+  height: 0;
+}
+@media (max-width: 640px) {
+  .how-nav {
+    position: static;
+  }
+  .how-nav.stuck {
+    box-shadow: none;
+  }
+}
+
+/* The main navigation folds in horizontally towards its − button and opens
+   with + (wider screens; phones keep their menu button). A clip instead of a
+   width animation, so the hover tab under "How it works" is not cut off. */
+.nav-fold {
+  display: none;
+}
+@media (min-width: 641px) {
+  nav.main-nav {
+    clip-path: inset(-40rem -40rem -40rem 0);
+    transition:
+      clip-path 0.35s ease,
+      opacity 0.3s ease;
+  }
+  nav.main-nav.folded {
+    clip-path: inset(-40rem -40rem -40rem 100%);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      clip-path 0.35s ease,
+      opacity 0.3s ease,
+      visibility 0s linear 0.35s;
+  }
+  button.nav-fold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    min-height: 0;
+    margin-left: 0.5rem;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+  }
+  button.nav-fold:hover,
+  button.nav-fold:focus-visible,
+  button.nav-fold:active {
+    background: var(--surface);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
