@@ -966,6 +966,59 @@ one-per-ticket rule enough?); returns; how often reasons cite the passage.
 
 *Status:* proposal; nothing built.
 
+### C-44 · §10.1, §11.1, C-25, C-26 — Hashtags for problems; filters on progress and discussions · new
+*Request (project owner, 2026-11-16):* the progress page and the discussions
+get filters, and the problems themselves get hashtags so that they are found
+quickly.
+
+*Proposed and implemented (2026-11-16):*
+- **Hashtags per submission.** A submission, i.e. a problem, carries up to 12
+  hashtags: the problem (`navier-stokes`, `erdos-problems`, `riemann-zeta`),
+  a family (`millennium-prize`, `counterexample`), the subject
+  (`symplectic-geometry`). Normal form: lower-case letters, digits and inner
+  hyphens, 2 to 40 characters; `#Erdős Problems` becomes `erdos-problems`.
+- **Who sets them.** Maintainers, when opening a submission
+  (`open-submission --tag`) or later on the paper's progress page or with
+  `dpc tag-submission`. Always the whole set, recorded as the event
+  `submission.tagged` in the public log. Reviewers do not set tags (no
+  vandalism to clean up); proposing tags for a maintainer to confirm can come
+  later.
+- **Not for the draw.** Hashtags serve finding a problem on the progress page
+  and in the discussions. They are not a preference: a tag can name a single
+  paper, and choosing tickets by paper would allow targeting them (C-32,
+  C-34). Preferences stay by domain and tier.
+- **Per submission, never per declaration.** A hashtag is the same for every
+  ticket of the submission, planted copies included, so it tells nothing
+  about a ticket. Tags per declaration would be a channel to mark tickets (a
+  maintainer sees the planted copies) and are not planned.
+- **Filters on the progress page:** search in titles and hashtags (`#…`
+  searches hashtags only), hashtag, domain, source (owner/repository), status
+  (not started, in review, complete, with findings, closed) with counts under
+  the other filters, and order. A paper is filed under the domain of its main
+  theorem, otherwise the most frequent domain of its declarations, so it
+  appears under one domain. A submission opened again replaces the closed one
+  (C-39). Hashtags on a card filter by a click.
+- **Filters in the discussions:** search in declarations, papers and
+  hashtags; hashtag, paper, domain, outcome (accepted, error found) with
+  counts, "only where I can share my review", and order (worth reading,
+  latest activity, most posts). Threads open only after the planted errors
+  of their submission are revealed (C-25), so filtering by outcome tells
+  nothing about planted copies.
+- **What someone filters for is not recorded.** The filter state stays in the
+  browser session, not in the log (no profiling, C-35).
+- The hashtags of the walkthrough were suggested by the assistant; a
+  maintainer has to check them.
+
+*Open:* reviewers proposing hashtags for a maintainer to confirm; a fixed
+vocabulary for subjects (MSC classes, C-37) next to free tags for problems;
+hashtags in the report (SR-42).
+
+*Evidence:* `dpc/coord/tags.py`, `Coordinator.tag_submission`,
+`SubmissionTagged`, `POST /api/admin/submissions/<id>/tags`;
+`web/src/components/ProgressFilters.tsx`, `DiscussionFilters.tsx`,
+`Tags.tsx`; tests `tests/test_tags.py`,
+`test_a_paper_is_filed_under_the_domain_of_its_main_theorem`.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
@@ -1207,3 +1260,11 @@ Complements S-14 and S-27. See C-39.
 at most one member of a course per ticket; a pool of submissions or domains
 inside which students draw as everyone does; membership and the link to the
 student in the vault, with consent; no grades from the platform. See C-43.
+
+### S-37 · SR-42 and the discussions — finding problems: hashtags and filters · new
+*Proposed:* Add: "Maintainers give a submission hashtags that name the
+problem, its family and its subject (event `submission.tagged`). The
+progress page and the discussions can be filtered by hashtag, domain,
+paper or source, and status or outcome. Hashtags never enter the draw and
+exist only per submission. What a person filters for is not recorded."
+See C-44.
