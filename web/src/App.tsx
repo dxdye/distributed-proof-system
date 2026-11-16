@@ -28,7 +28,7 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   const [error, setError] = useState<string | null>(null);
   // On phones the navigation folds into a menu; it closes on every page change.
   const [menuOpen, setMenuOpen] = useState(false);
-  // On wider screens the navigation folds in with − and opens with + (kept
+  // On wider screens the navigation folds in with › and opens with ‹ (kept
   // for the visit), for a calmer page head.
   const [navFolded, setNavFolded] = useState(() => sessionStorage.getItem(NAV_KEY) === "1");
   const foldNav = (folded: boolean) => {
@@ -265,7 +265,7 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
               title={navFolded ? "Show the menu" : "Fold the menu in"}
               onClick={() => foldNav(!navFolded)}
             >
-              <span aria-hidden="true">{navFolded ? "+" : "−"}</span>
+              <span aria-hidden="true">{navFolded ? "‹" : "›"}</span>
               <span className="sr-only">{navFolded ? "Show the menu" : "Fold the menu in"}</span>
             </button>
           </div>

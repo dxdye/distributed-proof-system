@@ -2967,8 +2967,8 @@ nav.main-nav .nav-drop-menu a:focus-visible {
   }
 }
 
-/* The main navigation folds in horizontally towards its − button and opens
-   with + (wider screens; phones keep their menu button). A clip instead of a
+/* The main navigation folds in horizontally towards its › button and opens
+   with ‹ (wider screens; phones keep their menu button). A clip instead of a
    width animation, so the hover tab under "How it works" is not cut off. */
 .nav-fold {
   display: none;
@@ -3003,9 +3003,10 @@ nav.main-nav .nav-drop-menu a:focus-visible {
     border-radius: var(--radius);
     background: var(--card);
     color: var(--ink);
-    font-size: 1.15rem;
+    font-size: 1.4rem;
     font-weight: 500;
     line-height: 1;
+    padding-bottom: 0.15rem; /* the chevrons sit high in the font */
     cursor: pointer;
   }
   button.nav-fold:hover,
