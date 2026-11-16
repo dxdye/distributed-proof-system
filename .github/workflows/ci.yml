@@ -44,8 +44,13 @@ jobs:
         run: pixi run lint
       - name: Types
         run: pixi run typecheck
+      # Every test case on its own line (the "-q" from pyproject.toml is for
+      # local runs and is switched off here), the reason for every skip and
+      # failure at the end, and the ten slowest tests.
       - name: Tests (without Lean, Docker and Keycloak)
-        run: pixi run python -m pytest -q -m "not lean and not docker and not keycloak"
+        run: >-
+          pixi run python -m pytest --override-ini=addopts= -v -rfEs --durations=10 --color=yes
+          -m "not lean and not docker and not keycloak"
 
   web:
     name: Web (typecheck, build)
