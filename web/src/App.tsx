@@ -12,6 +12,7 @@ import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
 import { ProgressDetailView, ProgressList } from "./views/Progress";
 import { How } from "./views/How";
+import { HowOrganisation, HowPlantedErrors, HowStatistics } from "./views/HowMore";
 import { Imprint, Privacy } from "./views/Legal";
 import { JoinForm, SignIn } from "./views/Register";
 import { Work } from "./views/Work";
@@ -59,7 +60,17 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
   const page = route[0] ?? "work";
   let body;
   if (routes?.[page]) body = routes[page];
-  else if (page === "how") body = <How />;
+  else if (page === "how")
+    body =
+      route[1] === "organisation" ? (
+        <HowOrganisation />
+      ) : route[1] === "planted-errors" ? (
+        <HowPlantedErrors />
+      ) : route[1] === "statistics" ? (
+        <HowStatistics />
+      ) : (
+        <How />
+      );
   else if (page === "imprint") body = <Imprint />;
   else if (page === "privacy") body = <Privacy />;
   else if (error) body = <p className="error">{error}</p>;

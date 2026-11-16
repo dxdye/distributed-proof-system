@@ -1,9 +1,11 @@
 import { MathText } from "../components/MathText";
+import { HOW_PAGES, HowNav } from "./HowMore";
 
 // How it works: what a ticket is, how verdicts are weighed, the rules that
 // protect the review, and where to learn to read Lean (SR-49 in part; the
-// pilot needs this page). It says *that* errors are planted and why, never
-// what they look like.
+// pilot needs this page). The subpages (HowMore.tsx) explain the organisation,
+// planted errors and the statistics in full: the mechanism is public, only
+// which ticket is planted stays secret until the reveal.
 
 const QUESTIONS: { title: string; text: string; example: string }[] = [
   {
@@ -40,6 +42,7 @@ const QUESTIONS: { title: string; text: string; example: string }[] = [
 export function How() {
   return (
     <div className="how">
+      <HowNav />
       <section className="hero">
         <span className="eyebrow">How it works</span>
         <h1>Reviewing a formal statement</h1>
@@ -138,6 +141,9 @@ export function How() {
             You learn which of your tickets had a planted error later, in batches, so that nobody
             can tell them apart while they are open. Finding one counts; missing one costs trust.
           </p>
+          <p className="small">
+            <a href="#/how/planted-errors">How planted errors are made, mixed in and sealed →</a>
+          </p>
         </section>
         <section className="card">
           <h2>Trust and roles</h2>
@@ -154,9 +160,17 @@ export function How() {
               excellence tickets.
             </li>
             <li>
-              <b>Maintainer</b>: decides escalations and releases reports; appointed, not earned.
+              <b>Maintainer</b>: looks after the content of a domain (passages, escalations,
+              moderation); appointed, and only if already a re-checker there.
+            </li>
+            <li>
+              <b>Administrator</b>: runs the platform and appoints maintainers; reviews nothing.
             </li>
           </ul>
+          <p className="small">
+            <a href="#/how/organisation">Organisation and roles →</a> ·{" "}
+            <a href="#/how/statistics">Why the statistics hold →</a>
+          </p>
         </section>
       </div>
 
@@ -238,6 +252,18 @@ export function How() {
           </ul>
         </section>
       </div>
+
+      <section className="card">
+        <h2>More on the mechanism</h2>
+        <ul className="how-more">
+          {HOW_PAGES.map((page) => (
+            <li key={page.slug}>
+              <a href={`#/how/${page.slug}`}>{page.title}</a>
+              <span className="muted small"> · {page.summary}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="card">
         <h2>Learning to read Lean</h2>

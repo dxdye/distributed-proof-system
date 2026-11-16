@@ -2740,3 +2740,37 @@ span.tag {
 .appoint-form input:not([type="checkbox"]) {
   flex: 1 1 12rem;
 }
+
+/* "How it works": subpages (organisation, planted errors, statistics) */
+.how-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+.how-nav a[aria-current="page"] {
+  font-weight: 600;
+  color: var(--ink-strong);
+  text-decoration: none;
+}
+.how-ladder {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
+  overflow-x: auto;
+}
+.how-table th,
+.how-table td {
+  text-align: left;
+}
+.how-table td {
+  text-align: center;
+}
+.how-more {
+  padding-left: 1.2rem;
+}
+.how-more li {
+  margin: 0.3rem 0;
+}
