@@ -56,7 +56,9 @@ function ReviewForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
   return (
     <section className="card">
       <h3>Your verdict</h3>
-      <p className="muted small">Go through these questions. If one of them fails, say which.</p>
+      <p className="muted small ticket-help">
+        Go through these questions. If one of them fails, say which.
+      </p>
       <ul className="questions">
         {lease.ticket.questions.map((q) => (
           <li key={q.id}>{q.text}</li>
@@ -231,6 +233,8 @@ function ClaimForm({ lease, onDone }: { lease: Lease; onDone: () => void }) {
   );
 }
 
+const EXTRA = "dpc.hide-extra";
+
 export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
   const [lease, setLease] = useState<Lease | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -246,6 +250,11 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
     reload();
     navigate("/work");
   }
+  const [hideExtra, setHideExtraState] = useState(() => sessionStorage.getItem(EXTRA) === "1");
+  const setHideExtra = (hide: boolean) => {
+    setHideExtraState(hide);
+    sessionStorage.setItem(EXTRA, hide ? "1" : "0");
+  };
 
   if (error) return <p className="error">{error}</p>;
   if (!lease) return <p className="muted">Loading…</p>;
@@ -253,7 +262,7 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
   const active = lease.status === "active";
 
   return (
-    <div className="lease">
+    <div className={hideExtra ? "lease hide-extra" : "lease"}>
       <section className="card">
         <div className="row">
           <div>
@@ -264,6 +273,8 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
               <TierBadge tier={t.tier} /> {domainLabel(t.domain)}
             </p>
           </div>
+        </div>
+        <div className="lease-toolbar">
           {active && (
             <div className="toolbar">
               {lease.extendable && (
@@ -284,8 +295,21 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
               </button>
             </div>
           )}
+          {/* A compact view: hints, the definitions a statement relies on and
+              the lists of constants hidden; never the statement, the passage,
+              a warning or an error. */}
+          <label className="switch">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={hideExtra}
+              onChange={(e) => setHideExtra(e.target.checked)}
+            />
+            <span className="switch-track" aria-hidden="true" />
+            Hide extra info
+          </label>
         </div>
-        <p className="muted small">
+        <p className="muted small ticket-help">
           {lease.expected_minutes !== null
             ? `Typical effort so far: about ${lease.expected_minutes} minutes. `
             : ""}

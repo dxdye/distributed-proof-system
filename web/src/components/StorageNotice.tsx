@@ -15,12 +15,12 @@ export function StorageNotice() {
       <p>
         This site stores only what signing in needs (your session in this browser, the session
         cookies of the sign-in service) and, for the current visit, what you choose for colour
-        scheme, font, filters and menu. No tracking, no analytics.
+        scheme, font, filters, menu and view. No tracking, no analytics.
         <br />
         <span lang="de">
           Diese Seite speichert nur, was die Anmeldung braucht (Ihre Sitzung in diesem Browser, die
           Sitzungs-Cookies des Anmeldedienstes), und für den aktuellen Besuch, was Sie bei
-          Farbschema, Schrift, Filtern und Menü wählen. Kein Tracking, keine Analyse.
+          Farbschema, Schrift, Filtern, Menü und Ansicht wählen. Kein Tracking, keine Analyse.
         </span>{" "}
         <a href="#/privacy">Privacy policy / Datenschutz</a>
       </p>

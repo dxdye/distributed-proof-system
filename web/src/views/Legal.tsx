@@ -226,10 +226,10 @@ function PrivacyDe({ d }: { d: LegalData }) {
         Gespeichert wird nur, was für die Anmeldung technisch erforderlich ist: Ihre Anmeldesitzung
         (Session Storage) bzw. Ihr Zugangs-Token, die Information, dass Sie den Speicherhinweis
         gelesen haben (Local Storage), für den aktuellen Besuch Ihre Wahl von Farbschema, Schrift,
-        Filtern und eingeklapptem Menü (Session Storage) sowie die Sitzungs-Cookies des
-        Anmeldedienstes. Die Schriften werden von diesem Server geladen, nicht von Dritten. Dafür
-        ist keine Einwilligung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Es gibt keine Analyse- oder
-        Tracking-Dienste und keine Inhalte Dritter.
+        Filtern, eingeklapptem Menü und kompakter Ansicht (Session Storage) sowie die
+        Sitzungs-Cookies des Anmeldedienstes. Die Schriften werden von diesem Server geladen, nicht
+        von Dritten. Dafür ist keine Einwilligung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Es gibt
+        keine Analyse- oder Tracking-Dienste und keine Inhalte Dritter.
       </p>
 
       <h3>5. Rechtsgrundlagen</h3>
@@ -311,10 +311,10 @@ function PrivacyEn({ d }: { d: LegalData }) {
       <p>
         Only what signing in technically requires is stored: your sign-in session (session storage)
         or your access token, the fact that you have read the storage notice (local storage), your
-        choice of colour scheme, font, filters and folded menu for the current visit (session
-        storage), and the session cookies of the sign-in service. Fonts are served by this server,
-        not by third parties. No consent is required for this (§ 25 (2) no. 2 TDDDG). There are no
-        analytics or tracking services and no third-party content.
+        choice of colour scheme, font, filters, folded menu and compact view for the current visit
+        (session storage), and the session cookies of the sign-in service. Fonts are served by this
+        server, not by third parties. No consent is required for this (§ 25 (2) no. 2 TDDDG). There
+        are no analytics or tracking services and no third-party content.
       </p>
 
       <h3>5. Legal basis</h3>

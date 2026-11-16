@@ -40,7 +40,10 @@ type State = {
   units: Map<string, ContextUnit>;
   /** The opened declarations, outermost first; the last one is shown. */
   trail: string[];
-  open: (declaration: string, from?: "statement" | "panel") => void;
+  /** Folded in to its head bar: at the end of the page, or by hand. */
+  folded: boolean;
+  fold: (folded: boolean) => void;
+  open: (declaration: string, from?: "statement" | "panel", anchor?: Element | null) => void;
   jump: (index: number) => void;
   close: () => void;
 };
@@ -89,11 +92,17 @@ export function TicketContextProvider({
     [cache, leaseId],
   );
 
+  const [anchor, setAnchor] = useState<Element | null>(null);
+  // Folded by hand (null: automatic, i.e. folded only at the end of the page).
+  const [manual, setManual] = useState<boolean | null>(null);
+  const [atEnd, setAtEnd] = useState(false);
   const open = useCallback(
-    (declaration: string, from: "statement" | "panel" = "panel") => {
+    (declaration: string, from: "statement" | "panel" = "panel", at?: Element | null) => {
       setError(null);
       void load(declaration).then((ok) => {
         if (!ok) return;
+        setManual(null);
+        if (at && !at.closest(".ctx-panel")) setAnchor(at);
         setTrail((t) => {
           if (from === "statement" || t.length === 0) return [declaration];
           const at = t.indexOf(declaration);
@@ -106,8 +115,51 @@ export function TicketContextProvider({
   const close = useCallback(() => setTrail([]), []);
   const jump = useCallback((index: number) => setTrail((t) => t.slice(0, index + 1)), []);
 
-  // The page gets room at its end for the sheet; Escape closes it.
+  // The page gets room at its end for the head bar; Escape closes the sheet.
   const isOpen = trail.length > 0;
+  // What was clicked slides smoothly above the sheet instead of being hidden.
+  useEffect(() => {
+    if (!isOpen || !anchor) return;
+    const root = document.documentElement;
+    const frame = requestAnimationFrame(() => {
+      const sheet = document.querySelector(".ctx-panel");
+      const height = sheet ? sheet.getBoundingClientRect().height : 0;
+      const rect = anchor.getBoundingClientRect();
+      const room = window.innerHeight - height - 24;
+      const needed = rect.bottom - room;
+      setAnchor(null);
+      if (needed <= 0) return;
+      // Near the end of the page there may be too little to scroll: room
+      // before the footer, just enough, and a little more so that the sheet
+      // does not fold in at once (it folds when the reader scrolls on).
+      const available = root.scrollHeight - window.innerHeight - window.scrollY;
+      if (needed > available - 24) {
+        root.style.setProperty("--ctx-spacer", `${Math.ceil(needed - available + 48)}px`);
+      }
+      requestAnimationFrame(() => window.scrollBy({ top: needed, behavior: "smooth" }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, anchor]);
+  useEffect(() => {
+    if (!isOpen) document.documentElement.style.removeProperty("--ctx-spacer");
+  }, [isOpen]);
+  // At the end of the page the sheet folds in to its head bar, so that the
+  // end of the page (the footer) stays visible; it unfolds when scrolling up.
+  useEffect(() => {
+    if (!isOpen) return;
+    const check = () => {
+      const end = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      setAtEnd(end < 8);
+    };
+    check();
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [isOpen]);
+  const folded = manual ?? atEnd;
   useEffect(() => {
     document.body.classList.toggle("ctx-panel-open", isOpen);
     if (!isOpen) return;
@@ -128,7 +180,7 @@ export function TicketContextProvider({
     }),
     [units, ctx?.own, open],
   );
-  const state: State = { ctx, units, trail, open, jump, close };
+  const state: State = { ctx, units, trail, folded, fold: setManual, open, jump, close };
   const current = trail[trail.length - 1];
   return (
     <UnfoldContext.Provider value={unfold}>
@@ -153,7 +205,7 @@ function Row({ unit, state }: { unit: ContextUnit; state: State }) {
       <button
         className={current ? "ctx-row current" : "ctx-row"}
         aria-current={current ? "true" : undefined}
-        onClick={() => !unit.own && state.open(unit.declaration, "statement")}
+        onClick={(e) => !unit.own && state.open(unit.declaration, "statement", e.currentTarget)}
         disabled={unit.own}
         title={unit.own ? "The declaration of this ticket" : unit.declaration}
       >
@@ -251,7 +303,10 @@ function Panel({
     (d) => d !== ownName && !state.trail.includes(d) && state.units.has(d),
   );
   return (
-    <aside className="ctx-panel" aria-label="Unfolded declaration">
+    <aside
+      className={state.folded ? "ctx-panel folded" : "ctx-panel"}
+      aria-label="Unfolded declaration"
+    >
       <div className="ctx-panel-head">
         <nav className="ctx-path" aria-label="Path">
           <button className="link" onClick={state.close}>
@@ -272,6 +327,14 @@ function Panel({
             </span>
           ))}
         </nav>
+        <button
+          className="ctx-panel-fold"
+          onClick={() => state.fold(!state.folded)}
+          aria-expanded={!state.folded}
+          title={state.folded ? "Unfold the sheet" : "Fold the sheet in"}
+        >
+          {state.folded ? "▴" : "▾"}
+        </button>
         <button className="ctx-panel-close" onClick={state.close} aria-label="Close">
           ✕
         </button>
@@ -374,7 +437,7 @@ export function TicketContext() {
         </summary>
         <Tree state={state} />
       </details>
-      <p className="muted small">
+      <p className="muted small ticket-help">
         A declaration opens in a sheet from below, with the path that led there; names in the
         statement open the same way. Once you have seen one, it is not offered to you as a ticket of
         its own.

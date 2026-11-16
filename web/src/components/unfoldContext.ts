@@ -6,8 +6,9 @@ import { createContext } from "react";
 export type Unfold = {
   /** Is this a declaration of the submission that can be opened here? */
   has: (declaration: string) => boolean;
-  /** Open it as the next step of the current path (or start a new path). */
-  open: (declaration: string, from?: "statement" | "panel") => void;
+  /** Open it as the next step of the current path (or start a new path);
+   * ``anchor``: what was clicked, scrolled above the sheet if it would hide it. */
+  open: (declaration: string, from?: "statement" | "panel", anchor?: Element | null) => void;
 };
 
 export const UnfoldContext = createContext<Unfold | null>(null);

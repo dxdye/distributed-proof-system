@@ -33,9 +33,9 @@ function Const({ text, hits }: { text: string; hits?: GlossaryEntry[] }) {
   const target = unfold && hits.find((h) => unfold.has(h.name))?.name;
   const open = target
     ? {
-        onClick: () => unfold.open(target, "statement"),
+        onClick: (e: React.MouseEvent) => unfold.open(target, "statement", e.currentTarget),
         onKeyDown: (e: React.KeyboardEvent) => {
-          if (e.key === "Enter") unfold.open(target, "statement");
+          if (e.key === "Enter") unfold.open(target, "statement", e.currentTarget);
         },
         role: "button",
       }
