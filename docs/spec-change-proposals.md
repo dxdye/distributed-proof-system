@@ -1137,6 +1137,58 @@ hashtags in the report (SR-42).
 `Tags.tsx`; tests `tests/test_tags.py`,
 `test_a_paper_is_filed_under_the_domain_of_its_main_theorem`.
 
+### C-46 · §3, §6.4, C-21, SR-28, SR-35 — k_min counts qualified verdicts; learner seats · refine
+*Problem (review of 2026-11-16):* concept §3 gives class A to the PV role,
+the simulation draws only PV for it, but the coordinator opened easy and
+medium tickets to everyone (C-21) and counted every review for k_min. A new
+account (s = c = 0.5) carries no weight but filled a seat, so the reserve
+"k_min = 3" of the parameter study did not exist: in the worst case one
+account with high trust (e.g. from lookup), fresh accounts to fill the seats
+and a PVV review that misses the error.
+
+*Decided (project owner, 2026-11-16), built:*
+- §6.4 reads "k_min independent **qualified** verdicts": only reviews by
+  people who held the PV role in the domain when they reviewed fill k_min
+  (`Vote.qualified`; the coordinator uses `ReviewRec.roles`).
+- C-21 precisely: the k_min + 1 seats of a ticket are for the PV role.
+  Others review on **learner seats** (`learner_slots`, default 1): their
+  verdicts are evidence with their measured weight and build their trust,
+  but never fill k_min. The 14-day opening of C-21 opens the tiers, not the
+  seats.
+- The one-finding rule stays: a justified "incorrect" of a learner blocks.
+  Against blocking out of malice, a learner has **one open claim at a time**
+  (`max_open_claims_learner`); further findings are deferred, do not block,
+  and open when the first is decided; if their ticket was decided meanwhile,
+  they go to the maintainers as reopen requests, so no finding is lost.
+
+*Consequence:* without onboarding the cold start locks (C-48).
+
+*Evidence:* `tests/test_qualified.py`, `tests/test_harness.py`;
+`docs/simulation/README.md` (before and after).
+
+### C-47 · §6.5, SR-41 — A cap on the prior from profiles · refine
+*Problem:* `external_prior` (linked profiles, not connected yet) had a_max = 5:
+α₀ = 6 gives a "correct" vote the factor 6 (about 20 lead from π₀ = 0.02 to
+δ_A = 10⁻³, so two such accounts decide alone), and the lower bound of
+Beta(6, 1) is 0.61: the account would be PV at once.
+*Decided (2026-11-16), built:* a_max = 1. A profile moves the odds by at
+most a factor 2 per vote and never makes anyone qualified; weight comes from
+measurement (C-42). Identity strength weighs separately (C-34).
+*Evidence:* `test_a_profile_alone_never_makes_anyone_qualified`.
+
+### C-48 · §6.5, §8.9 — Onboarding with entry planted errors · decide
+*Problem (harness, 2026-11-16):* with C-46 nobody becomes PV in a new
+installation: learners get one seat per ticket, evidence arrives only with
+reveals and decisions, and decisions need PV. In 45 simulated days no honest
+account reached θ_PV. The parameter study never showed this because it
+starts every account with eight planted errors and eight checked practice
+items.
+*Proposed:* an onboarding phase before the first real ticket: training
+tickets with known answers (planted errors from a training pool, decided
+real tickets), counted as evidence like planted errors; more of them for a
+weak identity (C-34). Founding maintainers bridge the very start. Measure the
+effect with the harness before deciding numbers.
+
 ### C-45 · §16, I-1, SR-05, SR-08, SR-20, SR-24, SR-50 — Submitting through the web · new
 *Today:* an administrator runs the pipeline on the command line: `dpc ingest`
 (or `ingest-batch`), `render`, `mutate`, `open-submission` with the submission

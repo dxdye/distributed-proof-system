@@ -93,3 +93,54 @@ Consequences:
 
 Leases and aborts, paired review, payouts. Choice sets are modelled only through
 the steering factor τ, not as sets of tickets with attention ψ.
+
+## Where the model and the coordinator differ (review of 2026-11-16)
+
+The decision rule and the trust model are the same code in both
+(`dpc/domain/decision.py`, `trust.py`). The process around them drifted:
+
+1. **Who fills k_min.** The model draws only people with κ ≥ θ_PV for class A
+   (`model.py`, `draw`). The coordinator opened easy and medium tickets to
+   everyone and counted every review for k_min; a new account (s = c = 0.5)
+   has no weight but filled a seat. *Changed 2026-11-16:* only votes of
+   people with the PV role fill k_min; others review on learner seats
+   (`qualified_seats`, `learner_slots`).
+2. **Onboarding.** The model starts every account with eight planted errors
+   and eight checked practice items (`onboarding_honeypots`,
+   `onboarding_checked`); the coordinator has no onboarding. With (1) this
+   locks the cold start: in the harness no honest account reached the PV role
+   in 45 days (κ 0.13–0.19, evidence stops at 4–7 items once the learner seats
+   are taken). Open, see C-48.
+3. **PVV.** The model samples re-checks (`recheck_probability`); the
+   coordinator wants a PVV review before every acceptance. Safer, and a
+   bottleneck the model does not show.
+4. **Lenses** (§8.4) exist only in the model; with ρ = 0.5 equal reviews miss
+   every blind error (52 % overall, 15 % with lenses).
+5. Not in the model at all: leases and aborts, tiers and the 14-day opening,
+   the roles of C-42, verdicts per question, blocking with cheap "incorrect"
+   verdicts (now capped: one open claim per learner, C-46).
+
+**The harness** (`dpc/sim/harness.py`) closes the gap for good: agents with
+the behaviours of the model call the real coordinator (choice sets, leases,
+reviews, PVV duties, claims, escalations, reveals) with a fake clock and a
+fixed seed; the truth comes from planted real errors and the vault. First
+measurement, 4 seeds × 80 units, 15 % real errors, 45 days, 3 honest founding
+maintainers, 12 honest and 3 clickers, in the attack also 2 lookup and 8 Sybil
+accounts aiming at all 41 real errors:
+
+| | accepted | of them wrong | errors found | open | accepted with < k_min qualified votes | targets passed |
+|---|---|---|---|---|---|---|
+| before, honest | 268 | 0 | 40 | 10 | 241 | — |
+| before, attack | 274 | 1 | 40 | 2 | 259 | 1 of 41 |
+| after (1), honest | 14 | 0 | 40 | 266 | 0 | — |
+| after (1), attack | 13 | 0 | 38 | 268 | 0 | 0 of 41 |
+
+Before, the mandatory PVV review caught almost every attack, but the k_min
+reserve did not exist. After, no acceptance rests on unqualified votes, and
+progress stops until onboarding (2) exists.
+
+**How far the results reach.** About 30 erroneous items per configuration
+bound the share of missed errors by about 10 % (95 % Clopper–Pearson, the
+rule of three) even when none is missed; δ_A = 10⁻³ needs about 3000 accepted
+items without a miss. The runs exclude gross failure, they do not confirm δ_A.
+`HarnessResult.miss_upper` gives the bound.
