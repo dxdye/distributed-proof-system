@@ -4,7 +4,7 @@ import { domainLabel } from "../kinds";
 import { Infoview } from "../components/Infoview";
 import { Reference } from "../components/Reference";
 import { ReliesOn } from "../components/ReliesOn";
-import { TicketContext } from "../components/TicketContext";
+import { TicketContext, TicketContextProvider } from "../components/TicketContext";
 import { TierBadge } from "../components/Tier";
 import { navigate } from "../router";
 
@@ -301,12 +301,14 @@ export function LeaseView({ id, reload }: { id: string; reload: () => void }) {
           minChars={lease.min_reason_chars}
           active={active}
         />
-        <section className="lean-panel">
-          <h3>Lean says</h3>
-          <Infoview view={t.view} hideContext />
-          <ReliesOn entries={t.relies_on} />
-          <TicketContext leaseId={lease.lease_id} />
-        </section>
+        <TicketContextProvider leaseId={lease.lease_id}>
+          <section className="lean-panel">
+            <h3>Lean says</h3>
+            <Infoview view={t.view} hideContext />
+            <ReliesOn entries={t.relies_on} />
+            <TicketContext />
+          </section>
+        </TicketContextProvider>
       </section>
       {active && lease.duty === "claim" && <ClaimForm lease={lease} onDone={done} />}
       {active && lease.duty !== "claim" && <ReviewForm lease={lease} onDone={done} />}

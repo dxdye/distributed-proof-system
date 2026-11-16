@@ -1,6 +1,7 @@
-import { type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { kindLabel } from "../kinds";
 import { layoutTerm } from "../layout";
+import { UnfoldContext } from "./unfoldContext";
 import type { Component, GlossaryEntry, UnitView } from "../api";
 
 // Static infoview (SR-21): the elaborated statement of each component, with the
@@ -26,9 +27,21 @@ function lookupTable(glossary: GlossaryEntry[]): Map<string, GlossaryEntry[]> {
 
 /** A name with its type, origin, docstring and convention on hover and focus. */
 function Const({ text, hits }: { text: string; hits?: GlossaryEntry[] }) {
+  // In a ticket, a declaration of the submission opens in the side panel (C-39).
+  const unfold = useContext(UnfoldContext);
   if (!hits) return <>{text}</>;
+  const target = unfold && hits.find((h) => unfold.has(h.name))?.name;
+  const open = target
+    ? {
+        onClick: () => unfold.open(target, "statement"),
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === "Enter") unfold.open(target, "statement");
+        },
+        role: "button",
+      }
+    : {};
   return (
-    <span className="const" tabIndex={0}>
+    <span className={target ? "const openable" : "const"} tabIndex={0} {...open}>
       {text}
       <span className="hover" role="tooltip">
         {hits.map((h) => (
@@ -198,15 +211,26 @@ function ComponentBox({ component, kind }: { component: Component; kind: string 
   );
 }
 
-/** ``hideContext``: where the neighbours are shown unfoldable instead (TicketContext). */
-export function Infoview({ view, hideContext }: { view: UnitView; hideContext?: boolean }) {
+/** ``hideContext``: where the neighbours are shown unfoldable instead
+ * (TicketContext). ``compact``: in the side panel, without its own header. */
+export function Infoview({
+  view,
+  hideContext,
+  compact,
+}: {
+  view: UnitView;
+  hideContext?: boolean;
+  compact?: boolean;
+}) {
   const differing = view.components.filter(displayDiffers).length;
   return (
-    <div className="infoview">
-      <div className="decl-head">
-        <span className="badge">{kindLabel(view.decl_kind)}</span>
-        <code>{view.declaration}</code>
-      </div>
+    <div className={compact ? "infoview compact" : "infoview"}>
+      {!compact && (
+        <div className="decl-head">
+          <span className="badge">{kindLabel(view.decl_kind)}</span>
+          <code>{view.declaration}</code>
+        </div>
+      )}
       {differing > 0 && (
         <p className="display-warning">
           The submission's own display rules change how{" "}

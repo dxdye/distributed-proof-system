@@ -3030,3 +3030,213 @@ nav.main-nav .nav-drop-menu a:focus-visible {
     color: var(--accent-text);
   }
 }
+
+/* Unfolding in a ticket (C-39), "focus instead of a stack": compact rows, a
+   side panel with the path that led there, a tree of the formalization. */
+.ctx-rows {
+  list-style: none;
+  margin: 0.3rem 0 0.6rem;
+  padding: 0;
+}
+button.ctx-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+button.ctx-row:hover,
+button.ctx-row:focus-visible {
+  background: var(--surface);
+}
+button.ctx-row.current {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.ctx-kind {
+  flex: none;
+  min-width: 5.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ctx-row code,
+.ctx-panel-title code {
+  background: none;
+  padding: 0;
+  font-size: 0.88rem;
+}
+.ctx-ns {
+  color: var(--muted);
+}
+.ctx-short {
+  color: var(--ink-strong);
+}
+.ctx-seen {
+  font-size: 0.72rem;
+  color: var(--ok);
+}
+.ctx-seen::before {
+  content: "● ";
+}
+.ctx-open {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+.ctx-tree {
+  list-style: none;
+  margin: 0;
+  padding-left: 1.1rem;
+  border-left: 1px dashed var(--line-strong);
+}
+.ctx-tree-top {
+  padding-left: 0;
+  border-left: 0;
+}
+.ctx-tree .ctx-rows {
+  margin: 0;
+}
+.ctx-again button.ctx-row {
+  opacity: 0.6;
+}
+.ctx-again-note {
+  display: block;
+  padding: 0 0 0.3rem 0.6rem;
+}
+
+/* The side panel: fixed beside the page under the header; full screen on
+   phones. The page makes room for it on wide screens. */
+.ctx-panel {
+  position: fixed;
+  top: var(--masthead-h, 0px);
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: min(34rem, 42vw);
+  background: var(--card);
+  border-left: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-lg);
+}
+.ctx-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.ctx-path {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+.ctx-path-sep {
+  margin: 0 0.35rem;
+  color: var(--muted);
+}
+.ctx-path b {
+  color: var(--ink-strong);
+}
+button.ctx-panel-close {
+  flex: none;
+  min-height: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
+  color: var(--ink);
+}
+button.ctx-panel-close:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--card);
+}
+.ctx-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.9rem 1rem 1.5rem;
+}
+.ctx-panel-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.ctx-label {
+  margin: 1rem 0 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ctx-back {
+  margin-top: 0.8rem;
+}
+@media (min-width: 900px) {
+  body.ctx-panel-open #main {
+    max-width: calc(100vw - min(34rem, 42vw) - 3rem);
+    margin-left: 1.5rem;
+    margin-right: 0;
+  }
+}
+@media (max-width: 899px) {
+  .ctx-panel {
+    width: 100%;
+    border-left: 0;
+  }
+}
+
+/* The declaration in the panel: quieter than the statement of the ticket. */
+.infoview.compact .component h4 {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+.infoview.compact pre.term {
+  background: none;
+  border: 0;
+  border-left: 2px solid var(--line-strong);
+  border-radius: 0;
+  padding: 0.3rem 0 0.3rem 0.8rem;
+  font-size: 0.86rem;
+}
+.infoview.compact .glossary button.link {
+  font-size: 0.8rem;
+}
+
+/* Names of the submission in a ticket open in the side panel. */
+.const.openable {
+  cursor: pointer;
+  border-bottom-style: solid;
+  border-bottom-color: var(--accent);
+}
+.const.openable:hover {
+  color: var(--accent-text);
+}
+button.ctx-row:disabled {
+  cursor: default;
+  opacity: 1;
+}
+button.ctx-row:disabled:hover {
+  background: none;
+}
