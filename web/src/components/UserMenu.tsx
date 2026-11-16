@@ -55,7 +55,9 @@ export function UserMenu({ me, onSignOut }: { me: Me | null; onSignOut: () => vo
               <strong>{me.pseudonym}</strong>
               <span className="small muted">
                 {GROUPS[me.group] ?? me.group}
-                {me.maintainer ? " · Maintainer" : ""}
+                {me.root ? " · Root tester" : ""}
+                {!me.root && me.admin ? " · Administrator" : ""}
+                {!me.root && me.maintainer ? " · Maintainer" : ""}
               </span>
             </div>
           )}
@@ -65,9 +67,9 @@ export function UserMenu({ me, onSignOut }: { me: Me | null; onSignOut: () => vo
           <a role="menuitem" href="#/work/preferences">
             Preferences
           </a>
-          {me?.maintainer && (
+          {(me?.admin || me?.maintainer) && (
             <a role="menuitem" href="#/admin">
-              Maintainers
+              {me?.admin ? "Administration" : "Maintenance"}
             </a>
           )}
           <a role="menuitem" href="#/how">

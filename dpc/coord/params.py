@@ -74,6 +74,15 @@ class CoordParams:
     #: A change of preferences discards the current set, so each change is a
     #: reroll; at most this many changes per day (C-32).
     max_preference_changes_per_day: int = 3
+    #: Term of a maintainer of a domain unless the administrator sets another
+    #: end date (C-42); founding maintainers count as PVV only until theirs.
+    maintainer_term_days: int = 365
+    founding_term_days: int = 90
+    #: Test systems and the click dummy only, never production: root testers
+    #: hold every role and are free of the rules (limits, tiers, one version per
+    #: person, the separation of C-42), so that every page can be tried. Off,
+    #: a root appointment in the log has no effect.
+    root_accounts: bool = False
 
     @property
     def parallel(self) -> int:

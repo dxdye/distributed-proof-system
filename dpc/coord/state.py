@@ -39,14 +39,28 @@ class EvidenceRec:
     ticket_id: str
 
 
+@dataclass(frozen=True)
+class MaintainerTerm:
+    """A maintainer of one domain (C-42) until ``until``; a founding maintainer
+    counts as PVV there until then."""
+
+    until: datetime
+    founding: bool
+
+
 @dataclass
 class ReviewerSt:
     rid: str
     group: str
     registered: datetime
     affiliation_tags: set[str] = field(default_factory=set)
-    maintainer: bool = False
-    maintainer_by: str | None = None  # "operator" or "identity_provider"
+    #: Administrator of the platform (C-42; before, the single "maintainer" role).
+    admin: bool = False
+    admin_by: str | None = None  # "operator" or "identity_provider"
+    #: Domains this person maintains, appointed by an administrator (C-42).
+    maintains: dict[str, MaintainerTerm] = field(default_factory=dict)
+    #: Root tester (test systems only; see CoordParams.root_accounts).
+    root: bool = False
     pref_domains: tuple[str, ...] = ()
     pref_tiers: tuple[str, ...] = ()
     prefs_at: datetime | None = None
@@ -257,11 +271,40 @@ class State:
         if cached is not None:
             return cached
         reviewer = self.reviewers[rid]
+        if self.is_root(rid):
+            roles_root = frozenset({"PV", "PVV", "maintainer", "admin", "root"})
+            self._roles[key] = roles_root
+            return roles_root
+        # Weight and duties come from measured trust only (C-42). Exceptions:
+        # founding maintainers count as PVV in their domain until the end of
+        # their term (cold start); administrators review nothing at all.
         roles = set(self.params.roles.roles(self.trust(rid, domain, at)))
-        if reviewer.maintainer:
-            roles |= {"PV", "PVV", "maintainer"}
+        term = reviewer.maintains.get(domain)
+        if term is not None and at < term.until:
+            roles.add("maintainer")
+            if term.founding:
+                roles |= {"PV", "PVV"}
+        if reviewer.admin:
+            roles = {"admin"}
         self._roles[key] = frozenset(roles)
         return self._roles[key]
+
+    def is_root(self, rid: str) -> bool:
+        """A root tester, where the parameters allow them (test systems only)."""
+        return self.params.root_accounts and self.reviewers[rid].root
+
+    def maintains(self, rid: str, domain: str, at: datetime) -> bool:
+        """Is ``rid`` a maintainer of ``domain`` at ``at`` (C-42)?"""
+        if self.is_root(rid):
+            return True
+        term = self.reviewers[rid].maintains.get(domain)
+        return term is not None and at < term.until
+
+    def maintained(self, rid: str, at: datetime) -> list[str]:
+        """The domains ``rid`` maintains at ``at`` (a root tester: all of them)."""
+        if self.is_root(rid):
+            return sorted({t.domain for t in self.tickets.values()})
+        return sorted(d for d, term in self.reviewers[rid].maintains.items() if at < term.until)
 
     def active_leases(self, rid: str | None = None, ticket_id: str | None = None
                       ) -> list[LeaseSt]:
@@ -304,10 +347,30 @@ class State:
                                           _: Entry) -> None:
         self.reviewers[p.reviewer].affiliation_tags.add(p.tag)
 
-    def _on_reviewer_maintainer_appointed(self, p: ev.MaintainerAppointed, at: datetime,
-                                          _: Entry) -> None:
+    def _on_reviewer_admin_appointed(self, p: ev.AdminAppointed, at: datetime, _: Entry) -> None:
         person = self.reviewers[p.reviewer]
-        person.maintainer, person.maintainer_by = True, p.by
+        person.admin, person.admin_by = True, p.by
+
+    # Older logs: the single maintainer role of before C-42 is the administrator.
+    _on_reviewer_maintainer_appointed = _on_reviewer_admin_appointed
+
+    def _on_reviewer_root_appointed(self, p: ev.RootAppointed, at: datetime, _: Entry) -> None:
+        self.reviewers[p.reviewer].root = True
+
+    def _on_reviewer_root_revoked(self, p: ev.RootRevoked, at: datetime, _: Entry) -> None:
+        self.reviewers[p.reviewer].root = False
+
+    def _on_role_maintainer_appointed(self, p: ev.MaintainerRoleAppointed, at: datetime,
+                                      _: Entry) -> None:
+        person = self.reviewers[p.reviewer]
+        for domain in p.domains:
+            person.maintains[domain] = MaintainerTerm(ev.parse_ts(p.until), p.founding)
+
+    def _on_role_maintainer_revoked(self, p: ev.MaintainerRoleRevoked, at: datetime,
+                                    _: Entry) -> None:
+        person = self.reviewers[p.reviewer]
+        for domain in p.domains:
+            person.maintains.pop(domain, None)
 
     def _on_reviewer_preferences_set(self, p: ev.PreferencesSet, at: datetime,
                                      _: Entry) -> None:
@@ -319,10 +382,11 @@ class State:
         if current is not None:
             current.consumed = True
 
-    def _on_reviewer_maintainer_revoked(self, p: ev.MaintainerRevoked, at: datetime,
-                                        _: Entry) -> None:
+    def _on_reviewer_admin_revoked(self, p: ev.AdminRevoked, at: datetime, _: Entry) -> None:
         person = self.reviewers[p.reviewer]
-        person.maintainer, person.maintainer_by = False, None
+        person.admin, person.admin_by = False, None
+
+    _on_reviewer_maintainer_revoked = _on_reviewer_admin_revoked
 
     def _on_submission_opened(self, p: ev.SubmissionOpened, at: datetime, _: Entry) -> None:
         self.submissions[p.submission_id] = SubmissionSt(

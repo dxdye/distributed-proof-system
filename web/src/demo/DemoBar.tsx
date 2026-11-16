@@ -31,7 +31,8 @@ const TAGLINE: Record<Role, string> = {
   newcomer: "Just joined.",
   pv: "A reviewer with earned trust.",
   pvv: "Checks the checkers.",
-  maintainer: "Runs the review of a paper.",
+  maintainer: "Looks after the content of a domain.",
+  root: "Test systems only: everything at once.",
 };
 
 const CAN: Record<Role, string[]> = {
@@ -51,9 +52,14 @@ const CAN: Record<Role, string[]> = {
     "Three tickets at a time",
   ],
   maintainer: [
-    "Escalations, contested paper passages, reopen requests",
-    "Notes on the progress page, moderation",
-    "Close a submission: reveals all planted errors",
+    "Escalations, contested paper passages, reopen requests in the domain",
+    "Notes on the progress page, hashtags, moderation",
+    "Sees originals under review, and therefore does not review them",
+  ],
+  root: [
+    "Every role at once: reviewer, PVV, maintainer, administrator",
+    "Free of the rules: no limits, every tier, every page",
+    "Exists only in test systems and in this dummy, never in production",
   ],
 };
 

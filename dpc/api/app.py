@@ -13,6 +13,7 @@ Public endpoints return aggregates.
 import asyncio
 import contextlib
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
@@ -135,6 +136,27 @@ class NoteReq(_Req):
     show_pseudonym: bool = False
 
 
+class DeclarationReq(_Req):
+    submission_id: str
+    declaration: str
+
+
+class AppointReq(_Req):
+    """A maintainer of domains (C-42), by an administrator."""
+
+    pseudonym: str
+    domains: list[str]
+    reason: str
+    until: str | None = None  # ISO date; default: the term of the parameters
+    founding: bool = False
+
+
+class RevokeReq(_Req):
+    pseudonym: str
+    domains: list[str] = []  # empty: all
+    reason: str
+
+
 class TagsReq(_Req):
     #: The whole set of hashtags of a submission (C-44); replaces the previous one.
     tags: list[str]
@@ -208,17 +230,27 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         rid = account(ident)
         if rid is None:
             raise HTTPException(403, "no reviewer account for this sign-in; register first")
-        if ident.maintainer is not None:  # the provider manages the maintainer role
-            coord.sync_maintainer(rid, ident.maintainer)
+        if ident.admin is not None:  # the provider manages the administrator role
+            coord.sync_admin(rid, ident.admin)
+        return rid
+
+    def administrator(rid: Annotated[str, Depends(reviewer)]) -> str:
+        if not (coord.state.reviewers[rid].admin or coord.state.is_root(rid)):
+            raise HTTPException(403, "administrators only")
         return rid
 
     def maintainer(rid: Annotated[str, Depends(reviewer)]) -> str:
-        if not coord.state.reviewers[rid].maintainer:
+        """A maintainer of some domain (C-42); each action checks the domain."""
+        if not coord.state.maintained(rid, coord.now()):
             raise HTTPException(403, "maintainers only")
         return rid
 
     Rid = Annotated[str, Depends(reviewer)]
-    Admin = Annotated[str, Depends(maintainer)]
+    Admin = Annotated[str, Depends(administrator)]
+    Maint = Annotated[str, Depends(maintainer)]
+
+    def mine(rid: str, domain: str) -> bool:
+        return coord.state.maintains(rid, domain, coord.now())
 
     def ticket_card(ticket: TicketSt) -> dict[str, Any]:
         """What is shown in a choice set: no counts, no popularity (SR-38)."""
@@ -352,8 +384,8 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             rid, _ = call(coord.register, req.pseudonym, req.group, req.affiliations,
                           notice_acknowledged=req.notice_acknowledged,
                           identity=(ident.provider, ident.subject))
-            if ident.maintainer:
-                coord.sync_maintainer(rid, True)
+            if ident.admin:
+                coord.sync_admin(rid, True)
             if req.domains:
                 call(coord.set_preferences, rid, domains=req.domains)
             return {"reviewer_id": rid}
@@ -371,7 +403,7 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         with coord.lock:
             st, now = coord.state, coord.now()
             person = st.reviewers[rid]
-            domains = sorted({e.domain for e in person.evidence})
+            domains = sorted({e.domain for e in person.evidence} | set(st.maintained(rid, now)))
             history = []
             for r in st.reviews.values():
                 if r.reviewer != rid:
@@ -386,7 +418,12 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                     "planted_error": t.honeypot})
             return {
                 "reviewer_id": rid, "pseudonym": coord.vault.pseudonym(rid),
-                "group": person.group, "maintainer": person.maintainer,
+                "group": person.group, "admin": person.admin or st.is_root(rid),
+                # Root tester (test systems only): every role, free of the rules.
+                "root": st.is_root(rid),
+                # Domains this person maintains (C-42); "maintainer": any of them.
+                "maintains": st.maintained(rid, now),
+                "maintainer": bool(st.maintained(rid, now)),
                 "roles": {d: sorted(st.roles(rid, d, now)) for d in domains},
                 "preferences": {"domains": list(person.pref_domains),
                                 "tiers": list(person.pref_tiers)},
@@ -521,7 +558,8 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             person = st.reviewers[p.author]
             item: dict[str, Any] = {
                 "post_id": pid, "kind": p.kind, "author": label(p.author),
-                "is_me": p.author == rid, "maintainer": person.maintainer,
+                "is_me": p.author == rid,
+                "maintainer": st.maintains(p.author, real.domain, coord.now()),
                 "member_since": person.registered.strftime("%Y-%m"),
                 "reviewed_here": p.author in reviewed, "at": p.at.isoformat(),
                 "score": p.score, "my_vote": p.votes.get(rid, 0), "ai_used": p.ai_used,
@@ -642,22 +680,25 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         except (ValueError, FileNotFoundError) as exc:
             raise HTTPException(404, "no such file") from exc
 
-    # ---------------------------------------------------------- maintainer
+    # ------------------------------------------- administrators and maintainers
     @app.post("/api/admin/tick")
     def tick(_: Admin) -> dict[str, int]:
         return dict(coord.tick())
 
     @app.get("/api/admin/escalated")
-    def escalated(_: Admin) -> list[dict[str, Any]]:
+    def escalated(rid: Maint) -> list[dict[str, Any]]:
+        """Escalations in the domains this maintainer maintains (C-42)."""
         with coord.lock:
             return [{"ticket_id": t.ticket_id, "declaration": t.view.declaration,
                      "paper": coord.state.submissions[t.submission_id].title,
+                     "domain": t.domain,
                      "votes": [{"verdict": "incorrect" if r.incorrect else "correct",
                                 "reason": r.reason} for r in t.reviews]}
-                    for t in coord.state.tickets.values() if t.status == "escalate"]
+                    for t in coord.state.tickets.values()
+                    if t.status == "escalate" and mine(rid, t.domain)]
 
     @app.post("/api/admin/tickets/{ticket_id}/decide")
-    def decide(ticket_id: str, req: DecideReq, rid: Admin) -> dict[str, bool]:
+    def decide(ticket_id: str, req: DecideReq, rid: Maint) -> dict[str, bool]:
         call(coord.maintainer_decide, rid, ticket_id, error=req.error, reason=req.reason)
         return {"ok": True}
 
@@ -667,33 +708,34 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
         return {"ok": True}
 
     @app.post("/api/admin/submissions/{submission_id}/tags")
-    def set_tags(submission_id: str, req: TagsReq, rid: Admin) -> dict[str, list[str]]:
+    def set_tags(submission_id: str, req: TagsReq, rid: Maint) -> dict[str, list[str]]:
         """Hashtags of the problem (C-44): for finding it, never for the draw."""
         return {"tags": list(call(coord.tag_submission, rid, submission_id, req.tags))}
 
     @app.get("/api/admin/reports")
-    def reports(_: Admin) -> list[dict[str, Any]]:
-        """Reported posts that are not hidden yet."""
+    def reports(rid: Maint) -> list[dict[str, Any]]:
+        """Reported posts that are not hidden yet, in this maintainer's domains."""
         with coord.lock:
             return [{"post_id": p.post_id, "submission_id": p.thread[0],
                      "declaration": p.thread[1], "text": p.text, "kind": p.kind,
                      "reasons": [r for _, r in p.reports]}
-                    for p in coord.state.posts.values() if p.reports and not p.hidden]
+                    for p in coord.state.posts.values() if p.reports and not p.hidden
+                    and any(mine(rid, d) for d in coord.thread_domains(*p.thread))]
 
     @app.post("/api/admin/posts/{post_id}/hide")
-    def hide(post_id: str, req: ReasonReq, rid: Admin) -> dict[str, bool]:
+    def hide(post_id: str, req: ReasonReq, rid: Maint) -> dict[str, bool]:
         call(coord.hide_post, rid, post_id, req.reason)
         return {"ok": True}
 
     @app.get("/api/admin/reopens")
-    def reopens(_: Admin) -> list[dict[str, Any]]:
+    def reopens(rid: Maint) -> list[dict[str, Any]]:
         with coord.lock:
             st = coord.state
             out = []
             for q in st.reopens.values():
-                if q.status != "open":
-                    continue
                 t = st.tickets[q.ticket_id]
+                if q.status != "open" or not mine(rid, t.domain):
+                    continue
                 out.append({"request_id": q.request_id, "ticket_id": q.ticket_id,
                             "declaration": t.view.declaration,
                             "paper": st.submissions[t.submission_id].title,
@@ -702,30 +744,34 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
             return out
 
     @app.post("/api/admin/reopens/{request_id}")
-    def resolve(request_id: str, req: ResolveReq, rid: Admin) -> dict[str, bool]:
+    def resolve(request_id: str, req: ResolveReq, rid: Maint) -> dict[str, bool]:
         call(coord.resolve_reopen, rid, request_id, reopen=req.reopen, reason=req.reason)
         return {"ok": True}
 
     @app.get("/api/admin/contested")
-    def contested(_: Admin) -> list[dict[str, Any]]:
-        """Paper mappings reviewers say are wrong (SR-24)."""
+    def contested(rid: Maint) -> list[dict[str, Any]]:
+        """Paper mappings reviewers say are wrong (SR-24), in this maintainer's domains."""
         with coord.lock:
             out = []
             for t in coord.state.tickets.values():
-                if t.contests and t.paper is not None:
+                if t.contests and t.paper is not None and mine(rid, t.domain):
                     out.append({"ticket_id": t.ticket_id, "declaration": t.view.declaration,
                                 "paper": coord.state.submissions[t.submission_id].title,
                                 "locator": t.paper.locator,
                                 "reasons": [reason for _, reason in t.contests]})
             return out
 
-    @app.get("/api/admin/declaration")
-    def admin_declaration(submission_id: str, declaration: str, _: Admin) -> dict[str, Any]:
-        """A declaration as its reviewers see it, for maintainers (progress page).
-        Not public: the real statement next to a planted copy would give it away."""
+    @app.post("/api/admin/declaration")
+    def admin_declaration(req: DeclarationReq, rid: Maint) -> dict[str, Any]:
+        """A declaration as its reviewers see it, for a maintainer of its domain
+        (progress page). Not public: the real statement next to a planted copy
+        would give it away. Recorded as seen (C-42): the maintainer is not
+        offered its tickets afterwards."""
+        submission_id, declaration = req.submission_id, req.declaration
         with coord.lock:
             if submission_id not in coord.state.submissions:
                 raise HTTPException(404, "no such submission")
+            call(coord.maintainer_view, rid, submission_id, declaration)
             unit = next((u for u in progress_page.units(coord, submission_id)
                          if u.declaration == declaration), None)
             if unit is None:
@@ -743,6 +789,41 @@ def create_app(coord: Coordinator, *, auth: Authenticator | None = None,
                 "contested": len(real.contests),
                 "discussion": coord.thread_open(submission_id, declaration),
             }
+
+    @app.get("/api/admin/maintainers")
+    def maintainers(_: Admin) -> list[dict[str, Any]]:
+        """Who maintains which domain, until when (C-42)."""
+        with coord.lock:
+            out = []
+            for rid, person in coord.state.reviewers.items():
+                for domain, term in sorted(person.maintains.items()):
+                    out.append({"pseudonym": coord.vault.pseudonym(rid), "domain": domain,
+                                "until": term.until.isoformat(), "founding": term.founding,
+                                "active": coord.now() < term.until})
+            return out
+
+    @app.post("/api/admin/maintainers")
+    def appoint(req: AppointReq, rid: Admin) -> dict[str, bool]:
+        target = coord.vault.reviewer_for_pseudonym(req.pseudonym)
+        if target is None:
+            raise HTTPException(404, "no such pseudonym")
+        until = None
+        if req.until:
+            try:
+                until = datetime.fromisoformat(req.until).replace(tzinfo=UTC)
+            except ValueError as exc:
+                raise HTTPException(400, "until: a date such as 2027-03-31") from exc
+        call(coord.appoint_maintainer, rid, target, req.domains, reason=req.reason,
+             until=until, founding=req.founding)
+        return {"ok": True}
+
+    @app.post("/api/admin/maintainers/revoke")
+    def revoke(req: RevokeReq, rid: Admin) -> dict[str, bool]:
+        target = coord.vault.reviewer_for_pseudonym(req.pseudonym)
+        if target is None:
+            raise HTTPException(404, "no such pseudonym")
+        call(coord.revoke_maintainer, rid, target, req.domains, reason=req.reason)
+        return {"ok": True}
 
     @app.get("/api/admin/submissions")
     def submissions(_: Admin) -> list[dict[str, Any]]:

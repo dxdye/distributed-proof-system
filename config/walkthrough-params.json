@@ -6,5 +6,6 @@
   "decision": {
     "k_min": 2
   },
-  "tier_gating": false
+  "tier_gating": false,
+  "root_accounts": true
 }

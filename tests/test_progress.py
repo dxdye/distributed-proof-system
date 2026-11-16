@@ -117,7 +117,7 @@ def test_a_submission_opened_again_replaces_the_closed_one(env: Env) -> None:
                                       tickets=specs("Q", 2), root="Q.u0")
     assert progress.summary(env.coord, old)["replaced_by"] is None  # still open
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.coord.appoint_admin(admin)
     env.coord.close_submission(admin, old)
     assert progress.summary(env.coord, old)["replaced_by"] is None  # closed, not reopened
     env.clock.advance(minutes=5)
@@ -143,7 +143,7 @@ def test_a_paper_is_filed_under_the_domain_of_its_main_theorem(env: Env) -> None
 def test_the_lean_statement_waits_for_the_decision(env: Env) -> None:
     sid = open_paper(env, 1)
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     rid = env.people(1)[0]
     d = progress.detail(env.coord, sid, None)
     assert d["main_statement"] == PASSAGE.statement and d["main_locator"] == PASSAGE.locator
@@ -163,7 +163,7 @@ def test_the_lean_statement_waits_for_the_decision(env: Env) -> None:
 def test_anyone_reads_the_page_and_only_maintainers_write_notes(env: Env) -> None:
     sid = open_paper(env, 2)
     admin, admin_token = env.coord.register("admin", notice_acknowledged=True)
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     _, token = env.coord.register("reader", notice_acknowledged=True)
     client = TestClient(create_app(env.coord, tick_seconds=None))
     listing = client.get("/api/progress")
@@ -194,20 +194,25 @@ def test_anyone_reads_the_page_and_only_maintainers_write_notes(env: Env) -> Non
 def test_maintainers_see_the_declaration_as_its_reviewers_do(env: Env) -> None:
     sid = open_paper(env, 2)
     admin, admin_token = env.coord.register("admin", notice_acknowledged=True)
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     _, token = env.coord.register("reader", notice_acknowledged=True)
     client = TestClient(create_app(env.coord, tick_seconds=None))
     query = {"submission_id": sid, "declaration": "P.u0"}
-    assert client.get("/api/admin/declaration", params=query).status_code == 401
+    assert client.post("/api/admin/declaration", json=query).status_code == 401
     reader = {"Authorization": f"Bearer {token}"}
-    assert client.get("/api/admin/declaration", params=query, headers=reader).status_code == 403
+    assert client.post("/api/admin/declaration", json=query, headers=reader).status_code == 403
     maint = {"Authorization": f"Bearer {admin_token}"}
-    d = client.get("/api/admin/declaration", params=query, headers=maint).json()
+    d = client.post("/api/admin/declaration", json=query, headers=maint).json()
     assert d["view"]["declaration"] == "P.u0" and d["state"] == "not started"
     assert d["paper_passage"]["statement"] == PASSAGE.statement
     assert d["questions"][0]["id"] == "fidelity"
     missing = {"submission_id": sid, "declaration": "P.nope"}
-    assert client.get("/api/admin/declaration", params=missing, headers=maint).status_code == 404
+    assert client.post("/api/admin/declaration", json=missing, headers=maint).status_code == 404
+    # Seen as maintainer, so never offered as a ticket (C-42): the original in
+    # mind, a planted copy would stand out by comparison.
+    assert (sid, "P.u0") in env.coord.state.seen_units[admin]
+    real = env.coord.real_ticket(sid, "P.u0")
+    assert real is not None and env.coord.why_not(admin, real, "review") is not None
 
 
 DATA = Path(__file__).parent / "data"
@@ -271,7 +276,7 @@ def test_library_definitions_wait_for_the_planted_errors(tmp_path: Path) -> None
     env = planted_env(tmp_path)
     sid = next(iter(env.coord.state.submissions))
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.coord.appoint_admin(admin)
     assert progress.detail(env.coord, sid, None)["library_definitions"] is None
     assert progress.detail(env.coord, sid, admin)["library_definitions"] == []
     env.log.close()

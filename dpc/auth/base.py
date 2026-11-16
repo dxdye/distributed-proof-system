@@ -2,7 +2,8 @@
 
 An *identity provider* turns a credential (a bearer token) into an
 :class:`Identity`: the provider's name, a stable subject id, and optionally
-whether the provider grants the coarse role *maintainer*. Everything else a
+whether the provider grants the coarse role *administrator* (C-42; formerly
+*maintainer*). Everything else a
 person may do (PV, PVV, exclusion rules) is derived from the audit log, never
 from the provider (concept §6, SR-17).
 
@@ -31,9 +32,10 @@ class AuthError(Exception):
 class Identity:
     provider: str  # name of the configured provider, e.g. "keycloak" or "local"
     subject: str  # stable id within that provider (OIDC `sub`; reviewer id for local tokens)
-    #: Whether the provider grants the maintainer role. ``None``: the provider
-    #: does not manage roles, maintainers are appointed by the operator only.
-    maintainer: bool | None = None
+    #: Whether the provider grants the administrator role (C-42). ``None``: the
+    #: provider does not manage roles; administrators are appointed by the
+    #: operator only. Maintainers of domains are appointed in the platform.
+    admin: bool | None = None
 
     @property
     def local(self) -> bool:

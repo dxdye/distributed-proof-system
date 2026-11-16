@@ -12,7 +12,7 @@ import { parseTags } from "../tags";
 
 type Json = Record<string, unknown>;
 type Tier = "easy" | "medium" | "hard" | "excellence";
-export type Role = "newcomer" | "pv" | "pvv" | "maintainer";
+export type Role = "newcomer" | "pv" | "pvv" | "maintainer" | "root";
 
 type SnapTicket = {
   ticket_id: string;
@@ -142,7 +142,12 @@ export const ROLES: { role: Role; label: string; hint: string }[] = [
   {
     role: "maintainer",
     label: "Maintainer",
-    hint: "Escalations, contested mappings, closing.",
+    hint: "Looks after the content of a domain: escalations, passages, moderation.",
+  },
+  {
+    role: "root",
+    label: "Root tester",
+    hint: "Test systems only: every role, every page, free of the rules.",
   },
 ];
 const PROFILE: Record<
@@ -188,6 +193,14 @@ const PROFILE: Record<
     roles: ["PV", "PVV", "maintainer"],
     maintainer: true,
   },
+  root: {
+    pseudonym: "demo-root",
+    group: "expert",
+    tiers: ["easy", "medium", "hard", "excellence"],
+    wip: 9,
+    roles: ["PV", "PVV", "maintainer", "admin", "root"],
+    maintainer: true,
+  },
 };
 
 const kindOf = (declKind: string) =>
@@ -213,7 +226,7 @@ function fresh(): State {
     seen: [],
   });
   const s: State = {
-    version: 5,
+    version: 6,
     leases: {},
     claims: [],
     contests: {},
@@ -225,6 +238,7 @@ function fresh(): State {
       pv: person(),
       pvv: person(),
       maintainer: person(),
+      root: person(),
     },
     next: 1,
     posts: [],
@@ -468,7 +482,7 @@ function load(): State {
     const raw = sessionStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as State;
-      if (parsed.version === 5) return parsed;
+      if (parsed.version === 6) return parsed;
     }
   } catch {
     /* fresh state */
@@ -699,6 +713,11 @@ function me(role: Role): Json {
     reviewer_id: `R-demo-${role}`,
     pseudonym: prof.pseudonym,
     group: prof.group,
+    // C-42: administrators run the platform, maintainers look after domains;
+    // in the dummy only the root tester is administrator.
+    admin: role === "root",
+    root: role === "root",
+    maintains: prof.maintainer ? domains : [],
     maintainer: prof.maintainer,
     roles: Object.fromEntries(domains.map((d) => [d, prof.roles])),
     reliability: role === "newcomer" ? 0.5 : 0.9,
@@ -1544,7 +1563,32 @@ function handle(
   }
   if (path.startsWith("/api/admin/")) {
     if (!PROFILE[role].maintainer) throw new HttpError(403, "maintainers only");
-    if (path === "/api/admin/declaration") return declarationJson(query);
+    const adminOnly =
+      path === "/api/admin/submissions" ||
+      path.startsWith("/api/admin/maintainers") ||
+      path.endsWith("/close") ||
+      path === "/api/admin/tick";
+    if (adminOnly && role !== "root") throw new HttpError(403, "administrators only");
+    if (path === "/api/admin/declaration")
+      return declarationJson(
+        method === "POST"
+          ? new URLSearchParams({
+              submission_id: String(body.submission_id ?? ""),
+              declaration: String(body.declaration ?? ""),
+            })
+          : query,
+      );
+    if (path === "/api/admin/maintainers" && method === "GET")
+      return [...new Set(snap.submissions.flatMap((s) => s.tickets.map((t) => t.domain)))].map(
+        (domain) => ({
+          pseudonym: PROFILE.maintainer.pseudonym,
+          domain,
+          until: "2027-03-31T00:00:00Z",
+          founding: true,
+          active: true,
+        }),
+      );
+    if (path.startsWith("/api/admin/maintainers")) return { ok: true }; // the dummy keeps them
     return admin(path, method, body);
   }
   throw new HttpError(404, "not found");

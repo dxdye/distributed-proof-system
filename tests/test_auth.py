@@ -58,13 +58,15 @@ def provider(**kw: Any) -> OidcProvider:
 
 
 # ------------------------------------------------------------- tokens
-def test_valid_token_gives_the_identity_and_the_maintainer_role() -> None:
+def test_valid_token_gives_the_identity_and_the_administrator_role() -> None:
+    """The provider grants only the administrator role (C-42); its realm role
+    is still called dpc-maintainer in the development realm."""
     p = provider()
     plain = p.authenticate(token())
-    assert (plain.provider, plain.subject, plain.maintainer) == ("keycloak", "user-1", False)
+    assert (plain.provider, plain.subject, plain.admin) == ("keycloak", "user-1", False)
     granted = p.authenticate(token(realm_access={"roles": ["dpc-maintainer"]}))
-    assert granted.maintainer is True
-    assert provider(maintainer_role=None).authenticate(token()).maintainer is None
+    assert granted.admin is True
+    assert provider(admin_role=None).authenticate(token()).admin is None
 
 
 @pytest.mark.parametrize("bad, why", [
@@ -188,18 +190,19 @@ def test_one_reviewer_per_sign_in(env: Env) -> None:
     assert again.status_code == 409
 
 
-def test_maintainer_role_follows_the_identity_provider(env: Env) -> None:
+def test_administrator_role_follows_the_identity_provider(env: Env) -> None:
     client = client_for(env)
     granted = bearer(token(sub="kc-m", realm_access={"roles": ["dpc-maintainer"]}))
     client.post("/api/register", headers=granted,
                 json={"pseudonym": "erin", "notice_acknowledged": True})
-    assert client.get("/api/me", headers=granted).json()["maintainer"] is True
+    me = client.get("/api/me", headers=granted).json()
+    assert me["admin"] is True and me["maintainer"] is False  # domains: in the platform
     assert client.get("/api/admin/submissions", headers=granted).status_code == 200
     revoked = bearer(token(sub="kc-m"))
     assert client.get("/api/admin/submissions", headers=revoked).status_code == 403
-    assert client.get("/api/me", headers=revoked).json()["maintainer"] is False
-    kinds = [e.kind for e in env.log.entries() if e.kind.startswith("reviewer.maintainer")]
-    assert kinds == ["reviewer.maintainer_appointed", "reviewer.maintainer_revoked"]
+    assert client.get("/api/me", headers=revoked).json()["admin"] is False
+    kinds = [e.kind for e in env.log.entries() if e.kind.startswith("reviewer.admin")]
+    assert kinds == ["reviewer.admin_appointed", "reviewer.admin_revoked"]
 
 
 def test_operator_appointments_are_kept(env: Env) -> None:
@@ -209,8 +212,8 @@ def test_operator_appointments_are_kept(env: Env) -> None:
     me = bearer(token(sub="kc-op"))
     r = client.post("/api/register", headers=me,
                     json={"pseudonym": "frank", "notice_acknowledged": True})
-    env.coord.appoint_maintainer(r.json()["reviewer_id"])
-    assert client.get("/api/me", headers=me).json()["maintainer"] is True
+    env.coord.appoint_admin(r.json()["reviewer_id"])
+    assert client.get("/api/me", headers=me).json()["admin"] is True
 
 
 def test_local_tokens_can_be_switched_off(env: Env) -> None:
@@ -245,7 +248,7 @@ def test_development_keycloak_end_to_end(env: Env) -> None:
                         json={"pseudonym": f"kc-{user}", "notice_acknowledged": True})
         assert r.status_code == 200, r.text
     boss, rev = bearer(keycloak_token("maintainer")), bearer(keycloak_token("reviewer1"))
-    assert client.get("/api/me", headers=boss).json()["maintainer"] is True
-    assert client.get("/api/me", headers=rev).json()["maintainer"] is False
+    assert client.get("/api/me", headers=boss).json()["admin"] is True
+    assert client.get("/api/me", headers=rev).json()["admin"] is False
     assert client.get("/api/admin/submissions", headers=boss).status_code == 200
     assert client.get("/api/admin/submissions", headers=rev).status_code == 403

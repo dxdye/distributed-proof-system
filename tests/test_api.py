@@ -82,7 +82,7 @@ def test_maintainer_endpoints_are_guarded(env: Env, client: TestClient) -> None:
                                     tickets=specs("P", 2))
     auth = register(client, "dave")
     assert client.post("/api/admin/tick", headers=auth).status_code == 403
-    env.coord.appoint_maintainer(env.vault.reviewer_for_pseudonym("dave") or "")
+    env.coord.appoint_admin(env.vault.reviewer_for_pseudonym("dave") or "")
     assert client.post("/api/admin/tick", headers=auth).json() == {"expired": 0, "revealed": 0}
     subs = client.get("/api/admin/submissions", headers=auth).json()
     assert subs[0]["tickets"] == {"open": 2}
@@ -97,7 +97,7 @@ def test_claim_duty_shows_the_finding_to_the_pvv(env: Env, client: TestClient) -
                               tickets=specs("P", 1))
     finder = register(client, "erin")
     admin = register(client, "admin")
-    env.coord.appoint_maintainer(env.vault.reviewer_for_pseudonym("admin") or "")
+    env.maintainer(env.vault.reviewer_for_pseudonym("admin") or "")
     cs = client.post("/api/choice-set", headers=finder).json()
     lid = client.post("/api/leases", headers=finder, json={
         "set_id": cs["set_id"], "ticket_id": cs["tickets"][0]["ticket_id"]}).json()["lease_id"]

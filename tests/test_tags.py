@@ -45,7 +45,7 @@ def test_maintainers_tag_a_submission(env: Env) -> None:
     rid = env.people(1)[0]
     with pytest.raises(Forbidden):
         env.coord.tag_submission(rid, sid, ["spam"])
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     assert env.coord.tag_submission(admin, sid, ["millennium-prize", "Navier-Stokes"]) == (
         "millennium-prize", "navier-stokes")
     seq = env.coord.state.seq
@@ -62,7 +62,7 @@ def test_tags_appear_on_the_progress_page_and_in_the_discussions(env: Env) -> No
     sid = env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
                                     tickets=specs("P", 1), tags=["counterexample"])
     admin, admin_token = env.coord.register("boss", notice_acknowledged=True)
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     decide_error(env, admin, env.people(1)[0])
     client = TestClient(create_app(env.coord, tick_seconds=None))
     assert client.get("/api/progress").json()[0]["tags"] == ["counterexample"]

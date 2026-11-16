@@ -5,7 +5,11 @@ Example (``config/auth-keycloak.json``)::
     {"local_tokens": true,
      "providers": [{"kind": "keycloak", "url": "http://localhost:8080", "realm": "dpc",
                     "client_id": "dpc-web", "audience": "dpc-api",
-                    "maintainer_role": "dpc-maintainer"}]}
+                    "admin_role": "dpc-admin"}]}
+
+``admin_role`` names the provider's role that makes someone an administrator
+(C-42). ``maintainer_role`` is its former name and still read: before C-42 the
+administrator was called maintainer.
 
 A new kind of provider gets a config class here and a branch in
 :func:`build_authenticator`.
@@ -37,7 +41,8 @@ class KeycloakConfig(_Cfg):
     realm: str
     client_id: str
     audience: str
-    maintainer_role: str | None = "dpc-maintainer"
+    admin_role: str | None = None
+    maintainer_role: str | None = "dpc-maintainer"  # former name of admin_role
     scopes: str = "openid"
 
 
@@ -49,7 +54,8 @@ class OidcConfig(_Cfg):
     client_id: str
     audience: str
     roles_claim: str = "roles"
-    maintainer_role: str | None = None
+    admin_role: str | None = None
+    maintainer_role: str | None = None  # former name of admin_role
     jwks_uri: str | None = None
     scopes: str = "openid"
 
@@ -77,12 +83,13 @@ def build_authenticator(config: AuthConfig, vault: Vault) -> Authenticator:
             providers.append(keycloak(
                 url=p.url, internal_url=p.internal_url, realm=p.realm, client_id=p.client_id,
                 audience=p.audience, name=p.name, label=p.label,
-                maintainer_role=p.maintainer_role, scopes=p.scopes))
+                admin_role=p.admin_role or p.maintainer_role, scopes=p.scopes))
         else:
             providers.append(OidcProvider(
                 name=p.name, label=p.label, issuer=p.issuer, client_id=p.client_id,
                 audience=p.audience, roles_claim=p.roles_claim,
-                maintainer_role=p.maintainer_role, jwks_uri=p.jwks_uri, scopes=p.scopes))
+                admin_role=p.admin_role or p.maintainer_role, jwks_uri=p.jwks_uri,
+                scopes=p.scopes))
     if not providers:
         raise ValueError("no sign-in method configured")
     return Authenticator(providers)

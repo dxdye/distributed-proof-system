@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Escalated, type SubmissionRow } from "../api";
+import { api, type Escalated, type MaintainerRow, type Me, type SubmissionRow } from "../api";
+import { domainLabel } from "../kinds";
 import { threadHref } from "./Discussions";
 
-export function Admin() {
+// Administrators run the platform; maintainers look after the content of
+// their domains (proposal C-42). Each sees only their part.
+export function Admin({ me }: { me: Me }) {
   const [subs, setSubs] = useState<SubmissionRow[]>([]);
   const [escalated, setEscalated] = useState<Escalated[]>([]);
   const [contested, setContested] = useState<
@@ -33,12 +36,14 @@ export function Admin() {
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
-    api.admin.submissions().then(setSubs);
-    api.admin.escalated().then(setEscalated);
-    api.admin.contested().then(setContested);
-    api.admin.reports().then(setReports);
-    api.admin.reopens().then(setReopens);
-  }, []);
+    if (me.admin) api.admin.submissions().then(setSubs);
+    if (me.maintainer) {
+      api.admin.escalated().then(setEscalated);
+      api.admin.contested().then(setContested);
+      api.admin.reports().then(setReports);
+      api.admin.reopens().then(setReopens);
+    }
+  }, [me.admin, me.maintainer]);
   useEffect(load, [load]);
 
   async function run<T>(action: () => Promise<T>, done: (r: T) => string) {
@@ -53,46 +58,335 @@ export function Admin() {
   return (
     <div>
       <section className="card">
-        <div className="row">
-          <h2>Submissions</h2>
-        </div>
+        <h2>{me.admin ? "Administration" : "Maintenance"}</h2>
+        <p className="muted small">
+          {me.admin
+            ? "You run the platform: submissions, parameters and who maintains which domain. " +
+              "Administrators review nothing, because they see the internals of review (C-42)."
+            : `You maintain ${me.maintains.map(domainLabel).join(", ")}: escalations, reopen ` +
+              "requests, reports and paper mappings of these domains."}
+        </p>
         {message && <p className="muted">{message}</p>}
+      </section>
+      {me.admin && <Maintainers onMessage={setMessage} />}
+      {me.admin && (
+        <section className="card">
+          <div className="row">
+            <h2>Submissions</h2>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Commit</th>
+                <th>Tickets</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {subs.map((s) => (
+                <tr key={s.submission_id}>
+                  <td>{s.title}</td>
+                  <td>
+                    <code>{s.commit.slice(0, 12)}</code>
+                  </td>
+                  <td className="small">
+                    {Object.entries(s.tickets)
+                      .map(([k, v]) => `${k}: ${v}`)
+                      .join(" · ")}
+                  </td>
+                  <td>
+                    {s.closed ? (
+                      <span className="muted">closed</span>
+                    ) : (
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          window.confirm(`Close ${s.title} and open all commitments?`) &&
+                          run(
+                            () => api.admin.close(s.submission_id),
+                            () => "closed",
+                          )
+                        }
+                      >
+                        Close
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="scheduled">
+            <p className="muted small">
+              Every minute the service ends leases whose time has run out (this lowers the
+              reliability of whoever let them lapse) and reveals planted errors whose waiting time
+              is over, in batches. The button does this now instead of at the next minute.
+            </p>
+            <button
+              className="secondary"
+              title="End leases whose time ran out and reveal planted errors that are due, now instead of at the next minute"
+              onClick={() =>
+                run(
+                  api.admin.tick,
+                  (r) => `${r.expired} leases expired, ${r.revealed} honeypots revealed`,
+                )
+              }
+            >
+              Run scheduled tasks now
+            </button>
+          </div>
+        </section>
+      )}
+      {me.maintainer && (
+        <>
+          <section className="card">
+            <h2>Escalated tickets</h2>
+            {escalated.length === 0 && <p className="muted">None.</p>}
+            {escalated.map((t) => (
+              <div key={t.ticket_id} className="escalated">
+                <p>
+                  <code>{t.declaration}</code> <span className="muted">{t.paper}</span>
+                </p>
+                <ul className="small">
+                  {t.votes.map((v, i) => (
+                    <li key={i}>
+                      {v.verdict} {v.reason && <span className="muted">— {v.reason}</span>}
+                    </li>
+                  ))}
+                </ul>
+                <textarea
+                  rows={2}
+                  placeholder="Justification"
+                  value={reasons[t.ticket_id] ?? ""}
+                  onChange={(e) => setReasons({ ...reasons, [t.ticket_id]: e.target.value })}
+                />
+                <div className="row">
+                  {[false, true].map((error) => (
+                    <button
+                      key={String(error)}
+                      className={error ? "secondary" : ""}
+                      disabled={!reasons[t.ticket_id]?.trim()}
+                      onClick={() =>
+                        run(
+                          () => api.admin.decide(t.ticket_id, error, reasons[t.ticket_id]),
+                          () => "decided",
+                        )
+                      }
+                    >
+                      {error ? "Erroneous" : "Accept"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+          <section className="card">
+            <h2>Reopen requests</h2>
+            <p className="muted small">
+              Someone in a discussion says a decided declaration is wrong after all. Reopening turns
+              it into an escalation, decided like any other; discussion never decides by itself.
+            </p>
+            {reopens.length === 0 ? (
+              <p className="muted">No open request.</p>
+            ) : (
+              reopens.map((q) => (
+                <div key={q.request_id} className="escalated">
+                  <p>
+                    <a href={threadHref(q.submission_id, q.declaration)}>
+                      <code>{q.declaration}</code>
+                    </a>{" "}
+                    <span className="muted small">
+                      {q.paper} · decided: {q.outcome}
+                    </span>
+                  </p>
+                  <blockquote>{q.reason}</blockquote>
+                  <textarea
+                    rows={2}
+                    placeholder="Your reason"
+                    value={notes[q.request_id] ?? ""}
+                    onChange={(e) => setNotes({ ...notes, [q.request_id]: e.target.value })}
+                  />
+                  <div className="toolbar">
+                    <button
+                      disabled={!(notes[q.request_id] ?? "").trim()}
+                      onClick={() =>
+                        run(
+                          () => api.admin.resolveReopen(q.request_id, true, notes[q.request_id]),
+                          () => "Reopened: the ticket is now escalated.",
+                        )
+                      }
+                    >
+                      Reopen as escalation
+                    </button>
+                    <button
+                      className="secondary"
+                      disabled={!(notes[q.request_id] ?? "").trim()}
+                      onClick={() =>
+                        run(
+                          () => api.admin.resolveReopen(q.request_id, false, notes[q.request_id]),
+                          () => "Request dismissed.",
+                        )
+                      }
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </section>
+          <section className="card">
+            <h2>Reported posts</h2>
+            {reports.length === 0 ? (
+              <p className="muted">No reported post.</p>
+            ) : (
+              reports.map((r) => (
+                <div key={r.post_id} className="escalated">
+                  <p>
+                    <a href={threadHref(r.submission_id, r.declaration)}>
+                      <code>{r.declaration}</code>
+                    </a>
+                  </p>
+                  <blockquote>{r.text || `(${r.kind})`}</blockquote>
+                  <p className="small muted">Reported because: {r.reasons.join(" · ")}</p>
+                  <div className="toolbar">
+                    <input
+                      placeholder="Reason for hiding"
+                      value={notes[r.post_id] ?? ""}
+                      onChange={(e) => setNotes({ ...notes, [r.post_id]: e.target.value })}
+                    />
+                    <button
+                      className="secondary"
+                      disabled={!(notes[r.post_id] ?? "").trim()}
+                      onClick={() =>
+                        run(
+                          () => api.admin.hide(r.post_id, notes[r.post_id]),
+                          () => "Post hidden.",
+                        )
+                      }
+                    >
+                      Hide post
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </section>
+          <section className="card">
+            <h2>Contested paper mappings</h2>
+            {contested.length === 0 ? (
+              <p className="muted">No reviewer has contested a mapping.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Declaration</th>
+                    <th>Paper and passage</th>
+                    <th>Reasons</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contested.map((c) => (
+                    <tr key={c.ticket_id}>
+                      <td>
+                        <code>{c.declaration}</code>
+                      </td>
+                      <td className="small">
+                        {c.paper} · {c.locator}
+                      </td>
+                      <td className="small">
+                        {c.reasons.map((r, i) => (
+                          <p key={i}>{r}</p>
+                        ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Who maintains which domain; appointing and revoking (administrators, C-42). */
+function Maintainers({ onMessage }: { onMessage: (m: string) => void }) {
+  const [rows, setRows] = useState<MaintainerRow[]>([]);
+  const [form, setForm] = useState({
+    pseudonym: "",
+    domains: "",
+    reason: "",
+    until: "",
+    founding: false,
+  });
+  const load = useCallback(() => {
+    api.admin.maintainers().then(setRows, () => setRows([]));
+  }, []);
+  useEffect(load, [load]);
+  const appoint = async () => {
+    try {
+      await api.admin.appoint({
+        pseudonym: form.pseudonym.trim(),
+        domains: form.domains.split(/[,\s]+/).filter(Boolean),
+        reason: form.reason,
+        until: form.until || null,
+        founding: form.founding,
+      });
+      onMessage(`${form.pseudonym} appointed.`);
+      setForm({ ...form, pseudonym: "", domains: "", reason: "" });
+      load();
+    } catch (e) {
+      onMessage((e as Error).message);
+    }
+  };
+  const revoke = async (r: MaintainerRow) => {
+    const reason = window.prompt(`Why does ${r.pseudonym} stop maintaining ${r.domain}?`);
+    if (!reason) return;
+    try {
+      await api.admin.revoke(r.pseudonym, [r.domain], reason);
+      onMessage(`${r.pseudonym} no longer maintains ${r.domain}.`);
+      load();
+    } catch (e) {
+      onMessage((e as Error).message);
+    }
+  };
+  return (
+    <section className="card">
+      <h2>Maintainers</h2>
+      <p className="muted small">
+        Appointed per domain, only if measured as PVV there. Founding maintainers start a new
+        domain: they count as PVV there until the end date. Every appointment is public, with its
+        reason.
+      </p>
+      {rows.length > 0 && (
         <table>
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Commit</th>
-              <th>Tickets</th>
+              <th>Pseudonym</th>
+              <th>Domain</th>
+              <th>Until</th>
               <th />
             </tr>
           </thead>
           <tbody>
-            {subs.map((s) => (
-              <tr key={s.submission_id}>
-                <td>{s.title}</td>
+            {rows.map((r) => (
+              <tr key={`${r.pseudonym}:${r.domain}`} className={r.active ? "" : "muted"}>
+                <td>{r.pseudonym}</td>
                 <td>
-                  <code>{s.commit.slice(0, 12)}</code>
+                  {domainLabel(r.domain)}
+                  {r.founding && <span className="badge">founding</span>}
                 </td>
                 <td className="small">
-                  {Object.entries(s.tickets)
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join(" · ")}
+                  {new Date(r.until).toLocaleDateString("en", { dateStyle: "medium" })}
+                  {!r.active && " (ended)"}
                 </td>
                 <td>
-                  {s.closed ? (
-                    <span className="muted">closed</span>
-                  ) : (
-                    <button
-                      className="secondary"
-                      onClick={() =>
-                        window.confirm(`Close ${s.title} and open all commitments?`) &&
-                        run(
-                          () => api.admin.close(s.submission_id),
-                          () => "closed",
-                        )
-                      }
-                    >
-                      Close
+                  {r.active && (
+                    <button className="link" onClick={() => revoke(r)}>
+                      Revoke
                     </button>
                   )}
                 </td>
@@ -100,192 +394,44 @@ export function Admin() {
             ))}
           </tbody>
         </table>
-        <div className="scheduled">
-          <p className="muted small">
-            Every minute the service ends leases whose time has run out (this lowers the reliability
-            of whoever let them lapse) and reveals planted errors whose waiting time is over, in
-            batches. The button does this now instead of at the next minute.
-          </p>
-          <button
-            className="secondary"
-            title="End leases whose time ran out and reveal planted errors that are due, now instead of at the next minute"
-            onClick={() =>
-              run(
-                api.admin.tick,
-                (r) => `${r.expired} leases expired, ${r.revealed} honeypots revealed`,
-              )
-            }
-          >
-            Run scheduled tasks now
-          </button>
-        </div>
-      </section>
-      <section className="card">
-        <h2>Escalated tickets</h2>
-        {escalated.length === 0 && <p className="muted">None.</p>}
-        {escalated.map((t) => (
-          <div key={t.ticket_id} className="escalated">
-            <p>
-              <code>{t.declaration}</code> <span className="muted">{t.paper}</span>
-            </p>
-            <ul className="small">
-              {t.votes.map((v, i) => (
-                <li key={i}>
-                  {v.verdict} {v.reason && <span className="muted">— {v.reason}</span>}
-                </li>
-              ))}
-            </ul>
-            <textarea
-              rows={2}
-              placeholder="Justification"
-              value={reasons[t.ticket_id] ?? ""}
-              onChange={(e) => setReasons({ ...reasons, [t.ticket_id]: e.target.value })}
-            />
-            <div className="row">
-              {[false, true].map((error) => (
-                <button
-                  key={String(error)}
-                  className={error ? "secondary" : ""}
-                  disabled={!reasons[t.ticket_id]?.trim()}
-                  onClick={() =>
-                    run(
-                      () => api.admin.decide(t.ticket_id, error, reasons[t.ticket_id]),
-                      () => "decided",
-                    )
-                  }
-                >
-                  {error ? "Erroneous" : "Accept"}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
-      <section className="card">
-        <h2>Reopen requests</h2>
-        <p className="muted small">
-          Someone in a discussion says a decided declaration is wrong after all. Reopening turns it
-          into an escalation, decided like any other; discussion never decides by itself.
-        </p>
-        {reopens.length === 0 ? (
-          <p className="muted">No open request.</p>
-        ) : (
-          reopens.map((q) => (
-            <div key={q.request_id} className="escalated">
-              <p>
-                <a href={threadHref(q.submission_id, q.declaration)}>
-                  <code>{q.declaration}</code>
-                </a>{" "}
-                <span className="muted small">
-                  {q.paper} · decided: {q.outcome}
-                </span>
-              </p>
-              <blockquote>{q.reason}</blockquote>
-              <textarea
-                rows={2}
-                placeholder="Your reason"
-                value={notes[q.request_id] ?? ""}
-                onChange={(e) => setNotes({ ...notes, [q.request_id]: e.target.value })}
-              />
-              <div className="toolbar">
-                <button
-                  disabled={!(notes[q.request_id] ?? "").trim()}
-                  onClick={() =>
-                    run(
-                      () => api.admin.resolveReopen(q.request_id, true, notes[q.request_id]),
-                      () => "Reopened: the ticket is now escalated.",
-                    )
-                  }
-                >
-                  Reopen as escalation
-                </button>
-                <button
-                  className="secondary"
-                  disabled={!(notes[q.request_id] ?? "").trim()}
-                  onClick={() =>
-                    run(
-                      () => api.admin.resolveReopen(q.request_id, false, notes[q.request_id]),
-                      () => "Request dismissed.",
-                    )
-                  }
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </section>
-      <section className="card">
-        <h2>Reported posts</h2>
-        {reports.length === 0 ? (
-          <p className="muted">No reported post.</p>
-        ) : (
-          reports.map((r) => (
-            <div key={r.post_id} className="escalated">
-              <p>
-                <a href={threadHref(r.submission_id, r.declaration)}>
-                  <code>{r.declaration}</code>
-                </a>
-              </p>
-              <blockquote>{r.text || `(${r.kind})`}</blockquote>
-              <p className="small muted">Reported because: {r.reasons.join(" · ")}</p>
-              <div className="toolbar">
-                <input
-                  placeholder="Reason for hiding"
-                  value={notes[r.post_id] ?? ""}
-                  onChange={(e) => setNotes({ ...notes, [r.post_id]: e.target.value })}
-                />
-                <button
-                  className="secondary"
-                  disabled={!(notes[r.post_id] ?? "").trim()}
-                  onClick={() =>
-                    run(
-                      () => api.admin.hide(r.post_id, notes[r.post_id]),
-                      () => "Post hidden.",
-                    )
-                  }
-                >
-                  Hide post
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </section>
-      <section className="card">
-        <h2>Contested paper mappings</h2>
-        {contested.length === 0 ? (
-          <p className="muted">No reviewer has contested a mapping.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Declaration</th>
-                <th>Paper and passage</th>
-                <th>Reasons</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contested.map((c) => (
-                <tr key={c.ticket_id}>
-                  <td>
-                    <code>{c.declaration}</code>
-                  </td>
-                  <td className="small">
-                    {c.paper} · {c.locator}
-                  </td>
-                  <td className="small">
-                    {c.reasons.map((r, i) => (
-                      <p key={i}>{r}</p>
-                    ))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </div>
+      )}
+      <div className="appoint-form">
+        <input
+          placeholder="Pseudonym"
+          aria-label="Pseudonym"
+          value={form.pseudonym}
+          onChange={(e) => setForm({ ...form, pseudonym: e.target.value })}
+        />
+        <input
+          placeholder="Domains, e.g. analysis, combinatorics"
+          aria-label="Domains"
+          value={form.domains}
+          onChange={(e) => setForm({ ...form, domains: e.target.value })}
+        />
+        <input
+          type="date"
+          aria-label="Until"
+          value={form.until}
+          onChange={(e) => setForm({ ...form, until: e.target.value })}
+        />
+        <label className="small filter-check">
+          <input
+            type="checkbox"
+            checked={form.founding}
+            onChange={(e) => setForm({ ...form, founding: e.target.checked })}
+          />{" "}
+          Founding
+        </label>
+        <input
+          placeholder="Reason (public)"
+          aria-label="Reason"
+          value={form.reason}
+          onChange={(e) => setForm({ ...form, reason: e.target.value })}
+        />
+        <button onClick={appoint} disabled={!form.pseudonym || !form.domains || !form.reason}>
+          Appoint
+        </button>
+      </div>
+    </section>
   );
 }

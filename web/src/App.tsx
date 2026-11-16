@@ -95,7 +95,7 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
         decl={decodeURIComponent(route[2])}
       />
     );
-  else if (page === "admin" && me.maintainer) body = <Admin />;
+  else if (page === "admin" && (me.admin || me.maintainer)) body = <Admin me={me} />;
   else body = <Work me={me} reload={reload} openPreferences={route[1] === "preferences"} />;
 
   const current = (name: string) => (page === name ? "page" : undefined);
@@ -191,11 +191,11 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
               <a href="#/how" aria-current={current("how")}>
                 How it works
               </a>
-              {me?.maintainer && (
+              {(me?.admin || me?.maintainer) && (
                 <>
                   <span className="nav-sep" aria-hidden="true" />
                   <a href="#/admin" aria-current={current("admin")}>
-                    Maintainers
+                    {me?.admin ? "Administration" : "Maintenance"}
                   </a>
                 </>
               )}

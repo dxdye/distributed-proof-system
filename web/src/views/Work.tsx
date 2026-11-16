@@ -237,7 +237,8 @@ export function Work({
     }
   }
 
-  const isPvv = Object.values(me.roles).some((r) => r.includes("PVV")) || me.maintainer;
+  // PVV by measured trust, or as founding maintainer (C-42); never by appointment alone.
+  const isPvv = Object.values(me.roles).some((r) => r.includes("PVV"));
   const [intro, setIntro] = useState(() => !introDone(me));
 
   return (

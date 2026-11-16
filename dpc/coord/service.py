@@ -24,7 +24,7 @@ import re
 import secrets
 import threading
 from collections import Counter
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -166,10 +166,36 @@ class Coordinator:
             raise Conflict(f"lease {lease_id} has expired")
         return lease
 
-    def _maintainer(self, rid: str) -> None:
+    def _admin(self, rid: str) -> None:
+        """Administrators of the platform (C-42)."""
         self._reviewer(rid)
-        if not self.state.reviewers[rid].maintainer:
-            raise Forbidden("maintainers only")
+        if not (self.state.reviewers[rid].admin or self.state.is_root(rid)):
+            raise Forbidden("administrators only")
+
+    def _maintainer_of(self, rid: str, domains: Iterable[str]) -> None:
+        """Maintainers of one of these domains (C-42)."""
+        self._reviewer(rid)
+        now = self.now()
+        if not any(self.state.maintains(rid, d, now) for d in domains):
+            raise Forbidden("maintainers of this domain only")
+
+    def appointed(self, rid: str) -> bool:
+        """Administrators and maintainers: appointed people, not anonymous
+        accounts; exempt from the limits on rerolling (C-32)."""
+        st = self.state
+        return st.reviewers[rid].admin or st.is_root(rid) or bool(st.maintained(rid, self.now()))
+
+    def submission_domains(self, submission_id: str) -> set[str]:
+        st = self.state
+        return {st.tickets[t].domain for t in st.submissions[submission_id].tickets}
+
+    def thread_domains(self, submission_id: str, declaration: str) -> set[str]:
+        """The domain of a declaration's thread; of the whole submission for its notes."""
+        if declaration:
+            real = self.real_ticket(submission_id, declaration)
+            if real is not None:
+                return {real.domain}
+        return self.submission_domains(submission_id)
 
     # ------------------------------------------------------- registration
     def register(self, pseudonym: str, group: ev.Group = "other", affiliations: Sequence[str] = (),
@@ -205,10 +231,70 @@ class Coordinator:
             self._emit("reviewer.affiliation_declared",
                        ev.AffiliationDeclared(reviewer=rid, tag=self.vault.tag(lab)))
 
-    def appoint_maintainer(self, rid: str) -> None:
+    def appoint_root(self, rid: str) -> None:
+        """A root tester, by the operator: only where the parameters allow root
+        accounts (test systems and the click dummy, never production)."""
         with self.lock:
             self._reviewer(rid)
-            self._emit("reviewer.maintainer_appointed", ev.MaintainerAppointed(reviewer=rid))
+            if not self.params.root_accounts:
+                raise Forbidden("root accounts are switched off here (production)")
+            self._emit("reviewer.root_appointed", ev.RootAppointed(reviewer=rid))
+
+    def appoint_admin(self, rid: str) -> None:
+        """An administrator of the platform, by the operator (C-42)."""
+        with self.lock:
+            self._reviewer(rid)
+            if self.state.maintained(rid, self.now()):
+                raise Conflict("a maintainer cannot be an administrator: revoke the maintainer "
+                               "role first (C-42)")
+            self._emit("reviewer.admin_appointed", ev.AdminAppointed(reviewer=rid))
+
+    def appoint_maintainer(self, by: str, rid: str, domains: Sequence[str], *, reason: str,
+                           until: datetime | None = None, founding: bool = False) -> None:
+        """A maintainer of ``domains`` (C-42), appointed by an administrator with
+        a reason and an end date. Only someone measured as PVV in each domain;
+        otherwise as *founding* maintainer, who counts as PVV there until the
+        end date (the cold start). Administrators are not maintainers: who sees
+        the internals of review does not review."""
+        with self.lock:
+            self._admin(by)
+            self._reviewer(rid)
+            st, now = self.state, self.now()
+            if st.reviewers[rid].admin:
+                raise Conflict("administrators are not maintainers (C-42)")
+            names = tuple(sorted({d.strip() for d in domains if d.strip()}))
+            if not names:
+                raise CoordError("name at least one domain")
+            if len(reason.strip()) < 10:
+                raise CoordError("give a reason, in at least 10 characters")
+            days = self.params.founding_term_days if founding else self.params.maintainer_term_days
+            end = until or now + timedelta(days=days)
+            if end <= now:
+                raise CoordError("the term must end in the future")
+            if not founding:
+                missing = [d for d in names
+                           if "PVV" not in self.params.roles.roles(st.trust(rid, d, now))]
+                if missing:
+                    raise Conflict(f"not PVV in {', '.join(missing)}: appoint as founding "
+                                   "maintainer with an end date, or wait for the measured trust")
+            self._emit("role.maintainer_appointed", ev.MaintainerRoleAppointed(
+                reviewer=rid, domains=names, by=by, reason=reason.strip(), until=ev.ts(end),
+                founding=founding))
+
+    def revoke_maintainer(self, by: str, rid: str, domains: Sequence[str], *,
+                          reason: str) -> None:
+        """End a maintainer's role in ``domains`` (in all of them if empty)."""
+        with self.lock:
+            self._admin(by)
+            self._reviewer(rid)
+            held = set(self.state.reviewers[rid].maintains)
+            names = tuple(sorted(set(domains) & held if domains else held))
+            if not names:
+                raise Conflict("not a maintainer of these domains")
+            if len(reason.strip()) < 10:
+                raise CoordError("give a reason, in at least 10 characters")
+            self._emit("role.maintainer_revoked", ev.MaintainerRoleRevoked(
+                reviewer=rid, domains=names, by=by, reason=reason.strip()))
 
     def unused_set_times(self, rid: str) -> list[datetime]:
         """When the choice sets of the last 24 hours that led to no review were
@@ -233,10 +319,10 @@ class Coordinator:
         return len(self.unused_set_times(rid))
 
     def preference_changes(self, rid: str) -> tuple[int | None, datetime | None]:
-        """Changes of preferences left today (None: no limit, for maintainers)
-        and, if none is left, when the next one is possible (C-32)."""
+        """Changes of preferences left today (None: no limit, for appointed
+        people) and, if none is left, when the next one is possible (C-32)."""
         st, now = self.state, self.now()
-        if st.reviewers[rid].maintainer:
+        if self.appointed(rid):
             return None, None
         cap = self.params.max_preference_changes_per_day
         recent = [t for t in st.pref_changes[rid] if now - t < timedelta(days=1)]
@@ -273,24 +359,30 @@ class Coordinator:
         """Tiers the reviewer may take (in ``domain``, or in any domain)."""
         st, now = self.state, self.now()
         person = st.reviewers[rid]
+        if st.is_root(rid):
+            return list(TIERS)
         domains = [domain] if domain is not None else sorted(
-            {e.domain for e in person.evidence}) or [""]
-        return [t for t in TIERS if any(
-            tier_open(t, roles=st.roles(rid, d, now), maintainer=person.maintainer)
-            for d in domains)]
+            {e.domain for e in person.evidence} | set(st.maintained(rid, now))) or [""]
 
-    def sync_maintainer(self, rid: str, granted: bool) -> None:
-        """Follow the maintainer role of an identity provider (docs/adr/0010).
-        Every change is logged. Appointments by the operator are left alone."""
+        def may(t: Tier, d: str) -> bool:
+            roles = st.roles(rid, d, now)
+            return tier_open(t, roles=roles, maintainer="maintainer" in roles)
+
+        return [t for t in TIERS if any(may(t, d) for d in domains)]
+
+    def sync_admin(self, rid: str, granted: bool) -> None:
+        """Follow the administrator role of an identity provider (docs/adr/0010,
+        C-42). Every change is logged. Appointments by the operator are left
+        alone; maintainers of domains are appointed in the platform only."""
         with self.lock:
             self._reviewer(rid)
             person = self.state.reviewers[rid]
-            if granted and not person.maintainer:
-                self._emit("reviewer.maintainer_appointed",
-                           ev.MaintainerAppointed(reviewer=rid, by="identity_provider"))
-            elif not granted and person.maintainer_by == "identity_provider":
-                self._emit("reviewer.maintainer_revoked",
-                           ev.MaintainerRevoked(reviewer=rid, by="identity_provider"))
+            if granted and not person.admin:
+                self._emit("reviewer.admin_appointed",
+                           ev.AdminAppointed(reviewer=rid, by="identity_provider"))
+            elif not granted and person.admin_by == "identity_provider":
+                self._emit("reviewer.admin_revoked",
+                           ev.AdminRevoked(reviewer=rid, by="identity_provider"))
 
     # --------------------------------------------------------- submissions
     def open_submission(
@@ -347,15 +439,38 @@ class Coordinator:
                 raise NotFound("no such submission")
             self._emit("submission.basis_recorded", basis)
 
+    def maintainer_view(self, rid: str, submission_id: str, declaration: str) -> TicketSt:
+        """The original of a declaration under review, for a maintainer of its
+        domain (C-42). Recorded as seen (``unit.shown``): its tickets are not
+        offered to them afterwards. Refused while planted errors of the
+        submission are unrevealed to someone who worked on one of its tickets:
+        they would learn whether theirs was a planted copy."""
+        with self.lock:
+            real = self.real_ticket(submission_id, declaration)
+            if real is None:
+                raise NotFound("no such declaration")
+            self._maintainer_of(rid, [real.domain])
+            st = self.state
+            involved = any(rid in st.participants(t)
+                           for t in self.unit_tickets(submission_id, declaration))
+            if involved and self.vault.unrevealed(honeypots_only=True,
+                                                  submission_id=submission_id):
+                raise Conflict("you worked on this declaration: the maintainer view opens "
+                               "once the planted errors of the submission are revealed")
+            if (submission_id, declaration) not in st.seen_units[rid]:
+                self._emit("unit.shown", ev.UnitShown(
+                    reviewer=rid, submission_id=submission_id, declaration=declaration))
+            return real
+
     def tag_submission(self, rid: str, submission_id: str,
                        tags: Sequence[str]) -> tuple[str, ...]:
-        """Set the hashtags of a submission (C-44): maintainers only, the whole
-        set at once. Returns the tags as recorded (normalized)."""
+        """Set the hashtags of a submission (C-44): maintainers of one of its
+        domains, the whole set at once. Returns the tags as recorded."""
         with self.lock:
-            self._maintainer(rid)
             sub = self.state.submissions.get(submission_id)
             if sub is None:
                 raise NotFound("no such submission")
+            self._maintainer_of(rid, self.submission_domains(submission_id))
             try:
                 clean = normalize_tags(tags)
             except ValueError as exc:
@@ -366,9 +481,9 @@ class Coordinator:
             return clean
 
     def close_submission(self, rid: str, submission_id: str) -> None:
-        """Close a submission and open every remaining commitment."""
+        """Close a submission and open every remaining commitment (administrators)."""
         with self.lock:
-            self._maintainer(rid)
+            self._admin(rid)
             sub = self.state.submissions.get(submission_id)
             if sub is None or sub.closed:
                 raise Conflict("no open submission with this id")
@@ -388,6 +503,12 @@ class Coordinator:
         st, now = self.state, self.now()
         person = st.reviewers[rid]
         sub = st.submissions[ticket.submission_id]
+        if st.is_root(rid):  # test systems: free of the rules, but not twice on a ticket
+            if not st.is_open(ticket):
+                return "ticket is not open"
+            return "already involved in this ticket" if rid in st.participants(ticket) else None
+        if person.admin:
+            return "administrators do not review: they see the internals of review (C-42)"
         if not st.is_open(ticket):
             return "ticket is not open"
         if rid in sub.authors:
@@ -403,8 +524,8 @@ class Coordinator:
         if duty == "review" and self.params.tier_gating and \
                 now - ticket.created < timedelta(seconds=self.params.tier_gate_age_s):
             tier = ticket.tier
-            if not tier_open(tier, roles=st.roles(rid, ticket.domain, now),
-                             maintainer=person.maintainer):
+            roles = st.roles(rid, ticket.domain, now)
+            if not tier_open(tier, roles=roles, maintainer="maintainer" in roles):
                 return f"{tier} tickets need more experience in this domain"
         window = timedelta(seconds=self.params.pair_window_s)
         for p in people:
@@ -439,6 +560,12 @@ class Coordinator:
             return "no self-review (SR-08)"
         if any(lease.claim_id == claim.claim_id for lease in st.active_leases()):
             return "claim already leased"
+        if st.is_root(rid):
+            return None
+        if st.reviewers[rid].admin:
+            return "administrators do not review: they see the internals of review (C-42)"
+        if (ticket.submission_id, ticket.view.declaration) in st.seen_units[rid]:
+            return "saw this declaration in another version (C-39, C-42)"
         if "PVV" not in st.roles(rid, ticket.domain, self.now()):
             return "PVV role required (SR-35)"
         sub = st.submissions[ticket.submission_id]
@@ -476,12 +603,12 @@ class Coordinator:
             recent = [t for t in st.sets_drawn[rid] if now - t < timedelta(days=1)]
             cap, unused_cap = (self.params.max_choice_sets_per_day,
                                self.params.max_unused_sets_per_day)
-            if not person.maintainer and len(recent) >= cap:
+            if not self.appointed(rid) and len(recent) >= cap:
                 raise RerollLimit("sets", _frees_at(recent, cap),
                                   f"You have drawn {len(recent)} choice sets in the last 24 hours, "
                                   "the most allowed.")
             unused = self.unused_set_times(rid)
-            if not person.maintainer and len(unused) >= unused_cap:
+            if not self.appointed(rid) and len(unused) >= unused_cap:
                 raise RerollLimit("unused", _frees_at(unused, unused_cap),
                                   f"You have left {len(unused)} choice sets in the last 24 hours "
                                   "without a review. To keep the draw fair, the next set comes "
@@ -778,10 +905,10 @@ class Coordinator:
         with self.lock:
             self._reviewer(rid)
             if declaration == "":
-                # Notes on the whole submission (progress page, C-26): maintainers only.
-                self._maintainer(rid)
+                # Notes on the whole submission (progress page, C-26): its maintainers.
                 if submission_id not in self.state.submissions:
                     raise NotFound("no such submission")
+                self._maintainer_of(rid, self.submission_domains(submission_id))
             else:
                 self._thread(submission_id, declaration)
             post_id = self.new_id("P")
@@ -866,10 +993,12 @@ class Coordinator:
                 post_id=post_id, reporter=rid))
 
     def hide_post(self, rid: str, post_id: str, reason: str) -> None:
+        """Moderation by a maintainer of the thread's domain (C-42)."""
         with self.lock:
-            self._maintainer(rid)
-            if post_id not in self.state.posts:
+            post = self.state.posts.get(post_id)
+            if post is None:
                 raise NotFound("no such post")
+            self._maintainer_of(rid, self.thread_domains(*post.thread))
             if not reason.strip():
                 raise CoordError("hiding a post needs a reason")
             self._emit("discussion.hidden", ev.DiscussionHidden(
@@ -895,11 +1024,12 @@ class Coordinator:
             return request_id
 
     def resolve_reopen(self, rid: str, request_id: str, *, reopen: bool, reason: str) -> None:
+        """A maintainer of the declaration's domain decides (C-42)."""
         with self.lock:
-            self._maintainer(rid)
             req = self.state.reopens.get(request_id)
             if req is None or req.status != "open":
                 raise Conflict("no open reopen request with this id")
+            self._maintainer_of(rid, [self.state.tickets[req.ticket_id].domain])
             if not reason.strip():
                 raise CoordError("a decision needs a reason")
             self._emit("ticket.reopen_resolved", ev.ReopenResolved(
@@ -937,7 +1067,8 @@ class Coordinator:
             lease = self._own_lease(rid, lease_id)
             if lease.duty != "claim" or lease.claim_id is None:
                 raise CoordError("this lease is not a claim")
-            by = "maintainer" if self.state.reviewers[rid].maintainer else "pvv"
+            domain = self.state.tickets[lease.ticket_id].domain
+            by = "maintainer" if self.state.maintains(rid, domain, self.now()) else "pvv"
             self._emit("claim.resolved", ev.ClaimResolved(
                 claim_id=lease.claim_id, confirmed=confirmed, by=by,
                 resolver=rid, lease_id=lease_id, reason=reason))
@@ -959,8 +1090,8 @@ class Coordinator:
     def maintainer_decide(self, rid: str, ticket_id: str, *, error: bool, reason: str) -> None:
         """Escalated tickets (concept §6.4: after R rounds) go to maintainers."""
         with self.lock:
-            self._maintainer(rid)
             ticket = self._ticket(ticket_id)
+            self._maintainer_of(rid, [ticket.domain])
             if ticket.status != "escalate":
                 raise Conflict("only escalated tickets are decided by maintainers")
             self._emit("ticket.decided", ev.TicketDecided(

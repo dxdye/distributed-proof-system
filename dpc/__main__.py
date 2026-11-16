@@ -218,7 +218,9 @@ def cmd_export_demo(args: argparse.Namespace) -> int:
 
 
 def cmd_demo(args: argparse.Namespace) -> int:
-    """Seed a local demo: the mutation fixture as a submission, one maintainer."""
+    """Seed a local demo: the mutation fixture as a submission, one administrator
+    (the former maintainer, C-42); maintainers of domains are appointed with
+    `dpc appoint-maintainer`."""
     from dpc.coord.demo import DISPLAY, MUTATION, seed_demo
 
     coord = _coordinator(args)
@@ -228,8 +230,8 @@ def cmd_demo(args: argparse.Namespace) -> int:
     _, token = coord.register(args.maintainer, "expert", notice_acknowledged=True)
     rid = coord.vault.reviewer_for_pseudonym(args.maintainer)
     assert rid is not None
-    coord.appoint_maintainer(rid)
-    _print(info | {"maintainer": args.maintainer, "maintainer_token": token})
+    coord.appoint_admin(rid)
+    _print(info | {"admin": args.maintainer, "admin_token": token})
     return 0
 
 
@@ -317,13 +319,82 @@ def cmd_tag_submission(args: argparse.Namespace) -> int:
 
 
 def cmd_appoint(args: argparse.Namespace) -> int:
+    """Appoint an administrator of the platform (C-42), as the operator."""
     coord = _coordinator(args)
     rid = coord.vault.reviewer_for_pseudonym(args.pseudonym)
     if rid is None:
         print(f"unknown pseudonym {args.pseudonym!r}", file=sys.stderr)
         return 1
-    coord.appoint_maintainer(rid)
-    _print({"maintainer": args.pseudonym, "reviewer_id": rid})
+    try:
+        coord.appoint_admin(rid)
+    except CoordError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    _print({"admin": args.pseudonym, "reviewer_id": rid})
+    return 0
+
+
+def cmd_appoint_root(args: argparse.Namespace) -> int:
+    """Appoint a root tester (test systems only: needs root_accounts in the parameters)."""
+    coord = _coordinator(args)
+    rid = coord.vault.reviewer_for_pseudonym(args.pseudonym)
+    if rid is None:
+        print(f"unknown pseudonym {args.pseudonym!r}", file=sys.stderr)
+        return 1
+    try:
+        coord.appoint_root(rid)
+    except CoordError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    _print({"root": args.pseudonym, "reviewer_id": rid})
+    return 0
+
+
+def _pseudonyms(coord: Coordinator, *names: str) -> list[str] | None:
+    out = []
+    for name in names:
+        rid = coord.vault.reviewer_for_pseudonym(name)
+        if rid is None:
+            print(f"unknown pseudonym {name!r}", file=sys.stderr)
+            return None
+        out.append(rid)
+    return out
+
+
+def cmd_appoint_maintainer(args: argparse.Namespace) -> int:
+    """Appoint a maintainer of domains (C-42), by an administrator."""
+    from datetime import UTC, datetime
+
+    coord = _coordinator(args)
+    ids = _pseudonyms(coord, args.by, args.pseudonym)
+    if ids is None:
+        return 1
+    until = datetime.fromisoformat(args.until).replace(tzinfo=UTC) if args.until else None
+    try:
+        coord.appoint_maintainer(ids[0], ids[1], args.domains, reason=args.reason,
+                                 until=until, founding=args.founding)
+    except CoordError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    person = coord.state.reviewers[ids[1]]
+    _print({"maintainer": args.pseudonym, "domains": {
+        d: {"until": t.until.isoformat(), "founding": t.founding}
+        for d, t in sorted(person.maintains.items())}})
+    return 0
+
+
+def cmd_revoke_maintainer(args: argparse.Namespace) -> int:
+    coord = _coordinator(args)
+    ids = _pseudonyms(coord, args.by, args.pseudonym)
+    if ids is None:
+        return 1
+    try:
+        coord.revoke_maintainer(ids[0], ids[1], args.domains or [], reason=args.reason)
+    except CoordError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    _print({"maintainer": args.pseudonym,
+            "domains": sorted(coord.state.reviewers[ids[1]].maintains)})
     return 0
 
 
@@ -553,10 +624,35 @@ def main(argv: list[str] | None = None) -> int:
     coord_args(p)
     p.set_defaults(func=cmd_tag_submission)
 
-    p = sub.add_parser("appoint", help="appoint a maintainer")
+    p = sub.add_parser("appoint", help="appoint an administrator of the platform (C-42)")
     p.add_argument("pseudonym")
     coord_args(p)
     p.set_defaults(func=cmd_appoint)
+
+    p = sub.add_parser("appoint-root", help="appoint a root tester (test systems only)")
+    p.add_argument("pseudonym")
+    coord_args(p)
+    p.set_defaults(func=cmd_appoint_root)
+
+    p = sub.add_parser("appoint-maintainer",
+                       help="appoint a maintainer of domains (C-42), as an administrator")
+    p.add_argument("pseudonym")
+    p.add_argument("--domain", dest="domains", action="append", required=True)
+    p.add_argument("--reason", required=True)
+    p.add_argument("--until", help="end of the term, e.g. 2027-03-31 (default: parameters)")
+    p.add_argument("--founding", action="store_true",
+                   help="founding maintainer: counts as PVV in the domains until the end date")
+    p.add_argument("--by", required=True, help="pseudonym of the administrator")
+    coord_args(p)
+    p.set_defaults(func=cmd_appoint_maintainer)
+
+    p = sub.add_parser("revoke-maintainer", help="end a maintainer's role (C-42)")
+    p.add_argument("pseudonym")
+    p.add_argument("--domain", dest="domains", action="append", help="default: all domains")
+    p.add_argument("--reason", required=True)
+    p.add_argument("--by", required=True, help="pseudonym of the administrator")
+    coord_args(p)
+    p.set_defaults(func=cmd_revoke_maintainer)
 
     p = sub.add_parser("export-demo", help="snapshot for the click dummy (web/demo)")
     p.add_argument("--demo-work", default="data/walkthrough/demo-work",
@@ -569,7 +665,8 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("demo", help="seed a local demo from own fixtures (M4)")
     p.add_argument("--share", type=float, default=0.2, help="honeypot share h")
-    p.add_argument("--maintainer", default="maintainer", help="pseudonym of the maintainer")
+    p.add_argument("--maintainer", default="maintainer",
+                   help="pseudonym of the administrator (the former maintainer, C-42)")
     p.add_argument("--cache", default=str(DEFAULT_CACHE))
     coord_args(p)
     p.set_defaults(func=cmd_demo, data="data/demo")

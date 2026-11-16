@@ -62,7 +62,11 @@ class AffiliationDeclared(_P):
     tag: Hex64
 
 
-class MaintainerAppointed(_P):
+class AdminAppointed(_P):
+    """An administrator of the platform (proposal C-42). Older logs record the
+    same as ``reviewer.maintainer_appointed``: the former single maintainer
+    role is the administrator now."""
+
     reviewer: str
     #: ``operator``: by command line (OD-2); ``identity_provider``: the role is
     #: managed in the identity provider and was granted there (docs/adr/0010).
@@ -78,9 +82,41 @@ class PreferencesSet(_P):
     tiers: tuple[Literal["easy", "medium", "hard", "excellence"], ...] = ()
 
 
-class MaintainerRevoked(_P):
+class AdminRevoked(_P):
     reviewer: str
     by: Literal["operator", "identity_provider"]
+
+
+class RootAppointed(_P):
+    """A root tester: every role, free of the rules. Effective only where the
+    parameters allow root accounts (test systems, never production)."""
+
+    reviewer: str
+
+
+class RootRevoked(_P):
+    reviewer: str
+
+
+class MaintainerRoleAppointed(_P):
+    """A maintainer of some domains (C-42), appointed by an administrator with
+    a reason and an end date. Only someone who is PVV in each of the domains
+    may be appointed, unless as *founding* maintainer: then, until the end
+    date, they count as PVV there (the cold start of a new installation)."""
+
+    reviewer: str
+    domains: tuple[str, ...]
+    by: str  # the administrator
+    reason: str
+    until: Ts  # end of the term (ev.ts)
+    founding: bool = False
+
+
+class MaintainerRoleRevoked(_P):
+    reviewer: str
+    domains: tuple[str, ...]
+    by: str  # the administrator
+    reason: str
 
 
 class SubmissionOpened(_P):
@@ -351,8 +387,15 @@ PAYLOADS: dict[str, type[_P]] = {
     "coord.configured": CoordConfigured,
     "reviewer.registered": ReviewerRegistered,
     "reviewer.affiliation_declared": AffiliationDeclared,
-    "reviewer.maintainer_appointed": MaintainerAppointed,
-    "reviewer.maintainer_revoked": MaintainerRevoked,
+    "reviewer.admin_appointed": AdminAppointed,
+    "reviewer.admin_revoked": AdminRevoked,
+    # The same, as older logs name it (before C-42 the administrator was "maintainer").
+    "reviewer.maintainer_appointed": AdminAppointed,
+    "reviewer.maintainer_revoked": AdminRevoked,
+    "reviewer.root_appointed": RootAppointed,
+    "reviewer.root_revoked": RootRevoked,
+    "role.maintainer_appointed": MaintainerRoleAppointed,
+    "role.maintainer_revoked": MaintainerRoleRevoked,
     "reviewer.preferences_set": PreferencesSet,
     "ticket.mapping_contested": MappingContested,
     "discussion.posted": DiscussionPosted,

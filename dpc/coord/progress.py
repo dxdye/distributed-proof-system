@@ -206,8 +206,10 @@ def library_definitions(coord: Coordinator, submission_id: str, viewer: str | No
     submission is unrevealed: a mutant can use a definition the real
     statements do not, and the list would give it away. Maintainers see it."""
     st = coord.state
-    maintainer = viewer is not None and viewer in st.reviewers and st.reviewers[viewer].maintainer
-    if not maintainer and coord.vault.unrevealed(honeypots_only=True,
+    # Administrators only: they review nothing (C-42). A maintainer who reviews
+    # in this submission must not see a definition only a mutant uses.
+    admin = viewer is not None and viewer in st.reviewers and st.reviewers[viewer].admin
+    if not admin and coord.vault.unrevealed(honeypots_only=True,
                                                  submission_id=submission_id):
         return None
     found: dict[str, dict[str, Any]] = {}

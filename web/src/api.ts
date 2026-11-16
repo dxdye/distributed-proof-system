@@ -104,10 +104,25 @@ export type HistoryItem = {
   outcome: string | null;
   planted_error: boolean | null;
 };
+/** A maintainer of one domain (C-42), as administrators see it. */
+export type MaintainerRow = {
+  pseudonym: string;
+  domain: string;
+  until: string;
+  founding: boolean;
+  active: boolean;
+};
+
 export type Me = {
   reviewer_id: string;
   pseudonym: string;
   group: string;
+  /** Administrator of the platform (C-42): runs it, reviews nothing. */
+  admin: boolean;
+  /** Root tester (test systems only): every role, free of the rules. */
+  root?: boolean;
+  /** Domains this person maintains (C-42); `maintainer`: any of them. */
+  maintains: string[];
   maintainer: boolean;
   roles: Record<string, string[]>;
   reliability: number;
@@ -435,11 +450,23 @@ export const api = {
     tick: () => request<{ expired: number; revealed: number }>("POST", "/api/admin/tick"),
     submissions: () => request<SubmissionRow[]>("GET", "/api/admin/submissions"),
     escalated: () => request<Escalated[]>("GET", "/api/admin/escalated"),
+    /** The original under review, for a maintainer of its domain; recorded as
+     * seen, so its tickets are not offered to them afterwards (C-42). */
     declaration: (sid: string, decl: string) =>
-      request<MaintainerDeclaration>(
-        "GET",
-        `/api/admin/declaration?submission_id=${encodeURIComponent(sid)}&declaration=${encodeURIComponent(decl)}`,
-      ),
+      request<MaintainerDeclaration>("POST", "/api/admin/declaration", {
+        submission_id: sid,
+        declaration: decl,
+      }),
+    maintainers: () => request<MaintainerRow[]>("GET", "/api/admin/maintainers"),
+    appoint: (body: {
+      pseudonym: string;
+      domains: string[];
+      reason: string;
+      until: string | null;
+      founding: boolean;
+    }) => request("POST", "/api/admin/maintainers", body),
+    revoke: (pseudonym: string, domains: string[], reason: string) =>
+      request("POST", "/api/admin/maintainers/revoke", { pseudonym, domains, reason }),
     contested: () =>
       request<
         {

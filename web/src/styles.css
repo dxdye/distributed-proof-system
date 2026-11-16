@@ -2728,3 +2728,15 @@ span.tag {
   align-items: center;
   gap: 0.35rem;
 }
+
+/* Appointing maintainers (administrators, C-42) */
+.appoint-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  margin-top: 0.8rem;
+}
+.appoint-form input:not([type="checkbox"]) {
+  flex: 1 1 12rem;
+}

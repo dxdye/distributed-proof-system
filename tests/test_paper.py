@@ -107,7 +107,7 @@ def test_reviewers_can_contest_the_mapping(env: Env, tmp_path: Path) -> None:
         env.coord.contest_mapping(env.coord.vault.reviewer_for_pseudonym("rita") or "", lid,
                                   "the same complaint once more, long enough")
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.coord.appoint_admin(admin)
     contested = [t for t in env.coord.state.tickets.values() if t.contests]
     assert contested and contested[0].contests[0][1].startswith("Theorem 1.1 is about")
 

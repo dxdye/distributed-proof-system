@@ -41,7 +41,7 @@ class OidcProvider:
 
     def __init__(
         self, *, name: str, issuer: str, client_id: str, audience: str, label: str = "",
-        roles_claim: str = "roles", maintainer_role: str | None = None,
+        roles_claim: str = "roles", admin_role: str | None = None,
         jwks_uri: str | None = None, scopes: str = "openid",
         algorithms: Sequence[str] = ALGORITHMS, leeway_s: int = 30,
         key_resolver: KeyResolver | None = None,
@@ -52,7 +52,7 @@ class OidcProvider:
         self.client_id = client_id
         self.audience = audience
         self.roles_claim = roles_claim
-        self.maintainer_role = maintainer_role
+        self.admin_role = admin_role
         self.scopes = scopes
         self.algorithms = [a for a in algorithms if a in ALGORITHMS]
         self.leeway_s = leeway_s
@@ -78,11 +78,11 @@ class OidcProvider:
             )
         except jwt.PyJWTError as exc:
             raise AuthError(f"{self.name}: invalid token ({exc})") from exc
-        maintainer = None
-        if self.maintainer_role is not None:
+        admin = None
+        if self.admin_role is not None:
             roles = claim_path(claims, self.roles_claim)
-            maintainer = isinstance(roles, list) and self.maintainer_role in roles
-        return Identity(self.name, str(claims["sub"]), maintainer)
+            admin = isinstance(roles, list) and self.admin_role in roles
+        return Identity(self.name, str(claims["sub"]), admin)
 
     def public_config(self) -> dict[str, str]:
         return {"kind": self.kind, "name": self.name, "label": self.label,
@@ -115,7 +115,7 @@ class OidcProvider:
 
 def keycloak(
     *, url: str, realm: str, client_id: str, audience: str, name: str = "keycloak",
-    label: str = "Keycloak", maintainer_role: str | None = "dpc-maintainer",
+    label: str = "Keycloak", admin_role: str | None = "dpc-maintainer",
     internal_url: str | None = None, scopes: str = "openid",
     key_resolver: KeyResolver | None = None,
 ) -> OidcProvider:
@@ -128,6 +128,6 @@ def keycloak(
         jwks = f"{internal_url.rstrip('/')}/realms/{realm}/protocol/openid-connect/certs"
     return OidcProvider(
         name=name, label=label, issuer=f"{base}/realms/{realm}", client_id=client_id,
-        audience=audience, roles_claim="realm_access.roles", maintainer_role=maintainer_role,
+        audience=audience, roles_claim="realm_access.roles", admin_role=admin_role,
         jwks_uri=jwks, scopes=scopes, key_resolver=key_resolver,
     )

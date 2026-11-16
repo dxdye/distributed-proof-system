@@ -44,7 +44,7 @@ def setup(env: Env) -> tuple[str, str, str, str]:
     sid = env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
                                     tickets=specs("P", 1))
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     rid = env.people(1)[0]
     return sid, "P.u0", admin, rid
 
@@ -100,7 +100,7 @@ def test_no_thread_while_a_planted_error_of_the_submission_is_unrevealed(tmp_pat
     sid = env.coord.open_submission(title="P", repo_url="https://x", commit="c" * 40,
                                     tickets=specs("P", 4), pool=pool)
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.coord.appoint_admin(admin)
     planted = {t for t in env.coord.state.tickets if env.vault.is_honeypot(t)}
     assert len(planted) == 1
     decl = next(t.view.declaration for t in env.coord.state.tickets.values()
@@ -175,7 +175,7 @@ def test_votes_on_a_thread_sort_the_list_and_say_nothing_about_the_decision(env:
     sid = env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
                                     tickets=specs("P", 2))
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     first, second = env.people(2)
     voter = env.people(1, "voter")[0]
     with pytest.raises(Forbidden, match="opens once"):

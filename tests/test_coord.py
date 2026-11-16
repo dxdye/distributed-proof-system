@@ -75,6 +75,21 @@ class Env:
         return [self.coord.register(f"{prefix}{i}", notice_acknowledged=True, **kw)[0]
                 for i in range(n)]  # type: ignore[arg-type]
 
+    def admin(self) -> str:
+        """An administrator (C-42), created once."""
+        rid = self.vault.reviewer_for_pseudonym("root-admin")
+        if rid is None:
+            rid = self.coord.register("root-admin", notice_acknowledged=True)[0]
+            self.coord.appoint_admin(rid)
+        return rid
+
+    def maintainer(self, rid: str, *domains: str) -> str:
+        """``rid`` as founding maintainer of ``domains`` (default: analysis, the
+        domain of :func:`specs`), so that it counts as PVV there (C-42)."""
+        self.coord.appoint_maintainer(self.admin(), rid, list(domains) or ["analysis"],
+                                      reason="founding maintainer for the test", founding=True)
+        return rid
+
     def take(self, rid: str, ticket_id: str | None = None) -> str:
         """Lease ``ticket_id`` (or any ticket) via a choice set."""
         cs = self.coord.choice_set(rid)
@@ -139,7 +154,7 @@ def test_every_unit_gets_a_ticket_and_honeypot_status_is_only_committed(tmp_path
     assert "honeypot" not in json.dumps(created) and "mutated" in json.dumps(created)
     # Closing opens every commitment; anyone can check them against the log.
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.coord.appoint_admin(admin)
     env.coord.close_submission(admin, sid)
     (reveal,) = env.events("honeypots.revealed")
     assert reveal["final"] and len(reveal["openings"]) == 20  # type: ignore[arg-type]
@@ -304,7 +319,7 @@ def test_confirmed_claim_decides_error_and_anchors_every_verdict(env: Env) -> No
                               tickets=specs("P", 1))
     (tid,) = env.coord.state.tickets
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     people = env.people(4)
     leases = [env.take(rid, tid) for rid in people]
     env.clock.advance(hours=1)
@@ -335,7 +350,7 @@ def test_acceptance_needs_a_pvv_review(tmp_path: Path) -> None:
                               tickets=specs("P", 1))
     (tid,) = env.coord.state.tickets
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     people = env.people(3)
     for rid in people:
         lease_id = env.take(rid, tid)
@@ -355,7 +370,7 @@ def test_inconclusive_tickets_get_more_rounds_and_then_escalate(env: Env) -> Non
                               tickets=specs("P", 1))
     (tid,) = env.coord.state.tickets
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     for rid in env.people(6):  # newcomers carry no information: p stays at the prior
         lease_id = env.take(rid, tid)
         env.clock.advance(hours=1)
@@ -386,8 +401,10 @@ def _honeypot_env(tmp_path: Path, **kw: object) -> tuple[Env, str]:
     return env, sid
 
 
-def _work_through(env: Env, people: list[str], admin: str) -> None:
-    """Honest reviewers: they find the planted errors and claim them."""
+def _work_through(env: Env, people: list[str], checkers: list[str]) -> None:
+    """Honest reviewers: they find the planted errors and claim them. Several
+    checkers (PVV): whoever re-checked a declaration's original may not resolve
+    the claim on its planted copy (C-39, C-42), so one is not enough."""
     for _ in range(200):
         progressed = False
         for rid in people:
@@ -404,14 +421,15 @@ def _work_through(env: Env, people: list[str], admin: str) -> None:
             else:
                 env.coord.submit_review(rid, lease_id, verdict="correct")
             progressed = True
-        while (duty := env.coord.next_duty(admin)) is not None:
-            progressed = True
-            if duty.duty == "claim":
-                env.coord.resolve_claim(admin, duty.lease_id,
-                                        confirmed=env.vault.is_honeypot(duty.ticket_id),
-                                        reason="checked")
-            else:
-                env.coord.submit_review(admin, duty.lease_id, verdict="correct")
+        for checker in checkers:
+            while (duty := env.coord.next_duty(checker)) is not None:
+                progressed = True
+                if duty.duty == "claim":
+                    env.coord.resolve_claim(checker, duty.lease_id,
+                                            confirmed=env.vault.is_honeypot(duty.ticket_id),
+                                            reason="checked")
+                else:
+                    env.coord.submit_review(checker, duty.lease_id, verdict="correct")
         if not progressed:
             return
 
@@ -419,10 +437,9 @@ def _work_through(env: Env, people: list[str], admin: str) -> None:
 @pytest.mark.req("SR-37", "SR-12")
 def test_honeypots_are_revealed_late_in_batches_and_replace_soft_evidence(tmp_path: Path) -> None:
     env, _ = _honeypot_env(tmp_path, reveal_batch=2)
-    admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    checkers = [env.maintainer(rid) for rid in env.people(2, "checker")]
     people = env.people(6)
-    _work_through(env, people, admin)
+    _work_through(env, people, checkers)
     honeypots = [t for t in env.coord.state.tickets.values() if env.vault.is_honeypot(t.ticket_id)]
     assert len(honeypots) == 2 and all(t.status == "error" for t in honeypots)
     assert env.coord.tick()["revealed"] == 0  # not before the delay
@@ -442,10 +459,9 @@ def test_honeypots_are_revealed_late_in_batches_and_replace_soft_evidence(tmp_pa
 
 def test_replaying_the_log_reproduces_the_state(tmp_path: Path) -> None:
     env, _ = _honeypot_env(tmp_path, reveal_batch=1)
-    admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    checkers = [env.maintainer(rid) for rid in env.people(2, "checker")]
     people = env.people(5)
-    _work_through(env, people, admin)
+    _work_through(env, people, checkers)
     env.clock.advance(days=2)
     env.coord.tick()
     replayed = env.make(seed=99)  # different RNG: replay must not depend on it
@@ -559,7 +575,7 @@ def test_hard_tickets_need_experience_until_they_have_waited_long(env: Env) -> N
         assert env.coord.tiers_open(rid) == ["easy", "medium"]
     assert env.coord.choice_set(newcomer) is None
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     assert env.coord.why_not(admin, env.coord.state.tickets[tid], "review") is None
     env.clock.advance(days=15)  # waited past tier_gate_age_s: open to everyone (SR-05)
     assert env.coord.why_not(newcomer, env.coord.state.tickets[tid], "review") is None
@@ -679,7 +695,7 @@ def test_maintainers_are_not_limited_in_rerolling(tmp_path: Path) -> None:
     env.coord.open_submission(title="P", repo_url="https://x/p", commit="p" * 40,
                               tickets=specs("P", 12))
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     for i in range(env.params.max_preference_changes_per_day + 2):
         env.coord.set_preferences(admin, domains=[f"d{i}"])
     assert env.coord.preference_changes(admin) == (None, None)
@@ -727,7 +743,7 @@ def test_waiting_re_checks_are_counted_for_the_work_page(env: Env) -> None:
     env.coord.open_submission(title="P", repo_url="https://x/p", commit="c" * 40,
                               tickets=specs("P", 1))
     admin = env.people(1, "admin")[0]
-    env.coord.appoint_maintainer(admin)
+    env.maintainer(admin)
     rid = env.people(1)[0]
     assert env.coord.duties_waiting(admin) == 0
     lease = env.take(rid)
