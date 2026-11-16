@@ -1,0 +1,66 @@
+# Tests on every push to any branch and on pull requests into master (the
+# pull-request run tests the merge with master before it happens). Kept cheap:
+# - Python: ruff, mypy and pytest without the tests marked lean, docker or
+#   keycloak (they need a Lean toolchain, Lean images or a running Keycloak;
+#   run them locally). The environment comes from the cache; written only by
+#   runs on master, read by all.
+# - Web: typecheck and build, with npm cache.
+# - A newer run of the same branch or pull request cancels the older one;
+#   hard time limit per job; changes to documentation only start no run.
+# A push to a branch with an open pull request runs both: the push and the
+# pull request (the merge). About 3 minutes per run with a warm cache.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore: ["docs/**", "doc/**", "**/*.md"]
+  pull_request:
+    branches: [master]
+    paths-ignore: ["docs/**", "doc/**", "**/*.md"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (lint, types, tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.11.3
+        with:
+          pixi-version: v0.68.1
+          locked: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      - name: Lint
+        run: pixi run lint
+      - name: Types
+        run: pixi run typecheck
+      - name: Tests (without Lean, Docker and Keycloak)
+        run: pixi run python -m pytest -q -m "not lean and not docker and not keycloak"
+
+  web:
+    name: Web (typecheck, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck and build
+        working-directory: web
+        run: npm run build

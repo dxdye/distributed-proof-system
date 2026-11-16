@@ -46,6 +46,12 @@ pixi run check            # lint + type check + tests
 pixi run trace            # tests + traceability matrix in build/traceability.md
 ```
 
+The workflow "CI" (`.github/workflows/ci.yml`) runs lint, type check and the
+tests without Lean, Docker and Keycloak, and builds the web client: on every
+push to any branch and on pull requests into `master`. Changes to
+documentation only start no run; a newer run of the same branch cancels the
+older one.
+
 Analyse a trusted local project (here: the fixture with a hand-checked TCB):
 
 ```bash
