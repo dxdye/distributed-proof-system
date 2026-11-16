@@ -15,7 +15,29 @@ type Tab = "paper" | "latex";
  * brackets are used for display; the stored LaTeX is unchanged. */
 function breakable(latex: string): string {
   const plain = latex.replace(/\\left(?![a-zA-Z])/g, "").replace(/\\right(?![a-zA-Z])/g, "");
-  return `$\\displaystyle ${plain}$`;
+  return `$\\displaystyle ${allowBreaks(plain)}$`;
+}
+
+/** KaTeX breaks an inline formula only after relations and operators; long
+ * chains such as `f(a, g(b, c), …)` have none and ran past the box. A break
+ * is allowed after every comma outside a `{…}` group (so never inside
+ * `\text{…}` and the like); escaped characters such as `\,` stay as they are. */
+export function allowBreaks(tex: string): string {
+  let depth = 0;
+  let out = "";
+  for (let i = 0; i < tex.length; i++) {
+    const c = tex[i];
+    if (c === "\\") {
+      out += c + (tex[i + 1] ?? "");
+      i++;
+      continue;
+    }
+    if (c === "{") depth++;
+    if (c === "}") depth--;
+    out += c;
+    if (c === "," && depth === 0) out += "\\allowbreak ";
+  }
+  return out;
 }
 
 function label(c: Component, kind: string): string {

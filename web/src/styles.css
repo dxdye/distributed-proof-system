@@ -1571,6 +1571,9 @@ button.small {
   line-height: 2.1;
   font-size: 1.05rem;
   overflow-wrap: anywhere;
+  /* What still cannot break (a single overlong name) scrolls inside the box. */
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .latex-body .katex {
   white-space: normal;
