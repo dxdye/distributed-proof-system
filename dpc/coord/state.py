@@ -126,7 +126,9 @@ class ClaimSt:
     claimant: str
     review_seq: int
     opened: datetime
-    status: Literal["open", "confirmed", "rejected"] = "open"
+    #: deferred: waits behind another open claim of the same learner;
+    #: reopen: handed to the maintainers because its ticket was decided
+    status: Literal["open", "confirmed", "rejected", "deferred", "reopen"] = "open"
     by: str | None = None
     resolver: str | None = None
 
@@ -601,8 +603,12 @@ class State:
             1.0 if reference.incorrect else 0.0, target.t_factor, ticket.ticket_id))
 
     def _on_claim_opened(self, p: ev.ClaimOpened, at: datetime, _: Entry) -> None:
-        self.claims[p.claim_id] = ClaimSt(p.claim_id, p.ticket_id, p.claimant, p.review_seq, at)
+        self.claims[p.claim_id] = ClaimSt(p.claim_id, p.ticket_id, p.claimant, p.review_seq, at,
+                                          status="deferred" if p.deferred else "open")
         self.tickets[p.ticket_id].claims.append(p.claim_id)
+
+    def _on_claim_activated(self, p: ev.ClaimActivated, at: datetime, _: Entry) -> None:
+        self.claims[p.claim_id].status = "reopen" if p.as_reopen else "open"
 
     def _on_claim_resolved(self, p: ev.ClaimResolved, at: datetime, _: Entry) -> None:
         claim = self.claims[p.claim_id]

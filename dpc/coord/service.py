@@ -595,10 +595,23 @@ class Coordinator:
                 len(st.active_leases(rid)) >= person.reliability.wip_limit(ticket.ticket_class):
             return "work-in-progress limit reached (SR-27)"
         if duty == "review":
-            holding = sum(1 for lease in st.active_leases(ticket_id=ticket.ticket_id)
-                          if lease.duty == "review")
-            if ticket.review_count() + holding >= ticket.slots:
-                return "no free review slot"
+            leases = [lease for lease in st.active_leases(ticket_id=ticket.ticket_id)
+                      if lease.duty == "review"]
+            if not self.params.qualified_seats:
+                if ticket.review_count() + len(leases) >= ticket.slots:
+                    return "no free review slot"
+            else:
+                def pv(person: str) -> bool:
+                    return "PV" in st.roles(person, ticket.domain, now)
+
+                mine = pv(rid)
+                used = sum(1 for r in ticket.reviews
+                           if r.duty == "review" and ("PV" in r.roles) == mine)
+                used += sum(1 for lease in leases if pv(lease.reviewer) == mine)
+                if mine and used >= ticket.slots:
+                    return "no free review slot"
+                if not mine and used >= self.params.learner_slots:
+                    return "no free learner seat: k_min needs the PV role in the domain"
         elif duty == "pvv":
             if not ticket.needs_pvv():
                 return "no PVV review requested"
@@ -832,9 +845,14 @@ class Coordinator:
                 t_factor=ev.dec(factor), roles=roles))
             if review.verdict == "incorrect" and ticket.ticket_class == "A":
                 # SR-35: a justified finding becomes a claim ticket for a PVV (SR-13).
+                # Learners (no PV role) block with one claim at a time (2026-11-16).
+                deferred = "PV" not in roles and sum(
+                    1 for c in self.state.claims.values()
+                    if c.claimant == rid and c.status == "open"
+                ) >= self.params.max_open_claims_learner
                 self._emit("claim.opened", ev.ClaimOpened(
                     claim_id=self.new_id("C"), ticket_id=ticket.ticket_id, claimant=rid,
-                    review_seq=entry.seq))
+                    review_seq=entry.seq, deferred=deferred))
             elif lease.duty == "review":
                 kappa = self.state.trust(rid, ticket.domain, now).kappa()
                 rho = recheck_probability(kappa, incorrect=False, ticket_class="A",
@@ -1132,6 +1150,31 @@ class Coordinator:
                 claim_id=lease.claim_id, confirmed=confirmed, by=by,
                 resolver=rid, lease_id=lease_id, reason=reason))
             self._evaluate(lease.ticket_id)
+            self._activate_deferred()
+
+    def _activate_deferred(self) -> None:
+        """Open the deferred claims of learners whose open claim was decided.
+        A claim whose ticket was decided meanwhile goes to the maintainers as
+        a reopen request: no finding is lost (2026-11-16)."""
+        st, now = self.state, self.now()
+        open_by = Counter(c.claimant for c in st.claims.values() if c.status == "open")
+        for claim in sorted((c for c in st.claims.values() if c.status == "deferred"),
+                            key=lambda c: c.opened):
+            ticket = st.tickets[claim.ticket_id]
+            learner = "PV" not in st.roles(claim.claimant, ticket.domain, now)
+            if learner and open_by[claim.claimant] >= self.params.max_open_claims_learner:
+                continue
+            if ticket.status == "open":
+                self._emit("claim.activated", ev.ClaimActivated(claim_id=claim.claim_id))
+                open_by[claim.claimant] += 1
+            else:
+                self._emit("claim.activated",
+                           ev.ClaimActivated(claim_id=claim.claim_id, as_reopen=True))
+                review = st.reviews[claim.review_seq]
+                self._emit("ticket.reopen_requested", ev.ReopenRequested(
+                    request_id=self.new_id("RQ"), ticket_id=ticket.ticket_id,
+                    requester=claim.claimant,
+                    reason=f"deferred finding: {review.reason}"[:2000]))
 
     def confirm_by_machine(self, claim_id: str, detail: str) -> None:
         """Machine-checked evidence (SR-10) confirms a claim: a hard anchor."""
@@ -1145,6 +1188,7 @@ class Coordinator:
             self._emit("claim.resolved", ev.ClaimResolved(
                 claim_id=claim_id, confirmed=True, by="machine", reason=detail))
             self._evaluate(claim.ticket_id)
+            self._activate_deferred()
 
     def maintainer_decide(self, rid: str, ticket_id: str, *, error: bool, reason: str) -> None:
         """Escalated tickets (concept §6.4: after R rounds) go to maintainers."""
@@ -1176,7 +1220,10 @@ class Coordinator:
             return  # one-finding rule: an open claim blocks (SR-35)
         if st.active_leases(ticket_id=ticket_id) or ticket.needs_pvv():
             return  # wait for everyone holding the ticket and for requested PVV reviews
-        n_reviews = ticket.review_count()
+        if params.qualified_seats:  # only the PV role fills k_min (2026-11-16)
+            n_reviews = sum(1 for r in ticket.reviews if r.duty == "review" and "PV" in r.roles)
+        else:
+            n_reviews = ticket.review_count()
         free = ticket.slots - n_reviews
         if n_reviews < params.decision.k_min and free > 0:
             return
@@ -1184,12 +1231,13 @@ class Coordinator:
         votes = []
         for r in ticket.reviews:
             s_hat, c_hat = st.trust(r.reviewer, ticket.domain, now).point_estimates()
-            votes.append(Vote(r.reviewer, r.incorrect, s_hat, c_hat))
+            votes.append(Vote(r.reviewer, r.incorrect, s_hat, c_hat,
+                              qualified=not params.qualified_seats or "PV" in r.roles))
         refuted = ticket.error_confirmed
         pvv_reviewed = any(r.duty == "pvv" or "PVV" in r.roles for r in ticket.reviews)
         p = posterior_error(votes, params.decision.prior_error)
         if (not refuted and not pvv_reviewed and p < params.decision.delta_a
-                and len(votes) >= params.decision.k_min):
+                and sum(1 for v in votes if v.qualified) >= params.decision.k_min):
             self._emit("pvv.requested", ev.PvvRequested(ticket_id=ticket_id, reason="decision"))
             return
         decision = decide(votes, params.decision, pvv_reviewed=pvv_reviewed, refuted=refuted,

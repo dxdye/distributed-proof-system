@@ -322,6 +322,18 @@ class ClaimOpened(_P):
     ticket_id: str
     claimant: str
     review_seq: int
+    #: An account without the PV role with an open claim already: the claim
+    #: waits and does not block until that one is decided (2026-11-16).
+    deferred: bool = False
+
+
+class ClaimActivated(_P):
+    """A deferred claim opens; if its ticket was decided meanwhile, it goes to
+    the maintainers as a reopen request instead (``as_reopen``), so that no
+    finding is lost."""
+
+    claim_id: str
+    as_reopen: bool = False
 
 
 class ClaimResolved(_P):
@@ -451,5 +463,6 @@ PAYLOADS: dict[str, type[_P]] = {
     "pvv.requested": PvvRequested,
     "claim.opened": ClaimOpened,
     "claim.resolved": ClaimResolved,
+    "claim.activated": ClaimActivated,
     "honeypots.revealed": HoneypotsRevealed,
 }

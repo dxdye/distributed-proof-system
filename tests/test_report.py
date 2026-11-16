@@ -17,7 +17,8 @@ from dpc.coord import report
 from test_coord import Env, params
 
 #: The overrides of test_coord.params(), as the service's parameter file.
-PARAMS = {"pair_window_s": 0, "honeypot_share": 0.0, "t_min_s": 60.0,
+#: The parameters of :func:`test_coord.params`, as a file for ``dpc report``.
+PARAMS = {"pair_window_s": 0, "honeypot_share": 0.0, "t_min_s": 60.0, "qualified_seats": False,
           "decision": {"prior_error": 0.02, "delta_a": 1e-3, "k_min": 3, "max_rounds": 3}}
 
 

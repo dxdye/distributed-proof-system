@@ -29,6 +29,10 @@ class Vote:
     c_hat: float
     justified: bool = False
     independent: bool = True  # round 1 only (Delphi, §8.6); one per chain (§9.4)
+    #: Held the PV role in the domain when reviewing (concept §3, §6.4 as
+    #: decided 2026-11-16): only such votes fill k_min. Others still count as
+    #: evidence, with the weight their measured rates give them.
+    qualified: bool = True
 
 
 @dataclass(frozen=True)
@@ -82,8 +86,9 @@ def decide(
     open_claims: int = 0,
     rounds: int = 1,
 ) -> Decision:
-    """Apply the rule of concept §6.4 together with the one-finding rule."""
-    independent = sum(1 for v in votes if v.independent)
+    """Apply the rule of concept §6.4 together with the one-finding rule.
+    k_min counts independent *qualified* verdicts."""
+    independent = sum(1 for v in votes if v.independent and v.qualified)
     p = posterior_error(votes, params.prior_error)
     if refuted or p > 1 - params.delta_a:
         return Decision(Outcome.ERROR, 1.0 if refuted else p, independent)

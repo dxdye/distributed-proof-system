@@ -144,11 +144,15 @@ def time_factor(seconds_spent: float, t_min: float) -> float:
 def external_prior(
     scores: Mapping[str, float],
     gammas: Mapping[str, float],
-    a_max: float = 5.0,
+    a_max: float = 1.0,
 ) -> TrustState:
     """Capped prior from linked external profiles (concept §6.5, SR-41):
-    ``α₀ = 1 + min(Σ γ_q log(1 + score_q), a_max)``, ``β₀ = 1``. With
-    ``a_max ≈ 5`` a strong profile counts like five passed honeypots."""
+    ``α₀ = 1 + min(Σ γ_q log(1 + score_q), a_max)``, ``β₀ = 1``.
+
+    ``a_max = 1`` (decided 2026-11-16): a "correct" vote then moves the odds
+    by at most a factor 2 (it was 6 with ``a_max = 5``, and two such accounts
+    reached δ_A alone), and the lower bound stays below θ_PV, so a profile
+    alone never makes anyone qualified. Weight comes from measurement (C-42)."""
     boost = sum(gammas.get(q, 0.0) * math.log1p(max(0.0, v)) for q, v in scores.items())
     alpha0 = 1.0 + min(boost, a_max)
     return TrustState(BetaRate(alpha0, 1.0), BetaRate(alpha0, 1.0))

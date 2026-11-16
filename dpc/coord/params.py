@@ -78,6 +78,16 @@ class CoordParams:
     #: end date (C-42); founding maintainers count as PVV only until theirs.
     maintainer_term_days: int = 365
     founding_term_days: int = 90
+    #: k_min and the review seats count only people with the PV role in the
+    #: domain (concept §3, §6.4; decided 2026-11-16). Others review on learner
+    #: seats: their verdicts are evidence with their measured weight and build
+    #: their trust, but never fill k_min. False: the head count of before, kept
+    #: only for unit tests of other parts.
+    qualified_seats: bool = True
+    learner_slots: int = 1
+    #: Open claims per account without the PV role; further justified findings
+    #: are deferred (they do not block) until one is decided (decided 2026-11-16).
+    max_open_claims_learner: int = 1
     #: Test systems and the click dummy only, never production: root testers
     #: hold every role and are free of the rules (limits, tiers, one version per
     #: person, the separation of C-42), so that every page can be tried. Off,

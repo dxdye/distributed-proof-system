@@ -104,7 +104,13 @@ class Env:
 
 
 def params(**kw: object) -> CoordParams:
+    """Parameters for unit tests of leases, choice sets, claims, reveals and
+    the like: fresh accounts fill k_min there (``qualified_seats=False``), so
+    that these tests need no measured PV role. Qualified seats and learner
+    seats (the default since 2026-11-16) are tested in test_qualified.py and
+    measured with the harness against the real coordinator."""
     base = CoordParams(pair_window_s=0, honeypot_share=0.0, t_min_s=60.0,
+                       qualified_seats=False,
                        decision=DecisionParams(prior_error=0.02, delta_a=1e-3, k_min=3,
                                                max_rounds=3))
     return replace(base, **kw)  # type: ignore[arg-type]
