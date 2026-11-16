@@ -147,8 +147,7 @@ export function HowOrganisation() {
           </li>
         </ol>
         <p className="small muted">
-          Rules 3 and 4 are being introduced: until then one maintainer of the domain decides an
-          escalation, and passages are mapped when a submission is opened.
+          Rule 4 is being introduced: until then one maintainer of the domain decides an escalation.
         </p>
         <p className="small muted">
           Test systems also have <i>root testers</i>, who hold every role at once to try every page.

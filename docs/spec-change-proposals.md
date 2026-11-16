@@ -980,12 +980,44 @@ events `reviewer.maintainer_appointed` and `…_revoked` of existing logs are
 read as such; new logs write `reviewer.admin_appointed` and `…_revoked`).
 Maintainers of domains are appointed anew, if needed as founding maintainers.
 
-*Implementation (2026-11-16):* see the evidence once built; steps in this
-order: (1) administrator and maintainer apart, no PVV by appointment except
-founding, administrators take no tickets, the maintainer view records
-`unit.shown`; (2) passages proposed and confirmed by four eyes; (3) panels for
-escalations. Submitting through the web stays open (today the administrator
-opens submissions with `dpc open-submission`).
+*Implemented (2026-11-16):*
+- **Step 1, the roles apart.** Administrator (`reviewer.admin_appointed`) and
+  maintainer per domain (`role.maintainer_appointed` with domains, reason,
+  end date, `founding`); nobody is PVV by appointment except founding
+  maintainers until their end date; administrators take no tickets and no PVV
+  duties; maintainers act only in their domains (escalations, reopen
+  requests, moderation, notes, hashtags, contested mappings). The maintainer
+  view of a declaration under review records `unit.shown`; whoever re-checked
+  an original may not resolve the claim on its planted copy. CLI `appoint`,
+  `appoint-maintainer`, `revoke-maintainer`; an administration page with
+  appointments and a maintenance page per domain.
+- **Step 2, passages by four eyes.** `passage.proposed` by a PVV or maintainer
+  of the domain, `passage.decided` by another maintainer of it; confirmed, the
+  passage applies to every ticket of the declaration, planted copies
+  included, and clears old contests. Only while nobody has reviewed the
+  declaration. Proposer and confirmer are recorded as having seen it.
+- **Root testers** for test systems: every role, free of the rules (limits,
+  tiers, one version per person, the separation above), but never twice on a
+  ticket. Effective only where the parameters set `root_accounts`
+  (walkthrough, demo, click dummy), never in production; appointed by the
+  operator (`dpc appoint-root`) as `reviewer.root_appointed`.
+
+*Why reviewers do not vote on passages* (asked in the walkthrough): a vote
+during review would change the reference while verdicts are being given;
+the k_min votes of a declaration would compare with different passages, and
+the first votes would anchor the later ones. The vote on a passage is
+therefore the confirmation by a second maintainer before the first review;
+afterwards reviewers contest a passage (SR-24), and a maintainer can open the
+submission again. Planted errors are unaffected: original and copy carry the
+same passage, so the passage tells nothing about a ticket.
+
+*Still open:* step 3, the panel of three for escalations (today one
+maintainer of the domain decides); identity strength as a condition for
+appointments (C-34); submitting through the web (C-45).
+
+*Evidence:* `tests/test_roles.py`, `tests/test_passages.py`;
+`Coordinator.appoint_maintainer`, `maintainer_view`, `propose_passage`,
+`decide_passage`, `appoint_root`.
 
 ### C-43 · §6, §6.5, §10, §12.8, SR-08, SR-41, SR-50 — Courses: students review during a semester · new
 *Idea (project owner, 2026-11-16):* a lecturer (Dr, PhD) runs a course on the
@@ -1104,6 +1136,48 @@ hashtags in the report (SR-42).
 `web/src/components/ProgressFilters.tsx`, `DiscussionFilters.tsx`,
 `Tags.tsx`; tests `tests/test_tags.py`,
 `test_a_paper_is_filed_under_the_domain_of_its_main_theorem`.
+
+### C-45 · §16, I-1, SR-05, SR-08, SR-20, SR-24, SR-50 — Submitting through the web · new
+*Today:* an administrator runs the pipeline on the command line: `dpc ingest`
+(or `ingest-batch`), `render`, `mutate`, `open-submission` with the submission
+file of interface I-1 and the paper map. Authors are linked by hand
+(`--author`). There is no web form.
+
+*Proposed flow:*
+1. **Form**, signed in with a strong identity (C-34): repository URL and
+   commit, main theorem and its module, the paper (arXiv id and version, or a
+   URL), authors (accounts) and lab (SR-50, stored as a tag in the vault),
+   suggested domain and hashtags (C-44), and the declaration that it is the
+   submitter's own work or submitted with the authors' consent. Optional: a
+   challenge file naming the main theorem, as openai/math ships them
+   (`ComparatorChallenges/*.json`).
+2. **Pre-check**, immediate and cheap: the commit exists, the toolchain is
+   supported, the size is within limits, the same repository, commit and main
+   theorem are not already submitted (then a link to it).
+3. **Build in the sandbox**, queued (SR-20, ADR 0005): ingest with limits on
+   CPU, memory and time, kernel replay, analysis, rendering, planted-error
+   candidates; batches share one replay (C-29). The submitter sees the state
+   (queued, building, analysed, failed with an excerpt of the log). Quotas per
+   account and lab keep the cost bounded.
+4. **Review of the result by an administrator:** units of TCB_new, axioms
+   (only Ax₀ admitted), replay, integrity of the official packages, number of
+   candidates. Accepted or rejected with a reason, as an event.
+5. **Passages before opening:** the main theorem needs its passage, proposed
+   and confirmed by four eyes (C-42), by people who are not authors. Authors
+   may suggest passages in the form, as hints only: choosing the passage for
+   one's own formalization is a conflict of interest (an author could pick
+   the passage that fits a flawed statement).
+6. **Opening:** tickets with planted errors are created; authors and their lab
+   are excluded automatically (SR-08, SR-50). The submitter follows the
+   progress page like everyone; notifications never count tickets (tickets
+   minus declarations would be the number of planted errors).
+
+*Events:* `submission.requested`, the ingest events of the sandbox (already
+in the ingest log), `submission.accepted` or `.rejected` by an administrator,
+then `submission.opened`.
+
+*Order:* after identity strength (C-34); the pipeline exists (batch ingest,
+C-29), the form and the queue are new. *Status:* concept, nothing built.
 
 ## SE document
 
