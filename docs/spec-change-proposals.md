@@ -901,6 +901,92 @@ Each of the following needs the project owner's decision:
 - *Later:* `#eval` examples and a search for counterexamples (§8.8) need the
   mutant built in the sandbox as well (SR-20); expensive.
 
+### C-42 · §6.3, §6.4, §8.5, SR-04, SR-13, SR-24, SR-35, ADR 0010 — Roles: earned and appointed, kept apart · new
+*Problem (walkthrough, 2026-11-16):* one role, *maintainer*, combined running
+the platform, curating content, moderating and arbitrating, and it counted as
+PV and PVV in every domain. Three consequences:
+- A maintainer sees the original of every declaration under review (maintainer
+  view). As PVV the same person confirmed error claims, and could tell a
+  planted copy from the original by comparison instead of by mathematics: the
+  case C-39 rules out for everyone else ("one version per person").
+- A maintainer without competence in a domain confirmed findings there.
+- Escalations were decided by one person; paper passages had no procedure and
+  could only be fixed by closing and opening the submission again.
+
+*Decided (project owner, 2026-11-16): five roles on two ladders.*
+
+```
+  Administrator        platform · appointed · few
+        │ appoints
+  Maintainer           per domain · appointed · requires PVV there
+        │ requires
+  ┌─ earned, measured per domain (trust κ) ─┐
+  PVV                  κ ≥ θ_PVV
+  PV                   κ ≥ θ_PV
+  Reviewer             everyone after sign-up
+```
+
+| | Reviewer | PV | PVV | Maintainer | Administrator |
+|---|---|---|---|---|---|
+| Review tickets, discuss | ✓ | ✓ | ✓ | ✓¹ | — |
+| Vote with weight | little | ✓ | ✓ | ✓¹ | — |
+| Re-checks, confirming error claims | | | ✓ | ✓¹ | — |
+| Propose passages, hashtags, domain corrections | | | ✓ | ✓ | |
+| Confirm them (second pair of eyes) | | | | ✓ | |
+| Decide escalations (panel of three, blind, majority) | | | | ✓ | |
+| Reopen requests, moderation in the domain | | | | ✓ | |
+| Open and close submissions, parameters | | | | | ✓ |
+| Appoint and revoke maintainers (public, with reason and term) | | | | | ✓ |
+| Vault: which tickets are planted | | | | | ✓ |
+
+¹ Only with the trust the person earned there, never by appointment; not on a
+declaration whose original they saw as maintainer.
+
+*Rules:*
+1. **Who knows the internals of review does not review.** Administrators
+   (vault, closing, parameters) take no tickets and no PVV duties and sit on
+   no panel. A maintainer who saw the original of a declaration under review
+   (maintainer view, mapping a passage) is recorded as having seen it
+   (`unit.shown`, C-39) and is not offered its tickets.
+2. **Voting weight comes from measurement only.** An appointment gives tasks,
+   not weight: a maintainer for number theory counts in a PDE review with the
+   trust measured there. Exception, the cold start: an administrator may
+   appoint *founding maintainers* of a domain, with a reason and an end date;
+   until that date they count as PVV in that domain, because nobody can have
+   earned PVV in a new installation. After it, only measured trust counts.
+3. **Content needs four eyes.** A PVV or maintainer of the domain proposes a
+   passage (or a domain correction); another maintainer of the domain
+   confirms it. So PVVs work on tickets without being maintainers. Passages
+   of an open submission can be mapped this way while no review of the
+   declaration exists; afterwards only by opening the submission again.
+4. **Escalations are never decided by one person**, but by a panel of three
+   maintainers of the domain, each voting blind, by majority, each with a
+   reason. Authors, members of the submitting lab and earlier participants of
+   the ticket are excluded (SR-08, SR-50).
+5. **Submitting is not a rung but a permission beside the ladder.** Anyone with
+   a strong identity (C-34) may submit their own work; an administrator opens
+   it, and the submitter becomes an author who does not review it (SR-08).
+6. **Courses** (C-43) have a course lead, a maintainer-like role scoped to one
+   course instead of a domain.
+
+Every appointment and revocation is an event in the public log, with reason
+and term; maintainers are appointed per domain and only if they are PVV there
+(or founding). The identity provider grants only the administrator role (ADR
+0010); maintainers are appointed in the platform, because only the platform
+knows domains and trust.
+
+*Migration:* the former global maintainer becomes the administrator (the
+events `reviewer.maintainer_appointed` and `…_revoked` of existing logs are
+read as such; new logs write `reviewer.admin_appointed` and `…_revoked`).
+Maintainers of domains are appointed anew, if needed as founding maintainers.
+
+*Implementation (2026-11-16):* see the evidence once built; steps in this
+order: (1) administrator and maintainer apart, no PVV by appointment except
+founding, administrators take no tickets, the maintainer view records
+`unit.shown`; (2) passages proposed and confirmed by four eyes; (3) panels for
+escalations. Submitting through the web stays open (today the administrator
+opens submissions with `dpc open-submission`).
+
 ### C-43 · §6, §6.5, §10, §12.8, SR-08, SR-41, SR-50 — Courses: students review during a semester · new
 *Idea (project owner, 2026-11-16):* a lecturer (Dr, PhD) runs a course on the
 platform; during the semester the students review a few tickets that belong
@@ -1253,6 +1339,16 @@ every declaration in one version." See C-39.
 submission, their content (unfoldable), and for Lean and Mathlib constants
 their definition on request. Hover works for every link of a dotted name."
 Complements S-14 and S-27. See C-39.
+
+### S-38 · SR-35, SR-13, SR-24, new requirement — Roles · new
+*Proposed:* Replace the single maintainer role by: reviewer, PV and PVV,
+earned per domain by measured trust; maintainer, appointed per domain by an
+administrator, only if PVV there (or as founding maintainer with an end date);
+administrator for the platform. Add: "Voting weight comes only from measured
+trust. Administrators review nothing. A maintainer who saw the original of a
+declaration under review does not review it. Passages and domain corrections
+need a proposal and a confirmation by two different people; escalations are
+decided by a panel of three maintainers of the domain." See C-42.
 
 ### S-36 · new requirement — Courses · new
 *Proposed:* A requirement for courses: a course lead role scoped to one course
