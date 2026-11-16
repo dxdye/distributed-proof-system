@@ -28,6 +28,9 @@ export const HOW_PAGES: { slug: string; title: string; summary: string }[] = [
 export function HowNav({ current }: { current?: string }) {
   return (
     <nav className="how-nav" aria-label="How it works">
+      <span className="how-nav-label" aria-hidden="true">
+        Sections
+      </span>
       <a href="#/how" aria-current={current ? undefined : "page"}>
         Overview
       </a>

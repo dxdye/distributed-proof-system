@@ -2741,18 +2741,60 @@ span.tag {
   flex: 1 1 12rem;
 }
 
-/* "How it works": subpages (organisation, planted errors, statistics) */
+/* "How it works": subpages (organisation, planted errors, statistics) as a
+   tab bar: a strip of its own, tabs that look clickable, the current one filled */
 .how-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 1.1rem;
-  margin: 0 0 1rem;
-  font-size: 0.9rem;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.75rem;
+  padding: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.how-nav-label {
+  padding: 0 0.5rem 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.how-nav a {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 550;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.how-nav a:hover {
+  border-color: var(--accent);
+  color: var(--ink-strong);
+  box-shadow: var(--shadow);
 }
 .how-nav a[aria-current="page"] {
-  font-weight: 600;
-  color: var(--ink-strong);
-  text-decoration: none;
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: var(--btn-ink);
+  box-shadow: none;
+}
+@media (max-width: 640px) {
+  .how-nav-label {
+    flex-basis: 100%;
+    padding: 0.2rem 0.4rem 0;
+  }
+  .how-nav a {
+    flex: 1 1 auto;
+    text-align: center;
+  }
 }
 .how-ladder {
   font-family: var(--mono);
@@ -2805,4 +2847,96 @@ span.tag {
   padding: 0.5rem 0.8rem;
   background: var(--surface);
   border-radius: var(--radius);
+}
+
+/* "How it works" in the main navigation: its subpages fade in as a tab on
+   hover and keyboard focus (desktop); listed under it in the mobile menu. */
+.nav-drop {
+  position: relative;
+  display: flex;
+}
+.nav-drop-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 30;
+  min-width: 19rem;
+  padding: 0.4rem;
+  margin-top: 0.35rem;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+}
+/* A bridge over the gap, so the pointer can travel from the link to the tab. */
+.nav-drop-menu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.45rem;
+  height: 0.45rem;
+}
+.nav-drop:hover .nav-drop-menu,
+.nav-drop:focus-within .nav-drop-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+nav.main-nav .nav-drop-menu a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+nav.main-nav .nav-drop-menu a:hover,
+nav.main-nav .nav-drop-menu a:focus-visible {
+  background: var(--surface);
+}
+.nav-drop-title {
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+.nav-drop-summary {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: normal;
+}
+@media (max-width: 640px) {
+  .nav-drop {
+    flex-direction: column;
+  }
+  .nav-drop-menu {
+    position: static;
+    min-width: 0;
+    margin: 0;
+    padding: 0 0 0 1rem;
+    border: 0;
+    box-shadow: none;
+    background: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+  .nav-drop-menu::before {
+    display: none;
+  }
+  nav.main-nav .nav-drop-menu a {
+    padding: 0.6rem 0.25rem;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+  }
+  .nav-drop-summary {
+    display: none;
+  }
 }

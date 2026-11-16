@@ -12,7 +12,7 @@ import { History } from "./views/History";
 import { LeaseView } from "./views/LeaseView";
 import { ProgressDetailView, ProgressList } from "./views/Progress";
 import { How } from "./views/How";
-import { HowOrganisation, HowPlantedErrors, HowStatistics } from "./views/HowMore";
+import { HOW_PAGES, HowOrganisation, HowPlantedErrors, HowStatistics } from "./views/HowMore";
 import { Imprint, Privacy } from "./views/Legal";
 import { JoinForm, SignIn } from "./views/Register";
 import { Work } from "./views/Work";
@@ -203,9 +203,21 @@ export function App({ routes }: { routes?: Record<string, JSX.Element> }) {
               <a href="#/progress" aria-current={current("progress") ?? current("stats")}>
                 Progress
               </a>
-              <a href="#/how" aria-current={current("how")}>
-                How it works
-              </a>
+              {/* The subpages fade in on hover and keyboard focus; in the mobile
+                  menu they are listed under it. */}
+              <div className="nav-drop">
+                <a href="#/how" aria-current={current("how")} aria-haspopup="true">
+                  How it works
+                </a>
+                <div className="nav-drop-menu">
+                  {HOW_PAGES.map((page) => (
+                    <a key={page.slug} href={`#/how/${page.slug}`}>
+                      <span className="nav-drop-title">{page.title}</span>
+                      <span className="nav-drop-summary">{page.summary}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
               {(me?.admin || me?.maintainer) && (
                 <>
                   <span className="nav-sep" aria-hidden="true" />
