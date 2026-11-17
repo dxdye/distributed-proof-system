@@ -1231,6 +1231,17 @@ then `submission.opened`.
 *Order:* after identity strength (C-34); the pipeline exists (batch ingest,
 C-29), the form and the queue are new. *Status:* concept, nothing built.
 
+### C-49 · CN-2, §12.8, SR-49 — Source-available, not open source · refine
+*Decided (project owner, 2026-11-16):* the software is licensed under the
+PolyForm Noncommercial License 1.0.0 (`LICENSE.md`), the documentation under
+CC BY-NC 4.0 (`LICENSE-docs.txt`). The copyright stays with a single holder,
+the project owner, named in `LICENSE.md`; contributions need a contributor
+license agreement, which is still to be written. Commercial use needs a separate license.
+*Proposed:* CN-2 reads "source-available for noncommercial use" instead of
+"Open Source". Unchanged: reviews and reports produced by the system are
+published under an open license (SR-49); that concerns their data, not the
+software.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix

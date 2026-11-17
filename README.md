@@ -19,6 +19,21 @@ makes the reliability of that judgement measurable:
 - **Everything is logged** in an append-only, hash-chained audit log from which
   the public report is derived.
 
+**Research prototype.** This repository implements the concept and measures it
+on real formalizations. It is not a running service, and no review campaign
+with real reviewers has taken place. The specification is still changing:
+proposed changes are collected in
+[docs/spec-change-proposals.md](docs/spec-change-proposals.md), and several of
+them await the project owner's decision. Known open risks, with numbers from
+the simulation, are in [docs/simulation/README.md](docs/simulation/README.md).
+The largest are planted errors that can be recognised by comparison with the
+public repository under review ([ADR 0006](docs/adr/0006-honeypot-sources.md)),
+and accounts that are not tied to one person (SR-41).
+
+For a first look with nothing installed but Node.js, run the click dummy, the
+web client on simulated data (details below):
+`cd web && npm ci && npm run dev:demo`.
+
 ## Status
 
 | Milestone | Content | State |
@@ -96,6 +111,22 @@ pixi run keycloak-up          # http://localhost:8080, admin console: admin / ad
 pixi run serve --data data/demo --params config/demo-params.json --auth config/auth-keycloak.json
 ```
 
+The realm and `deploy/keycloak/compose.yaml` are for development only: fixed
+passwords, plain HTTP and a password-grant client for tests. Never import them
+into a system that can be reached from outside.
+
+Or run Keycloak and the web service together in Docker (`compose.yaml`). Both
+come back by themselves after a reboot, once Docker Desktop runs. The service
+state lives in the volume `dpc-state`, seeded once from `data/walkthrough`
+(SQLite in WAL mode is not safe on a Windows bind mount); `DPC_SEED_DIR` and
+`DPC_PARAMS` choose other data. Stop a Keycloak started with `keycloak-up`
+first, both use port 8080.
+
+```bash
+pixi run stack-up             # docker compose up -d --build: http://127.0.0.1:8000
+pixi run stack-down           # the state volume stays; `docker compose down -v` drops it
+```
+
 A click dummy of the web client (simulated backend in the browser, four roles,
 no server needed) is built from a snapshot of the current implementation:
 
@@ -161,6 +192,7 @@ lean/fixtures/        test projects: `basic` (hand-checked TCB), `mutation` (kno
                       display rule)
 web/                  React/TypeScript client (Vite)
 deploy/keycloak/      development Keycloak (Docker Compose, realm with test users)
+deploy/dpc/           image of the web service; `compose.yaml` runs it with Keycloak
 docs/case-studies/    measurements on real formalizations
 sandbox/              Dockerfile and entry script of the sandbox image
 requirements/sr.yaml  system requirements SR-01 … SR-60
@@ -192,10 +224,30 @@ tests/                pytest; `tests/data` holds recorded analyzer output
 
 ## License
 
-Source-available for non-commercial use; commercial use is not permitted
-without a separate license from the copyright holder. The exact license text
-is being finalised. Contributions require agreeing to a contributor license
-agreement, so that the copyright stays with a single holder.
+The software is source-available under the
+[PolyForm Noncommercial License 1.0.0](LICENSE.md): it may be used, changed and
+shared for noncommercial purposes, including personal research and study and
+any use by educational institutions and public research organisations.
+Commercial use needs a separate license from the copyright holder. The
+documentation (everything in `docs/` and the Markdown files) is licensed under
+[CC BY-NC 4.0](LICENSE-docs.txt). Copyright 2026 Tilman-Sören Bertram
+([tilmanbertram.com](https://www.tilmanbertram.com)).
+
+Contributions require agreeing to a contributor license agreement, so that the
+copyright stays with a single holder. The agreement is not written yet; until
+it is, outside contributions cannot be accepted.
 
 Reviews and reports produced *by* the system are a separate matter: they are
 published under an open license (SR-49).
+
+### Third-party material
+
+- `web/demo/snapshot.json`, the data of the click dummy, contains declarations
+  rendered from
+  [openai/NavierStokesAndEuler](https://github.com/openai/NavierStokesAndEuler)
+  at commit `f9e8bc5`, licensed by its authors under the Apache License 2.0.
+  The people, verdicts and discussions around them in the click dummy are
+  invented. They are not an assessment of that formalization. If the snapshot
+  is regenerated with further case studies, list their sources here.
+- The web client bundles the fonts Inter and JetBrains Mono (SIL Open Font
+  License 1.1) and KaTeX (MIT) from their npm packages.

@@ -10,13 +10,21 @@ export function DemoBar() {
         <div className="container demo-inner">
           <span>
             <strong>Click dummy.</strong> Simulated data in your browser; nothing is sent or stored.
-            Planted errors are revealed right after your verdict (in the real system: days later).
+            People, verdicts and discussions are invented and say nothing about the real
+            formalizations. Planted errors are revealed right after your verdict (in the real
+            system: days later).
           </span>
           <span className="demo-roles">
             <a href="#/choose-role">{currentRole() ? "Switch role" : "Choose a role"}</a>
             <button className="link" onClick={resetDemo} title="Start over with the seeded data">
               Reset
             </button>
+            <a
+              href="https://github.com/dxdye/distributed-proof-system#license"
+              title="Source code, licenses and third-party material"
+            >
+              Source &amp; licenses
+            </a>
           </span>
         </div>
       </div>

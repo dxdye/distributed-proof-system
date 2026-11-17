@@ -416,14 +416,16 @@ function fresh(): State {
   );
   note(
     "S-ns",
-    "The declaration to watch is the definition of a smooth solution: one condition too few, and the main theorem is about something else. One divergence check is escalated to the maintainers.",
+    "The declaration to watch is the definition of a smooth solution: if a single condition were missing, the main theorem would be about something else. One divergence check is escalated to the maintainers.",
     day(3),
     { ana: 1 },
   );
   s.named["S-ns|"] = ["carla"];
 
   // Navier–Stokes: two decided declarations with a discussion. Both are about
-  // how Mathlib's definitions are used (proposal C-27).
+  // how Mathlib's definitions are used (proposal C-27). The declarations are
+  // quoted from openai/NavierStokesAndEuler (Apache-2.0, see README); people,
+  // statuses and posts are invented, and the banner says so (DemoBar).
   const nsPost = (
     decl: string,
     author: Author,
