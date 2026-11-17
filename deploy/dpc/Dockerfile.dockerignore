@@ -1,0 +1,14 @@
+# Build context of deploy/dpc/Dockerfile (takes the place of the root
+# .dockerignore, which is for the sandbox image): only what the web service needs.
+*
+!pixi.toml
+!pixi.lock
+!dpc
+!config
+!web
+!deploy/dpc/entrypoint.sh
+web/node_modules
+web/dist
+web/dist-demo
+**/__pycache__
+**/*.pyc

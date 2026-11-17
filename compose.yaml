@@ -1,0 +1,44 @@
+# The local stack: Keycloak (sign-in, deploy/keycloak) and the DPC web service
+# (deploy/dpc). Both come back by themselves after a reboot, as soon as Docker
+# Desktop runs ("Start Docker Desktop when you sign in").
+#
+#   docker compose up -d --build    # http://127.0.0.1:8000, Keycloak on :8080
+#   docker compose down             # stop; the state volume stays
+#   docker compose down -v          # stop and drop the state (next start seeds again)
+#
+# The service state (audit log, vault, blobs) lives in the volume dpc-state, not
+# in ./data: SQLite in WAL mode is not safe on a Windows bind mount. On the first
+# start the volume is seeded once from ./$DPC_SEED_DIR (default: the walkthrough
+# data), which is never written. For other data set DPC_SEED_DIR and DPC_PARAMS
+# (e.g. in a .env file) and start with a fresh volume. Development only, like
+# the Keycloak realm (see README).
+name: dpc
+
+include:
+  - deploy/keycloak/compose.yaml
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: deploy/dpc/Dockerfile
+    command:
+      - --params
+      - ${DPC_PARAMS:-config/walkthrough-params.json}
+      - --auth
+      - config/auth-keycloak-docker.json
+    environment:
+      DPC_SEED: /seed
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - dpc-state:/data
+      - ./${DPC_SEED_DIR:-data/walkthrough}:/seed:ro
+      # Parameters and sign-in are read at start: edit, then restart, no rebuild.
+      - ./config:/app/config:ro
+    depends_on:
+      - keycloak
+    restart: unless-stopped
+
+volumes:
+  dpc-state:

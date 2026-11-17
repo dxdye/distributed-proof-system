@@ -50,6 +50,9 @@ demo = "python -m dpc demo"
 # Development Keycloak (docs/adr/0010): http://localhost:8080, admin console admin / admin
 keycloak-up = "docker compose -f deploy/keycloak/compose.yaml up -d"
 keycloak-down = "docker compose -f deploy/keycloak/compose.yaml down"
+# Whole local stack in Docker (compose.yaml): Keycloak + web service on http://127.0.0.1:8000
+stack-up = "docker compose up -d --build"
+stack-down = "docker compose down"
 
 [activation.env]
 DO_NOT_TRACK = "1"
