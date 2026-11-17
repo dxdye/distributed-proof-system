@@ -30,9 +30,10 @@ The largest are planted errors that can be recognised by comparison with the
 public repository under review ([ADR 0006](docs/adr/0006-honeypot-sources.md)),
 and accounts that are not tied to one person (SR-41).
 
-For a first look with nothing installed but Node.js, run the click dummy, the
-web client on simulated data (details below):
-`cd web && npm ci && npm run dev:demo`.
+For a first look, open the click dummy, the web client on simulated data in
+your browser: <https://dxdye.github.io/distributed-proof-system/>. Locally, with
+nothing installed but Node.js: `cd web && npm ci && npm run dev:demo` (details
+below).
 
 ## Status
 
@@ -135,8 +136,10 @@ pixi run dpc export-demo          # writes web/demo/snapshot.json (needs `dpc de
 cd web && npm run build:demo      # static site in web/dist-demo; `npm run dev:demo` to try it
 ```
 
-The workflow "Click dummy" builds it on GitHub when started by hand; publishing
-is off unless the repository variable `PUBLISH_CLICK_DUMMY` is `true`. Planted
+The workflow "Click dummy" builds it on GitHub when started by hand and, with
+the repository variable `PUBLISH_CLICK_DUMMY` set to `true` (as here),
+publishes it on GitHub Pages: <https://dxdye.github.io/distributed-proof-system/>.
+The page changes only with a new run. Planted
 errors in the dummy come only from own fixtures: whatever is public is burnt
 for a real review.
 
