@@ -1,6 +1,7 @@
 # Click dummy: the web client on a simulated backend (web/src/demo), as a
 # static site. Kept cheap on purpose:
-# - runs only when started by hand (Actions → "Click dummy" → Run workflow);
+# - runs on a push to master that changes the web client (web/) or this
+#   workflow, and by hand (Actions → "Click dummy" → Run workflow);
 # - builds only the web client (no Lean, no Docker, no tests), with npm cache;
 #   about a minute per run;
 # - a newer run cancels an older one; hard limit of 10 minutes per job.
@@ -15,6 +16,11 @@
 name: Click dummy
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "web/**"
+      - ".github/workflows/click-dummy.yml"
   workflow_dispatch:
 
 concurrency:

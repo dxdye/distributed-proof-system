@@ -136,10 +136,10 @@ pixi run dpc export-demo          # writes web/demo/snapshot.json (needs `dpc de
 cd web && npm run build:demo      # static site in web/dist-demo; `npm run dev:demo` to try it
 ```
 
-The workflow "Click dummy" builds it on GitHub when started by hand and, with
-the repository variable `PUBLISH_CLICK_DUMMY` set to `true` (as here),
-publishes it on GitHub Pages: <https://dxdye.github.io/distributed-proof-system/>.
-The page changes only with a new run. Planted
+The workflow "Click dummy" builds it on GitHub on every push to `master` that
+changes `web/` (or by hand) and, with the repository variable
+`PUBLISH_CLICK_DUMMY` set to `true` (as here), publishes it on GitHub Pages:
+<https://dxdye.github.io/distributed-proof-system/>. Planted
 errors in the dummy come only from own fixtures: whatever is public is burnt
 for a real review.
 
