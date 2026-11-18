@@ -69,7 +69,9 @@ function useColumns(ref: RefObject<HTMLElement>): number {
       canvas.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
       const ch = canvas.measureText("0".repeat(40)).width / 40;
       const inner = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-      if (ch > 0 && inner > 0) setCols(Math.max(30, Math.min(110, Math.floor(inner / ch) - 1)));
+      // No floor above what fits: on a phone a layout for more columns than the
+      // block holds is wrapped a second time by the browser.
+      if (ch > 0 && inner > 0) setCols(Math.max(16, Math.min(110, Math.floor(inner / ch) - 1)));
     };
     measure();
     void document.fonts?.ready.then(measure);

@@ -992,6 +992,24 @@ details.builds-on ul {
 .const:focus .hover {
   display: block;
 }
+/* Phones: a name near the right edge would push its 18rem card past the
+   screen. The card spans the whole term block instead, under the line of the
+   name (its static position: top stays auto). */
+@media (max-width: 640px) {
+  pre.term {
+    position: relative;
+  }
+  .const {
+    position: static;
+  }
+  .const .hover {
+    right: 0;
+    top: auto;
+    min-width: 0;
+    max-width: none;
+    margin-top: 0.3rem;
+  }
+}
 .hover-line {
   display: block;
 }
@@ -2054,6 +2072,7 @@ button.vote.on {
 
 .scheduled {
   display: flex;
+  flex-wrap: wrap; /* narrow screens: the button goes below the text */
   align-items: center;
   gap: 1rem;
   justify-content: space-between;
@@ -2062,6 +2081,7 @@ button.vote.on {
   border-top: 1px solid var(--line);
 }
 .scheduled p {
+  flex: 1 1 18rem;
   margin: 0;
   max-width: 44rem;
 }
@@ -2477,6 +2497,17 @@ code,
 .mono {
   overflow-wrap: anywhere;
 }
+/* Touch screens: iOS zooms into a form field whose text is under 16px and
+   stays zoomed in. Fields in a label inherit its 0.92rem, so set it back. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea,
+  textarea.mono,
+  .site-footer select.font-local {
+    font-size: 1rem;
+  }
+}
 /* The menu button: only on phones (see below). */
 .menu-toggle {
   display: none;
@@ -2609,6 +2640,12 @@ code,
     padding: 0.7rem 1rem;
     font-size: 1rem;
   }
+  /* Lean terms: a little smaller and less padded, so that a line holds
+     about 30 characters and the layout (layout.ts) needs fewer fallbacks. */
+  pre.term {
+    font-size: 0.85rem;
+    padding: 0.75rem;
+  }
   /* Long formulas scroll on their own instead of widening the page. */
   .latex-panel .latex-item,
   .katex-display {
@@ -2669,8 +2706,12 @@ details.card.replaced ul {
   flex: 1 1 16rem;
   min-width: 12rem;
 }
+/* A select is as wide as its longest option (a paper title); without the
+   min-width it would not shrink and widen the page on a phone. */
 .filter-row select {
   flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 .filter-row .segmented {
   flex-wrap: wrap;
@@ -2738,6 +2779,7 @@ span.tag {
 }
 .tag-editor-row input {
   flex: 1 1 auto;
+  min-width: 0; /* else its default width pushes "Save" off a phone screen */
 }
 .filter-check {
   display: inline-flex;

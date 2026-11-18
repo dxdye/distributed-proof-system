@@ -35,7 +35,8 @@ export function ProgressChart({ timeline, total }: { timeline: Point[]; total: n
   useEffect(() => {
     const el = box.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => setWidth(Math.max(320, e.contentRect.width)));
+    // At least 240: a card on a 320px phone has about 256px of room.
+    const ro = new ResizeObserver(([e]) => setWidth(Math.max(240, e.contentRect.width)));
     ro.observe(el);
     return () => ro.disconnect();
   }, [asTable]);
@@ -62,7 +63,9 @@ export function ProgressChart({ timeline, total }: { timeline: Point[]; total: n
   const step = niceStep(ymax);
   const yticks: number[] = [];
   for (let v = 0; v < ymax; v += step) yticks.push(v);
-  const xticks = Array.from({ length: 4 }, (_, i) => t0 + ((t1 - t0) * i) / 3).filter(
+  // Fewer date labels on a narrow chart, so that they do not overlap.
+  const nx = iw < 160 ? 2 : iw < 240 ? 3 : 4;
+  const xticks = Array.from({ length: nx }, (_, i) => t0 + ((t1 - t0) * i) / (nx - 1)).filter(
     (t, i, all) => i === 0 || shortDay(t) !== shortDay(all[i - 1]),
   );
 
