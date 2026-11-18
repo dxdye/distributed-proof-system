@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { GlossaryEntry } from "../api";
 import { Origin } from "./Infoview";
+import { LeanName } from "./LeanName";
 
 // What a declaration takes from Mathlib and Lean (proposal C-27). The kernel
 // checked the proof, not what the words of the statement mean: the statement
@@ -34,7 +35,7 @@ export function ReliesOn({
         <ul>
           {entries.map((g) => (
             <li key={g.name}>
-              <code>{g.name}</code>
+              <LeanName text={g.name} />
               <p className="small glossary-note">{g.note}</p>
             </li>
           ))}
@@ -57,7 +58,7 @@ export function ReliesOn({
         {shown.map((g) => (
           <li key={g.name}>
             <div className="relies-head">
-              <code>{g.name}</code> <Origin origin={g.origin} />
+              <LeanName text={g.name} /> <Origin origin={g.origin} />
             </div>
             <code className="relies-type">{g.type}</code>
             {g.doc && <p className="small muted">{docText(g.doc)}</p>}

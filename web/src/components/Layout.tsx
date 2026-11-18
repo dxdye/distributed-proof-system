@@ -150,8 +150,12 @@ export function SiteFooter() {
             reviewed by people.
           </span>
           <span className="appearance">
-            Appearance <ThemeSwitch />
-            <span className="appearance-label">Font</span> <FontSwitch />
+            <span className="appearance-group">
+              Appearance <ThemeSwitch />
+            </span>
+            <span className="appearance-group">
+              Font <FontSwitch />
+            </span>
           </span>
         </div>
       </div>

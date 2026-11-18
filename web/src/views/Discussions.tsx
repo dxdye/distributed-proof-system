@@ -7,6 +7,7 @@ import {
   useDiscussionFilter,
 } from "../components/DiscussionFilters";
 import { Tags } from "../components/Tags";
+import { LeanName } from "../components/LeanName";
 import { Infoview } from "../components/Infoview";
 import { Reference } from "../components/Reference";
 import { QUESTION_LABELS } from "./LeaseView";
@@ -123,7 +124,7 @@ export function Discussions() {
               />
               <div>
                 <a href={threadHref(t.submission_id, t.declaration)}>
-                  <code>{t.declaration}</code>
+                  <LeanName text={t.declaration} />
                 </a>{" "}
                 <span className={`badge outcome-${t.outcome}`}>
                   {OUTCOMES[t.outcome] ?? t.outcome}
@@ -305,7 +306,7 @@ export function ThreadView({ sid, decl }: { sid: string; decl: string }) {
             onVote={(v) => api.voteThread(sid, decl, v).then(load)}
           />
           <h2>
-            <code>{thread.declaration}</code>{" "}
+            <LeanName text={thread.declaration} />{" "}
             <span className={`badge outcome-${thread.outcome}`}>
               {OUTCOMES[thread.outcome] ?? thread.outcome}
             </span>

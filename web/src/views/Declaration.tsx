@@ -3,6 +3,7 @@ import { api, type MaintainerDeclaration, type Me } from "../api";
 import { PassageMapping } from "../components/PassageMapping";
 import { domainLabel, kindLabel } from "../kinds";
 import { Infoview } from "../components/Infoview";
+import { LeanName } from "../components/LeanName";
 import { ReliesOn } from "../components/ReliesOn";
 import { Reference } from "../components/Reference";
 import { TierBadge } from "../components/Tier";
@@ -39,7 +40,7 @@ export function DeclarationView({ sid, decl, me }: { sid: string; decl: string; 
         </p>
         <div className="progress-card-head">
           <h2>
-            <code>{d.declaration}</code>
+            <LeanName text={d.declaration} />
           </h2>
           <span className="badge">{kindLabel(d.decl_kind)}</span>
           <TierBadge tier={d.tier} />

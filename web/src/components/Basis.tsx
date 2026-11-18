@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ProgressDetail } from "../api";
+import { LeanName } from "./LeanName";
 
 // What a result relies on (proposal C-29): what the system re-checked, and
 // what it trusts without checking. Nothing is shown as checked that was not.
@@ -154,13 +155,13 @@ export function Basis({ d }: { d: ProgressDetail }) {
                 {(shownDefs ?? []).map((g) => (
                   <tr key={g.name}>
                     <td>
-                      <code title={g.type}>{g.name}</code>
+                      <LeanName text={g.name} title={g.type} />
                       {g.note && <div className="muted small">{g.note}</div>}
                     </td>
                     <td>{g.origin === "library" ? "Mathlib" : "Lean core"}</td>
                     <td className="small">
                       {g.used_by.length === 1 ? (
-                        <code>{g.used_by[0]}</code>
+                        <LeanName text={g.used_by[0]} />
                       ) : (
                         `${g.used_by.length} declarations`
                       )}

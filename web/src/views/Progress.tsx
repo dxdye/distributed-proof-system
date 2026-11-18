@@ -10,6 +10,7 @@ import {
 import { domainLabel, kindLabel } from "../kinds";
 import { Basis } from "../components/Basis";
 import { Infoview } from "../components/Infoview";
+import { LeanName } from "../components/LeanName";
 import { MathText } from "../components/MathText";
 import { ProgressChart } from "../components/ProgressChart";
 import { ProgressFilters, progressTagLink, useProgressFilter } from "../components/ProgressFilters";
@@ -381,10 +382,10 @@ function Units({
                     href={`${progressHref(sid)}/${encodeURIComponent(u.declaration)}`}
                     title="Open the ticket as its reviewers see it (maintainers only)"
                   >
-                    <code>{u.declaration}</code>
+                    <LeanName text={u.declaration} />
                   </a>
                 ) : (
-                  <code>{u.declaration}</code>
+                  <LeanName text={u.declaration} />
                 )}
               </td>
               <td>{kindLabel(u.decl_kind)}</td>
@@ -496,7 +497,7 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
         {d.main_view ? (
           <details className="lean-details" open>
             <summary>
-              Lean says: <code>{d.main_view.declaration}</code>
+              Lean says: <LeanName text={d.main_view.declaration} />
             </summary>
             <Infoview view={d.main_view} />
           </details>
@@ -506,7 +507,7 @@ export function ProgressDetailView({ sid, me }: { sid: string; me: Me | null }) 
             {d.root && (
               <>
                 {" "}
-                of <code>{d.root}</code>
+                of <LeanName text={d.root} />
               </>
             )}{" "}
             is shown once it is decided and the planted errors of this paper are revealed, so that

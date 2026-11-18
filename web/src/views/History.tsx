@@ -1,4 +1,5 @@
 import type { Me } from "../api";
+import { LeanName } from "../components/LeanName";
 
 // Own reviews. Planted errors (honeypots) are revealed only later and in batches
 // (SR-37); until then the column stays empty.
@@ -23,7 +24,7 @@ export function History({ me }: { me: Me }) {
             {me.history.map((h, i) => (
               <tr key={i}>
                 <td>
-                  <code>{h.declaration}</code> {h.duty !== "review" && <span className="badge">{h.duty}</span>}
+                  <LeanName text={h.declaration} /> {h.duty !== "review" && <span className="badge">{h.duty}</span>}
                 </td>
                 <td>{h.paper}</td>
                 <td>{h.verdict}</td>

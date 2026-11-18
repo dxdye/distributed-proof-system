@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Escalated, type MaintainerRow, type Me, type SubmissionRow } from "../api";
 import { domainLabel } from "../kinds";
+import { LeanName } from "../components/LeanName";
 import { threadHref } from "./Discussions";
 
 // Administrators run the platform; maintainers look after the content of
@@ -146,7 +147,7 @@ export function Admin({ me }: { me: Me }) {
             {escalated.map((t) => (
               <div key={t.ticket_id} className="escalated">
                 <p>
-                  <code>{t.declaration}</code> <span className="muted">{t.paper}</span>
+                  <LeanName text={t.declaration} /> <span className="muted">{t.paper}</span>
                 </p>
                 <ul className="small">
                   {t.votes.map((v, i) => (
@@ -194,7 +195,7 @@ export function Admin({ me }: { me: Me }) {
                 <div key={q.request_id} className="escalated">
                   <p>
                     <a href={threadHref(q.submission_id, q.declaration)}>
-                      <code>{q.declaration}</code>
+                      <LeanName text={q.declaration} />
                     </a>{" "}
                     <span className="muted small">
                       {q.paper} · decided: {q.outcome}
@@ -245,7 +246,7 @@ export function Admin({ me }: { me: Me }) {
                 <div key={r.post_id} className="escalated">
                   <p>
                     <a href={threadHref(r.submission_id, r.declaration)}>
-                      <code>{r.declaration}</code>
+                      <LeanName text={r.declaration} />
                     </a>
                   </p>
                   <blockquote>{r.text || `(${r.kind})`}</blockquote>
@@ -290,7 +291,7 @@ export function Admin({ me }: { me: Me }) {
                   {contested.map((c) => (
                     <tr key={c.ticket_id}>
                       <td>
-                        <code>{c.declaration}</code>
+                        <LeanName text={c.declaration} />
                       </td>
                       <td className="small">
                         {c.paper} · {c.locator}

@@ -3,6 +3,7 @@ import { api, type ChoiceSet, type Me } from "../api";
 import { TIER_HINTS, TIER_LABELS, TierBadge } from "../components/Tier";
 import { Welcome, introDone } from "../components/Welcome";
 import { domainLabel, kindLabel, splitName } from "../kinds";
+import { LeanName } from "../components/LeanName";
 import { navigate } from "../router";
 
 const ALL_TIERS = ["easy", "medium", "hard", "excellence"];
@@ -131,22 +132,6 @@ function Preferences({ me, onSaved, open }: { me: Me; onSaved: () => void; open?
   );
 }
 
-/** A Lean name that may break only after a dot or an underscore, never inside
- * a word. */
-function Breakable({ text, className }: { text: string; className: string }) {
-  const parts = text.split(/(?<=[._])/);
-  return (
-    <code className={className}>
-      {parts.map((p, i) => (
-        <span key={i}>
-          {p}
-          {i < parts.length - 1 && <wbr />}
-        </span>
-      ))}
-    </code>
-  );
-}
-
 /** "at 17:42", "tomorrow at 09:10" or a date, in the reader's time zone. */
 function whenText(iso: string): string {
   const at = new Date(iso);
@@ -251,7 +236,7 @@ export function Work({
           {me.leases.map((l) => (
             <li key={l.lease_id}>
               <a href={`#/lease/${l.lease_id}`}>
-                <code>{l.ticket.view.declaration}</code>
+                <LeanName text={l.ticket.view.declaration} />
               </a>{" "}
               <span className="badge">{l.duty}</span>{" "}
               <span className="muted">{l.ticket.paper}</span>{" "}
@@ -319,7 +304,7 @@ export function Work({
               <p className="blocked-note">
                 These are your next tickets. You already hold{" "}
                 <a href={`#/lease/${me.leases[0].lease_id}`}>
-                  <code>{me.leases[0].ticket.view.declaration}</code>
+                  <LeanName text={me.leases[0].ticket.view.declaration} />
                 </a>
                 {me.leases.length > 1 ? ` and ${me.leases.length - 1} more` : ""}: finish or return
                 it to take one of these. Returning carries no penalty.
@@ -357,8 +342,8 @@ export function Work({
                         <TierBadge tier={t.tier} />
                       </span>
                       <span className="choice-main">
-                        {ns && <Breakable className="choice-ns" text={ns} />}
-                        <Breakable className="choice-name" text={short} />
+                        {ns && <LeanName className="choice-ns" text={ns} />}
+                        <LeanName className="choice-name" text={short} />
                         <span className="choice-paper">
                           {t.paper} · {domainLabel(t.domain)}
                           {!noEstimates && ` · ${duration(t.expected_minutes)}`}

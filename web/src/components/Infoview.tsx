@@ -1,6 +1,7 @@
 import { type RefObject, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { kindLabel } from "../kinds";
 import { layoutTerm } from "../layout";
+import { LeanName } from "./LeanName";
 import { UnfoldContext } from "./unfoldContext";
 import type { Component, GlossaryEntry, UnitView } from "../api";
 
@@ -153,10 +154,14 @@ export function Origin({ origin }: { origin?: string | null }) {
   return <span className={`badge origin origin-${origin}`}>{ORIGIN_LABELS[origin] ?? origin}</span>;
 }
 
-function heading(c: Component, kind: string): string {
+function heading(c: Component, kind: string): React.ReactNode {
   if (c.target === "type") return kind === "theorem" ? "Statement" : "Type";
   if (c.target === "value") return "Definition";
-  return `Constructor ${c.label}`;
+  return (
+    <>
+      Constructor <LeanName text={c.label} />
+    </>
+  );
 }
 
 export function displayDiffers(c: Component): boolean {
@@ -230,7 +235,7 @@ export function Infoview({
       {!compact && (
         <div className="decl-head">
           <span className="badge">{kindLabel(view.decl_kind)}</span>
-          <code>{view.declaration}</code>
+          <LeanName text={view.declaration} />
         </div>
       )}
       {differing > 0 && (
@@ -256,7 +261,7 @@ export function Infoview({
           <ul>
             {view.context.map((c) => (
               <li key={c}>
-                <code>{c}</code>
+                <LeanName text={c} />
               </li>
             ))}
           </ul>

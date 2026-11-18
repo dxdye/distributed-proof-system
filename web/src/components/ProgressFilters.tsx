@@ -179,6 +179,7 @@ export function ProgressFilters({
           </select>
         )}
         <select
+          className="filter-order"
           aria-label="Order"
           value={filter.order}
           onChange={(e) => set({ order: e.target.value as Order })}
