@@ -1327,6 +1327,34 @@ is possible:
   room (recorded per post), so that disagreeing with the team pays when one
   is right.
 
+*Planted members (project owner, 2026-11-19).* A share of teams gets a PVV
+or maintainer as a planted member who knows the answer and argues for the
+wrong side on purpose: on a planted copy that it is fine, on a training
+ticket with a known correct answer (C-48) that it has an error. Planted
+errors measure whether someone finds an error; a planted member measures
+whether someone holds a correct finding under pressure and whether they
+follow a wrong one, so q directly, per person and overall. Conditions:
+- **Only where the answer is known** (planted copies, training tickets).
+  The planted member's verdicts and findings count for nothing and open no
+  claim; on a team with a planted member, the joint verdict counts for
+  nothing either. The other members' own verdicts count as always.
+- **Announced, like planted errors** (Kerckhoffs): the rules say that a
+  share of teams has a planted member, not which. Revealed to the team with
+  the reveal of the planted errors, with the planted member's explanation.
+- **Indistinguishable.** No role badges in team rooms (a maintainer badge
+  would give the planted member away and invite deference instead of
+  argument); guidelines for planted members on what to argue and at what
+  pace; arguments on the content only.
+- **Kept apart.** The planted member knows which version is the copy and is
+  excluded from the declaration's other tickets (C-39).
+- **Use.** A member's q enters the team model above and their feedback, not
+  the trust of solo reviews, where it plays no part.
+- **Cost and limits.** PVVs and maintainers are scarce; a small share,
+  first in onboarding teams, where the planted member explains afterwards.
+  It is a different quality from a planted error: a person who argues
+  against their knowledge in a conversation. Announcement and reveal keep it
+  fair; the pilot measures who leaves after such a reveal.
+
 Recommended order: own verdicts first (point 2) cost nothing statistically
 and give the data: on every planted copy a team met, the own verdicts and
 the joint verdict side by side. They estimate q, c_T and ρ. If the joint
