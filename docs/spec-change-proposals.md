@@ -1242,6 +1242,188 @@ license agreement, which is still to be written. Commercial use needs a separate
 published under an open license (SR-49); that concerns their data, not the
 software.
 
+### C-50 · §6, §6.4, §8.9, C-25, C-46 — Review teams: alone first, then together · decide
+*Request (project owner, 2026-11-19):* instead of one person per ticket, a
+team of three works on a ticket together, discusses it and votes together at
+the end.
+
+*What speaks for it:* an error can be shown; whoever finds it can convince
+the others, so on such tasks a team tends to reach the level of its best
+member. Large tickets can be split (one reads the Lean, one the paper, one
+the Mathlib definitions). People learn more and stay longer.
+
+*Where it meets the mechanism:*
+- **Independence.** §6 multiplies the evidence of k_min independent
+  verdicts. Three people who talked before voting are one verdict, not
+  three (the reason for "one student of a course per ticket", C-43). Counted
+  as one vote, a declaration would need nine people instead of three, and
+  the harness shows that three qualified ones are already scarce at the
+  start (C-48).
+- **Measurement.** Planted errors measure individuals. A joint verdict does
+  not say who found the error; whoever goes along gains trust without
+  earning it.
+- **Steering.** The most confident member, or one with a purpose, can talk
+  the other two out of a finding. A team chosen by its members is a channel
+  for collusion.
+
+*Proposed: alone first, then together.*
+1. **The team is drawn.** A reviewer picks a ticket from the choice set
+   (C-32) in team mode; the team is formed by the next two who pick the same
+   ticket in team mode within a time window. Nobody chooses team mates.
+   Conflicts of interest (SR-08, SR-50), the course rule (C-43) and one
+   version per person (C-39) apply to every member. Members appear to each
+   other as "Reviewer A, B, C" of that team only. If no team forms in the
+   window, the reviewer continues alone.
+2. **Own verdict first.** Each member gives verdict and reason alone, as
+   today, and cannot change it afterwards. Nothing has been exchanged yet,
+   so these verdicts are as independent as three solo reviews: on qualified
+   seats they fill k_min, on learner seats they count as learner verdicts
+   (C-46), and they alone measure trust on planted errors. A justified
+   "incorrect" opens a claim at once, as today.
+3. **Then the team room.** When all three have given their verdicts (or a
+   missing member's lease has ended), the team sees the three verdicts and
+   reasons and discusses in a private thread. It stays private; members may
+   share their own part when the declaration's public thread opens (C-25).
+4. **The joint verdict can add findings, never remove them.** The team ends
+   with a joint verdict. An "incorrect" with a reason that none of the own
+   verdicts had becomes a claim like any finding. A member's own finding
+   stays even if the team is convinced otherwise; the PVV of the claim
+   decides (SR-35). So the discussion can only make the review stricter.
+   Apart from added findings, the joint verdict enters neither trust nor
+   the decision; it is recorded for the pilot.
+5. **Planted errors.** A team on a planted copy discusses the copy, like
+   three reviewers who met it alone. Reveals come per member, after their
+   own verdict, as today; a finding the team adds on a planted copy earns
+   nobody trust.
+6. **Where first.** Learner seats, courses (C-43) and onboarding (C-48),
+   where no verdict fills k_min. One variant for onboarding: one PV and two
+   learners; the PV's own verdict counts, the learners learn from the
+   discussion. Teams on qualified seats once the pilot shows that teams add
+   findings that hold.
+
+*Counting the team as one voter (decide).* The project owner's view: the
+three act as one and compete for the truth inside the team; that is a
+strength, and the statistics should model it rather than rule it out. That
+is possible:
+- **The team as a voter of its own,** with sensitivity s_T and specificity
+  c_T. An error can be shown, so the simplest model is "truth wins": the
+  team finds the error if one member does, s_T = 1 − Π(1 − s_i), reduced by
+  the share q of findings talked away in the room; c_T at least the median
+  of the c_i, since discussion removes false alarms. Teams are drawn anew
+  each time, so the parameters of the model are estimated (q, and how far
+  c_T exceeds the members'), not the history of a team. Every joint verdict
+  on a planted copy is evidence for them.
+- **In the decision rule** the team is one vote with the likelihood ratio
+  from (s_T, c_T); k_min counts independent voices, and a team is one.
+  Whether two strong team voices may stand where three solo voices stand
+  follows from the measured s_T and c_T through the posterior (§6), not
+  from a setting.
+- **Without a team model:** the members' own verdicts count with a
+  correlation discount, n_eff = n / (1 + (n − 1)ρ), with ρ the measured
+  correlation of verdicts within teams (the simulation already models ρ
+  for correlated blind spots, `--blind-share`).
+- **Competition pays:** a confirmed finding is credited, as recognition
+  (C-38), to the member who raised it first, in the own verdict or in the
+  room (recorded per post), so that disagreeing with the team pays when one
+  is right.
+
+Recommended order: own verdicts first (point 2) cost nothing statistically
+and give the data: on every planted copy a team met, the own verdicts and
+the joint verdict side by side. They estimate q, c_T and ρ. If the joint
+verdict beats the union of the own verdicts, the team vote replaces the own
+verdicts in the decision, and point 4 ("never remove") can be relaxed by
+the measured q. Before the pilot the harness gets a team agent (truth wins,
+steering with probability q) to show from which values teams pay off.
+
+*Cost:* the three members are the seats a ticket has anyway; new are the
+waiting time until a team forms and the moderation of team rooms. Counted
+as one voter (above), a team fills one of the k_min seats.
+
+*Events:* `team.formed` (ticket, members as reviewer ids, in the vault
+whether they are linked), `team.verdict`, posts of the team room like posts
+of threads, but not public.
+
+*Pilot measures:* findings added by teams and how many were confirmed; how
+often a member with an own finding disagreed with the joint verdict (the
+steering effect); joint against own verdicts on planted errors; time to a
+decision and returns, with and without teams.
+
+*Order:* after C-48 (onboarding); for courses after C-43. *Status:*
+proposal; nothing built.
+
+### C-51 · §8.8, OS-3, SR-24, C-17, C-31, C-42 — Passages located by a model, confirmed by a vote · new
+*Request (project owner, 2026-11-19):* paper passages are linked to the
+tickets with the help of a language model; where that fails, it is shown. In
+a separate strand a community, mostly maintainers and possibly lay judges,
+votes on whether the linked passage belongs to the declaration.
+
+*Today:* a PVV or maintainer of the domain proposes a passage, another
+maintainer confirms it (C-42, step 2), before the first review. The
+passages of the walkthrough's openai/math papers were written by an
+assistant as paraphrases, marked "to be confirmed by a maintainer". Mapping
+by hand is the bottleneck of breadth first (C-28).
+
+*Proposed:*
+1. **The model locates, it does not write.** The passage is the reference the
+   review compares with. A model that has seen the Lean statement and
+   rephrases the passage moves it towards the Lean; then the reference
+   confirms what it should check. The model therefore returns a location
+   only (source file, section, lines of the TeX source; page and region for
+   papers without source) and the kind of place (numbered theorem,
+   definition, prose). The text is cut from the source mechanically by that
+   location; a proposal whose text does not occur verbatim in the source is
+   void. The TeX source is preferred (arXiv), so formulas stay formulas.
+2. **The main theorem from the paper's side.** Its passage is located from
+   the claims of the paper (abstract, introduction, numbered theorems;
+   C-31), not by similarity to the Lean statement; otherwise the model picks
+   the place that fits a flawed statement best, for instance a weaker
+   corollary.
+3. **Which model.** Never one of the provider whose models produced the
+   reviewed proof (C-17); for openai/math no OpenAI model. Model, version,
+   prompt and hashes of the inputs go into `passage.proposed` (by:
+   machine), so every machine proposal can be told apart and repeated.
+4. **"Not found" is information.** Shown on the ticket and per submission
+   on the progress page, with the model's category: auxiliary lemma (normal,
+   most have no place in the paper), not in the paper, unsure. A main
+   theorem without passage is not opened (as today). A claim of the paper
+   without a Lean counterpart is a finding for C-31.
+5. **The vote asks one narrow question:** "Is this the place where the paper
+   makes this claim or gives this definition?" Answers: yes; another place
+   (with location); not in the paper. It does not ask whether the passage
+   matches the Lean: that is the review itself, and a vote on it beforehand
+   would anchor the reviewers.
+6. **Who votes.** Maintainers and PVVs of the domain, as today. Lay judges
+   (any signed-in account) may join and earn weight the way reviewers do:
+   their tasks contain planted wrong mappings (the neighbouring theorem, a
+   weaker version, the definition of a similar object) that they must
+   reject. Authors of the submission do not vote (C-45, point 5). The
+   minimum stays four eyes: the machine proposes, a maintainer of the domain
+   confirms; other votes are evidence, and a weighted objection sends the
+   passage to a second maintainer.
+7. **Closed before the first review.** The reference must not change while
+   verdicts are given (C-42, "why reviewers do not vote on passages").
+   Afterwards reviewers contest a passage (SR-24); the contest goes back
+   into this strand, and a changed passage needs the submission opened again.
+8. **Verbatim, not paraphrased.** The binding passage is a short quote with
+   its location and a link to the source, so every reviewer can check it in
+   the paper; the paper's licence and the right of quotation apply. A
+   paraphrase may be shown in addition, never as the reference.
+   Consequence for C-41 (decide): planted errors on the paper side need
+   uniform paraphrases and are not possible with verbatim quotes; proposed
+   is to drop them for passages.
+
+*Events:* `passage.proposed` with by = machine and the model's details, or
+with location none and a category; `passage.voted` (new);
+`passage.decided` as today.
+
+*Pilot measures:* share of machine proposals confirmed unchanged; how often
+lay judges and maintainers reject planted wrong mappings; contests (SR-24)
+for machine-located against hand-mapped passages; time from submission to
+opening.
+
+*Order:* after C-42 step 2 (built); the paper source comes with the
+submission (C-45). *Status:* proposal; nothing built.
+
 ## SE document
 
 ### S-01 · AS-1 and §9 workload · fix
