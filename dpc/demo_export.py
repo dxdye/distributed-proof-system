@@ -13,6 +13,7 @@ the real case studies appear with their actual statements and no mutants.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -77,7 +78,8 @@ def _ticket(tid: str, view: UnitView, domain: str, paper: PaperMap | None,
         "ticket_id": tid,
         "declaration": view.declaration,
         "decl_kind": view.decl_kind,
-        "domain": (paper.domain(view.declaration) if paper else None) or domain,
+        "domain": ((paper.domain(view.declaration) if paper else None) or domain)
+        .replace("_", " "),
         "tier": tier_of_unfolded(view, views or {}),  # what is read unfolded (C-39)
         "view": view.model_dump(mode="json"),
         # what the statement takes from Mathlib, and the checklist naming it (C-27)
@@ -143,8 +145,36 @@ def export(sources: list[Source], out: Path, ingest_log: Path | None = None) -> 
     return counts
 
 
-def default_sources(root: Path, demo_work: Path, case_studies: Path) -> list[Source]:
+def _area(area: str) -> str:
+    """``NumberTheory`` → ``number theory``, the way domains are written here."""
+    return re.sub(r"(?<!^)(?=[A-Z])", " ", area).lower()
+
+
+def openai_math_sources(base: Path) -> list[Source]:
+    """The openai/math papers prepared for the walkthrough (``work/openai-math``):
+    each one with its rendered views, paper map and ingest outputs. Real
+    statements, so no planted errors (see the module docstring)."""
+    papers_file = base / "papers.json"
+    if not papers_file.is_file():
+        return []
+    papers = json.loads(papers_file.read_text("utf-8"))
+    out = []
+    for key in sorted(papers):
+        meta_file, work = base / f"{key}.json", base / key
+        if not (meta_file.is_file() and (work / "views.jsonl").is_file()):
+            continue
+        meta = json.loads(meta_file.read_text("utf-8"))
+        out.append(Source(f"OAI-{key}", papers[key]["title"], meta["repo_url"], meta["commit"],
+                          _area(papers[key]["area"]), work / "views.jsonl",
+                          work / "paper.yaml", paper_ref=meta.get("paper_ref"),
+                          root=meta.get("root"), workdir=work))
+    return out
+
+
+def default_sources(root: Path, demo_work: Path, case_studies: Path,
+                    openai_math: Path | None = None) -> list[Source]:
     fixtures = root / "lean" / "fixtures"
+    extra = openai_math_sources(openai_math) if openai_math is not None else []
     return [
         Source("mutation", "Mutation fixture (demo)", "https://example.org/mutation", "0" * 40,
                "arithmetic", demo_work / "mutation" / "views.jsonl",
@@ -168,4 +198,5 @@ def default_sources(root: Path, demo_work: Path, case_studies: Path) -> list[Sou
                case_studies / "qrh" / "paper.yaml",
                root="OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re",
                workdir=case_studies / "qrh"),
+        *extra,
     ]

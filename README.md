@@ -248,9 +248,13 @@ published under an open license (SR-49).
 - `web/demo/snapshot.json`, the data of the click dummy, contains declarations
   rendered from
   [openai/NavierStokesAndEuler](https://github.com/openai/NavierStokesAndEuler)
-  at commit `f9e8bc5`, licensed by its authors under the Apache License 2.0.
-  The people, verdicts and discussions around them in the click dummy are
-  invented. They are not an assessment of that formalization. If the snapshot
-  is regenerated with further case studies, list their sources here.
+  at commit `f9e8bc5` and from [openai/math](https://github.com/openai/math)
+  at commit `4eaee87` (20 papers), both licensed by their authors under the
+  Apache License 2.0. The informal statements shown as "the paper says" for
+  the openai/math papers are paraphrases of the papers, not quotes, and not
+  confirmed by their authors. The people, verdicts and discussions around them
+  in the click dummy are invented. They are not an assessment of those
+  formalizations. If the snapshot is regenerated with further case studies,
+  list their sources here.
 - The web client bundles the fonts Inter and JetBrains Mono (SIL Open Font
   License 1.1) and KaTeX (MIT) from their npm packages.

@@ -211,7 +211,8 @@ def cmd_export_demo(args: argparse.Namespace) -> int:
     from dpc.demo_export import default_sources, export
 
     root = Path(__file__).resolve().parents[1]
-    counts = export(default_sources(root, Path(args.demo_work), Path(args.case_studies)),
+    counts = export(default_sources(root, Path(args.demo_work), Path(args.case_studies),
+                                    Path(args.openai_math)),
                     Path(args.out), Path(args.ingest_log) if args.ingest_log else None)
     _print(counts | {"file": args.out})
     return 0
@@ -660,6 +661,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--case-studies", default="work/case-studies")
     p.add_argument("--ingest-log", default="data/case-studies.sqlite",
                    help="audit log of the case studies' ingest (pinned libraries)")
+    p.add_argument("--openai-math", default="work/openai-math",
+                   help="the openai/math papers prepared for the walkthrough (skipped if absent)")
     p.add_argument("--out", default="web/demo/snapshot.json")
     p.set_defaults(func=cmd_export_demo)
 
