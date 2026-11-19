@@ -1354,6 +1354,7 @@ follow a wrong one, so q directly, per person and overall. Conditions:
   It is a different quality from a planted error: a person who argues
   against their knowledge in a conversation. Announcement and reveal keep it
   fair; the pilot measures who leaves after such a reveal.
+  Alternatives that need no live planted member: C-52, points 1–3.
 
 Recommended order: own verdicts first (point 2) cost nothing statistically
 and give the data: on every planted copy a team met, the own verdicts and
@@ -1451,6 +1452,80 @@ opening.
 
 *Order:* after C-42 step 2 (built); the paper source comes with the
 submission (C-45). *Status:* proposal; nothing built.
+
+### C-52 · §6, §6.5, §8.2, §8.9, C-17, C-38, C-50, C-51 — More instruments for judgement · new
+*Request (project owner, 2026-11-19):* how planted members (C-50) could be
+done better, and which other ideas there are. Eight instruments, each with
+its condition; none changes the decision rule before the harness and the
+pilot have measured it.
+
+*In the team room (C-50):*
+1. **Planted arguments instead of planted people.** After the own verdict is
+   locked, a reviewer, alone or in a team, sees an argument for the opposite
+   side and may keep the verdict or revise it. The revision is recorded
+   separately and never replaces the counted verdict; a revision to
+   "incorrect" is a finding like any other, a revision away from a finding
+   removes nothing (C-50, point 4).
+   - **The same on every ticket.** Arguments appear on originals and copies
+     at the same rate and from the same source; an argument that appeared
+     only on planted copies would give them away before the reveal. So they
+     are written by a model (not one of the provider of the proof, C-17)
+     from the ticket, always for the side opposite the reviewer's verdict.
+   - **Measured where the answer is known:** on planted copies and training
+     tickets (C-48) the revision rate is q, per person, with the same
+     stimulus for everyone. On originals the argument is a challenge.
+   - Announced in the rules, revealed with the planted errors. Costs no
+     PVV time per team; live planted members (C-50) remain for onboarding
+     teams, where they explain afterwards.
+2. **Delphi rounds instead of a free chat.** The team room works in fixed,
+   asynchronous rounds: (1) own verdicts; (2) everyone sees the others'
+   reasons, anonymous and without a count of verdicts; (3) everyone may
+   revise once, with a reason; then the room closes. Status, speed,
+   insistence and "two of three already said yes" no longer steer, so q
+   falls by design, and the team needs no common time online. Free talk
+   comes with the declaration's public thread (C-25).
+3. **An open devil's advocate.** In each team one member, drawn at random
+   and known to all, argues the opposite of their own verdict in round 2.
+   Nobody is deceived; it works against groupthink. It improves the joint
+   verdict, but it does not measure q.
+
+*Beyond teams:*
+4. **"Surprisingly popular"** (Prelec, Seung, McCoy, Nature 2017). With the
+   verdict, each reviewer estimates the share of reviewers of the ticket who
+   will say "incorrect". If "incorrect" is more frequent than predicted, it
+   is surprisingly popular: often a sign that the minority knows something
+   the majority does not. Since one justified "incorrect" already opens a
+   claim, the signal serves whoever decides the claim (SR-35) and orders the
+   queue of claims; it never decides. Few verdicts per ticket make it noisy;
+   the pilot compares it with the majority on planted copies.
+5. **Debate for lay judges** (C-51). Two people, sides drawn at random,
+   argue for and against a mapping; a lay judge decides with the exchange in
+   front of them. In experiments, judges of debates were more often right
+   than judges advised by a single expert (Michael et al., 2023). First for
+   disputed mappings; the judges' weight is measured on planted wrong
+   mappings (C-51, point 6). Later perhaps for escalations.
+6. **Planted errors written by people.** PVVs write subtle errors in
+   statements, in addition to the mutation operators (ADR 0006, C-41). Kept
+   only if they pass the equivalence filter (C-05) and current models miss
+   them at least as often as real errors (C-17), and if a second PVV
+   confirms that a careful reviewer could see them (no unfair traps). The
+   author is excluded from the declaration. This answers the condition of
+   C-17, which automatic mutants meet poorly.
+7. **A probability instead of yes or no.** With the verdict, a reviewer
+   states how sure they are, in five steps, scored against planted errors
+   with a proper scoring rule (Brier score): honest statements are the best
+   strategy. First as feedback on calibration only; using it in the trust
+   model changes §6 and needs the harness first.
+8. **Credit for findings instead of consensus.** Every reviewer whose own
+   verdict named a confirmed real error (claim resolved by a PVV or by the
+   machine) is credited as recognition (C-38), growing with difficulty;
+   public when the declaration's thread opens. Not "first one wins": a race
+   would reward speed over care. The competition is for the truth, not
+   for agreement.
+
+*Order:* 2 and 4 are cheap and touch no decision; 1 replaces live planted
+members outside onboarding; 6 strengthens C-17 and comes with C-41; 5 with
+C-51; 7 and 8 after the pilot. *Status:* proposal; nothing built.
 
 ## SE document
 
